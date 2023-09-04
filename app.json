@@ -25,6 +25,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "1f71a331-422c-42b7-bd8c-e14f83bb426e"
+      }
+    },
+    "owner": "aecook"
   }
 }
