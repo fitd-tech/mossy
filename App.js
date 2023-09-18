@@ -1,17 +1,40 @@
 import { useState, useEffect } from 'react'
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Button } from 'react-native';
+import { StyleSheet, Text, View, Button, Pressable } from 'react-native';
+import { map } from 'lodash'
 
 import { mossyBackendDevUrl } from './constants';
 
+const tasksMock = [
+  {
+    id: 1,
+    name: 'Dishes',
+    frequency: 1,
+  },
+  {
+    id: 2,
+    name: 'Clean pet fountain',
+    frequency: 7,
+  },
+  {
+    id: 3,
+    name: 'Pet Lady',
+    frequency: 1,
+  },
+  {
+    id: 4,
+    name: 'Laundry',
+    frequency: 3,
+  },
+]
+
 export default function App() {
   const [buttonLabel, setButtonLabel] = useState('loading...')
+  const [highlightButton, setHighlightButton] = useState(null)
+  console.log('highlightButton', highlightButton)
 
   useEffect(() => {
-    /* setTimeout(() => {
-      setButtonLabel('press me')
-    }, 3000) */
-    async function fetchStuff() {
+    async function fetchBooks() {
       const config = {
         method: 'GET',
         headers: {
@@ -21,16 +44,35 @@ export default function App() {
       let result
       try {
         const response = await fetch(`http://${mossyBackendDevUrl}/api/books`, config)
-        const serializedResponse = await response.json()
-        console.log('serializedResponse', serializedResponse)
-        result = serializedResponse.author
+        const serializedBooksResponse = await response.json()
+        console.log('serializedBooksResponse', serializedBooksResponse)
+        result = serializedBooksResponse.author
       } catch (err) {
         console.log('err', err)
         result = err.message
       }
       setButtonLabel(result)
     }
-    fetchStuff()
+    async function fetchTasks() {
+      const config = {
+        method: 'GET',
+        headers: {
+          "Content-Type": "application/json"
+        }
+      }
+      let result
+      try {
+        const response = await fetch(`http://${mossyBackendDevUrl}/api/tasks`, config)
+        const serializedTasksResponse = await response.json()
+        console.log('serializedTasksResponse', serializedTasksResponse)
+        result = serializedTasksResponse
+      } catch (err) {
+        console.log('err', err)
+        result = err.message
+      }
+    }
+    fetchBooks()
+    fetchTasks()
   }, [])
 
   function handleButtonPress() {
@@ -41,14 +83,31 @@ export default function App() {
     }
   }
 
+  function handleTaskCardPress(id) {
+    console.log('id', id)
+    setHighlightButton(id)
+  }
+
   return (
     <View style={styles.container}>
       <Text>mossy</Text>
-      <Text>you have work to do</Text>
-      <Button
-        title={buttonLabel}
-        onPress={handleButtonPress}
-      />
+      <View style={styles.taskCardContainer}>
+        {map(tasksMock, task => highlightButton === task.id ? (
+          <Pressable onPress={() => handleTaskCardPress(task.id)} key={task.id}>
+          <View style={styles.taskCardHighlighted}>
+            <Text style={styles.taskTitleHighlighted}>{task.name}</Text>
+            <Text style={styles.taskFrequencyHighlighted}>{`${task.frequency} Day(s)`}</Text>
+          </View>
+        </Pressable>
+        ) : (
+          <Pressable onPress={() => handleTaskCardPress(task.id)} key={task.id}>
+            <View style={styles.taskCard}>
+              <Text style={styles.taskTitle}>{task.name}</Text>
+              <Text style={styles.taskFrequency}>{`${task.frequency} Day(s)`}</Text>
+            </View>
+          </Pressable>
+        ))}
+      </View>
       <StatusBar style="auto" />
     </View>
   );
@@ -61,4 +120,47 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  taskCardContainer: {
+    flex: 0.8,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    width: '90%',
+    justifyContent: 'center',
+  },
+  taskCard: {
+    width: 160,
+    height: 160,
+    margin: 5,
+    padding: 10,
+    borderWidth: 2,
+    borderRadius: 5,
+  },
+  taskTitle: {
+    fontSize: 30,
+    fontWeight: 700,
+  },
+  taskFrequency: {
+    fontSize: 15,
+    color: 'darkgrey',
+    fontWeight: 600,
+  },
+  taskCardHighlighted: {
+    width: 160,
+    height: 160,
+    margin: 5,
+    padding: 10,
+    borderWidth: 2,
+    borderRadius: 5,
+    backgroundColor: 'mediumvioletred',
+  },
+  taskTitleHighlighted: {
+    fontSize: 30,
+    fontWeight: 700,
+    color: 'white',
+  },
+  taskFrequencyHighlighted: {
+    fontSize: 15,
+    color: 'white',
+    fontWeight: 600,
+  }
 });
