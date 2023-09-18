@@ -33,6 +33,26 @@ export default function App() {
   const [highlightButton, setHighlightButton] = useState(null)
   console.log('highlightButton', highlightButton)
 
+  async function fetchTasks() {
+    console.log('called fetchTasks')
+    const config = {
+      method: 'GET',
+      headers: {
+        "Content-Type": "application/json"
+      }
+    }
+    let result
+    try {
+      const response = await fetch(`http://${mossyBackendDevUrl}/api/tasks`, config)
+      const serializedTasksResponse = await response.json()
+      console.log('serializedTasksResponse', serializedTasksResponse)
+      result = serializedTasksResponse
+    } catch (err) {
+      console.log('err', err)
+      result = err.message
+    }
+  }
+
   useEffect(() => {
     async function fetchBooks() {
       const config = {
@@ -53,24 +73,6 @@ export default function App() {
       }
       setButtonLabel(result)
     }
-    async function fetchTasks() {
-      const config = {
-        method: 'GET',
-        headers: {
-          "Content-Type": "application/json"
-        }
-      }
-      let result
-      try {
-        const response = await fetch(`http://${mossyBackendDevUrl}/api/tasks`, config)
-        const serializedTasksResponse = await response.json()
-        console.log('serializedTasksResponse', serializedTasksResponse)
-        result = serializedTasksResponse
-      } catch (err) {
-        console.log('err', err)
-        result = err.message
-      }
-    }
     fetchBooks()
     fetchTasks()
   }, [])
@@ -86,6 +88,36 @@ export default function App() {
   function handleTaskCardPress(id) {
     console.log('id', id)
     setHighlightButton(id)
+  }
+
+  function handleCreateTask() {
+    console.log('called handleCreateTask')
+    async function postTask() {
+      console.log('called postTask')
+      const taskData = {
+        name: 'new task',
+        frequency: 2,
+      }
+      const config = {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(taskData),
+      }
+      let result
+      try {
+        const response = await fetch(`http://${mossyBackendDevUrl}/api/tasks`, config)
+        const serializedCreateTaskResponse = await response.json()
+        console.log('serializedCreateTaskResponse', serializedCreateTaskResponse)
+        result = serializedCreateTaskResponse
+        fetchTasks()
+      } catch (err) {
+        console.log('err', err)
+        result = err.message
+      }
+    }
+    postTask()
   }
 
   return (
@@ -107,6 +139,9 @@ export default function App() {
             </View>
           </Pressable>
         ))}
+      </View>
+      <View>
+        <Button title="Make a task" onPress={handleCreateTask} />
       </View>
       <StatusBar style="auto" />
     </View>
