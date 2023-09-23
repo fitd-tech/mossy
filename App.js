@@ -1,38 +1,17 @@
 import { useState, useEffect } from 'react'
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Button, Pressable, ScrollView, Modal } from 'react-native';
-import { map, size } from 'lodash'
+import { StyleSheet, Text, View, Button, Pressable, ScrollView, Modal, TextInput } from 'react-native';
+import { map, size, find } from 'lodash'
 
 import { mossyBackendDevUrl } from './constants';
-
-const tasksMock = [
-  {
-    id: 1,
-    name: 'Dishes',
-    frequency: 1,
-  },
-  {
-    id: 2,
-    name: 'Clean pet fountain',
-    frequency: 7,
-  },
-  {
-    id: 3,
-    name: 'Pet Lady',
-    frequency: 1,
-  },
-  {
-    id: 4,
-    name: 'Laundry',
-    frequency: 3,
-  },
-]
 
 export default function App() {
   const [buttonLabel, setButtonLabel] = useState('loading...')
   const [highlightButton, setHighlightButton] = useState(null)
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [tasks, setTasks] = useState([])
+  const [name, setName] = useState(null)
+  const [frequency, setFrequency] = useState(null)
   console.log('highlightButton', highlightButton)
   console.log('tasks', tasks)
   console.log('tasks?.[0]?._id.$oid', tasks?.[0]?._id.$oid)
@@ -84,16 +63,17 @@ export default function App() {
     fetchTasks()
   }, [])
 
-  function handleButtonPress() {
-    if (buttonLabel === 'press me again') {
-      setButtonLabel('i done been pressed')
-    } else {
-      setButtonLabel('press me again')
+  useEffect(() => {
+    if (highlightButton) {
+      console.log(`find(tasks, ['_id.$oid', highlightButton])`, find(tasks, ['_id.$oid', highlightButton]))
+      const selectedTaskName = find(tasks, ['_id.$oid', highlightButton]).name
+      const selectedTaskFrequency = find(tasks, ['_id.$oid', highlightButton]).frequency
+      setName(selectedTaskName)
+      setFrequency(String(selectedTaskFrequency))
     }
-  }
+  }, [highlightButton])
 
   function handleTaskCardPress(id) {
-    console.log('id', id)
     setHighlightButton(id)
     setIsModalVisible(true)
   }
@@ -103,8 +83,8 @@ export default function App() {
     async function postTask() {
       console.log('called postTask')
       const taskData = {
-        name: 'new task',
-        frequency: 2,
+        name,
+        frequency: frequency ? Number(frequency) : 0,
       }
       const config = {
         method: 'POST',
@@ -154,10 +134,60 @@ export default function App() {
     deleteTasks()
   }
 
+  function handleSaveTask() {
+    console.log('called handleSaveTask')
+    async function saveTask() {
+      console.log('called saveTask')
+      const task = {
+        _id: highlightButton,
+        name,
+        frequency: frequency ? Number(frequency) : 0,
+      }
+      const config = {
+        method: 'PATCH',
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(task),
+      }
+      let result
+      try {
+        const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config)
+        const serializedUpdateTaskResponse = await response.json()
+        console.log('serializedUpdateTaskResponse', serializedUpdateTaskResponse)
+        result = serializedUpdateTaskResponse
+        fetchTasks()
+      } catch (err) {
+        console.log('err', err)
+        result = err.message
+      }
+    }
+    saveTask()
+  }
+
+  function handleCreate() {
+    setIsModalVisible(true)
+    setName('')
+    setFrequency('')
+  }
+
   function handleCloseModal() {
-    handleDeleteTasks()
     setHighlightButton(null)
     setIsModalVisible(false)
+  }
+
+  function handleSave() {
+    if (highlightButton) {
+      handleSaveTask()
+    } else {
+      handleCreateTask()
+    }
+    handleCloseModal()
+  }
+
+  function handleDelete() {
+    handleDeleteTasks()
+    handleCloseModal()
   }
 
   function handleLogTasks() {
@@ -166,6 +196,10 @@ export default function App() {
       console.log('result', result)
     }
     getTaskList()
+  }
+
+  function handleChangeField(value, setFunc) {
+    setFunc(value)
   }
 
   return (
@@ -199,11 +233,8 @@ export default function App() {
             )
             }
           </View>
-          <View>
-            <Button title="log task list" onPress={handleLogTasks} />
-          </View>
-          <View>
-            <Button title="Make a task" onPress={handleCreateTask} />
+          <View style={styles.createButtonWrapper}>
+            <Button title="Make a task" onPress={handleCreate} />
           </View>
           <StatusBar style="auto" />
         </View>
@@ -215,11 +246,34 @@ export default function App() {
       >
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
-            <Text style={styles.modalText}>Options</Text>
+            <Text style={styles.modalText}>Edit Task</Text>
+            <TextInput 
+              value={name}
+              onChangeText={value => handleChangeField(value, setName)}
+              placeholder="Name"
+              style={styles.textInput}
+            />
+            <TextInput 
+              value={frequency}
+              onChangeText={value => handleChangeField(value, setFrequency)}
+              placeholder="Frequency"
+              inputMode="numeric"
+              style={styles.textInput}
+            />
             <Pressable
-              style={[styles.button, styles.buttonClose]}
+              style={styles.modalButton}
+              onPress={handleSave}>
+              <Text style={styles.textStyle}>Save</Text>
+            </Pressable>
+            <Pressable
+              style={styles.modalButton}
+              onPress={handleDelete}>
+              <Text style={styles.textStyle}>Delete</Text>
+            </Pressable>
+            <Pressable
+              style={styles.modalButton}
               onPress={handleCloseModal}>
-              <Text style={styles.textStyle}>Delete, maybe?</Text>
+              <Text style={styles.textStyle}>Cancel</Text>
             </Pressable>
           </View>
         </View>
@@ -315,5 +369,17 @@ const styles = StyleSheet.create({
   },
   placeholderText: {
     fontSize: 20,
-  }
+  },
+  textInput: {
+    borderBottomWidth: 1,
+    width: 200,
+    height: 30,
+    marginBottom: 25,
+  },
+  modalButton: {
+    marginBottom: 15,
+  },
+  createButtonWrapper: {
+    marginTop: 25,
+  },
 });
