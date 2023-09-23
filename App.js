@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Button, Pressable } from 'react-native';
-import { map } from 'lodash'
+import { StyleSheet, Text, View, Button, Pressable, ScrollView, Modal } from 'react-native';
+import { map, size } from 'lodash'
 
 import { mossyBackendDevUrl } from './constants';
 
@@ -31,7 +31,12 @@ const tasksMock = [
 export default function App() {
   const [buttonLabel, setButtonLabel] = useState('loading...')
   const [highlightButton, setHighlightButton] = useState(null)
+  const [isModalVisible, setIsModalVisible] = useState(false)
+  const [tasks, setTasks] = useState([])
   console.log('highlightButton', highlightButton)
+  console.log('tasks', tasks)
+  console.log('tasks?.[0]?._id.$oid', tasks?.[0]?._id.$oid)
+  console.log('isModalVisible', isModalVisible)
 
   async function fetchTasks() {
     console.log('called fetchTasks')
@@ -43,14 +48,16 @@ export default function App() {
     }
     let result
     try {
-      const response = await fetch(`http://${mossyBackendDevUrl}/api/tasks`, config)
+      const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config)
       const serializedTasksResponse = await response.json()
-      console.log('serializedTasksResponse', serializedTasksResponse)
+      setTasks(serializedTasksResponse)
+      console.log('serializedTasksResponse', serializedTasksResponse || [])
       result = serializedTasksResponse
     } catch (err) {
       console.log('err', err)
       result = err.message
     }
+    return result
   }
 
   useEffect(() => {
@@ -63,7 +70,7 @@ export default function App() {
       }
       let result
       try {
-        const response = await fetch(`http://${mossyBackendDevUrl}/api/books`, config)
+        const response = await fetch(`${mossyBackendDevUrl}api/books`, config)
         const serializedBooksResponse = await response.json()
         console.log('serializedBooksResponse', serializedBooksResponse)
         result = serializedBooksResponse.author
@@ -88,6 +95,7 @@ export default function App() {
   function handleTaskCardPress(id) {
     console.log('id', id)
     setHighlightButton(id)
+    setIsModalVisible(true)
   }
 
   function handleCreateTask() {
@@ -107,7 +115,7 @@ export default function App() {
       }
       let result
       try {
-        const response = await fetch(`http://${mossyBackendDevUrl}/api/tasks`, config)
+        const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config)
         const serializedCreateTaskResponse = await response.json()
         console.log('serializedCreateTaskResponse', serializedCreateTaskResponse)
         result = serializedCreateTaskResponse
@@ -120,31 +128,103 @@ export default function App() {
     postTask()
   }
 
+  function handleDeleteTasks() {
+    console.log('called handleDeleteTasks')
+    async function deleteTasks() {
+      console.log('called deleteTask')
+      const config = {
+        method: 'DELETE',
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify([highlightButton]),
+      }
+      let result
+      try {
+        const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config)
+        const serializedDeleteTasksResponse = await response.json()
+        console.log('serializedDeleteTasksResponse', serializedDeleteTasksResponse)
+        result = serializedDeleteTasksResponse
+        fetchTasks()
+      } catch (err) {
+        console.log('err', err)
+        result = err.message
+      }
+    }
+    deleteTasks()
+  }
+
+  function handleCloseModal() {
+    handleDeleteTasks()
+    setHighlightButton(null)
+    setIsModalVisible(false)
+  }
+
+  function handleLogTasks() {
+    async function getTaskList() {
+      const result = await fetchTasks()
+      console.log('result', result)
+    }
+    getTaskList()
+  }
+
   return (
-    <View style={styles.container}>
-      <Text>mossy</Text>
-      <View style={styles.taskCardContainer}>
-        {map(tasksMock, task => highlightButton === task.id ? (
-          <Pressable onPress={() => handleTaskCardPress(task.id)} key={task.id}>
-          <View style={styles.taskCardHighlighted}>
-            <Text style={styles.taskTitleHighlighted}>{task.name}</Text>
-            <Text style={styles.taskFrequencyHighlighted}>{`${task.frequency} Day(s)`}</Text>
+    <>
+      <ScrollView>
+        <View style={styles.container}>
+          <Text>mossy</Text>
+          <View style={styles.taskCardContainer}>
+            {size(tasks) ? (
+              <>
+                {map(tasks, task => highlightButton === task._id.$oid ? (
+                  <Pressable onPress={() => handleTaskCardPress(task._id.$oid)} key={task._id.$oid}>
+                  <View style={styles.taskCardHighlighted}>
+                    <Text style={styles.taskTitleHighlighted}>{task.name}</Text>
+                    <Text style={styles.taskFrequencyHighlighted}>{`${task.frequency} Day(s)`}</Text>
+                  </View>
+                </Pressable>
+                ) : (
+                  <Pressable onPress={() => handleTaskCardPress(task._id.$oid)} key={task._id.$oid}>
+                    <View style={styles.taskCard}>
+                      <Text style={styles.taskTitle}>{task.name}</Text>
+                      <Text style={styles.taskFrequency}>{`${task.frequency} Day(s)`}</Text>
+                    </View>
+                  </Pressable>
+                ))}
+              </>
+            ) : (
+              <View style={styles.placeholder}>
+                <Text style={styles.placeholderText}>Create some tasks!</Text>
+              </View>
+            )
+            }
           </View>
-        </Pressable>
-        ) : (
-          <Pressable onPress={() => handleTaskCardPress(task.id)} key={task.id}>
-            <View style={styles.taskCard}>
-              <Text style={styles.taskTitle}>{task.name}</Text>
-              <Text style={styles.taskFrequency}>{`${task.frequency} Day(s)`}</Text>
-            </View>
-          </Pressable>
-        ))}
-      </View>
-      <View>
-        <Button title="Make a task" onPress={handleCreateTask} />
-      </View>
-      <StatusBar style="auto" />
-    </View>
+          <View>
+            <Button title="log task list" onPress={handleLogTasks} />
+          </View>
+          <View>
+            <Button title="Make a task" onPress={handleCreateTask} />
+          </View>
+          <StatusBar style="auto" />
+        </View>
+      </ScrollView>
+      <Modal
+        animationType="slide"
+        transparent
+        visible={isModalVisible}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Options</Text>
+            <Pressable
+              style={[styles.button, styles.buttonClose]}
+              onPress={handleCloseModal}>
+              <Text style={styles.textStyle}>Delete, maybe?</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }
 
@@ -154,6 +234,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 50,
   },
   taskCardContainer: {
     flex: 0.8,
@@ -197,5 +278,42 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: 'white',
     fontWeight: 600,
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 22,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  textStyle: {
+    color: 'black',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  placeholder: {
+    marginTop: 100,
+    marginBottom: 100,
+  },
+  placeholderText: {
+    fontSize: 20,
   }
 });
