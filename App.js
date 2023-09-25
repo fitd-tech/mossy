@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, Button, Pressable, ScrollView, Modal, TextInput } from 'react-native';
-import { map, size, find } from 'lodash'
+import { map, size, find, orderBy } from 'lodash'
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { mossyBackendDevUrl } from './constants';
 
@@ -12,10 +13,13 @@ export default function App() {
   const [tasks, setTasks] = useState([])
   const [name, setName] = useState(null)
   const [frequency, setFrequency] = useState(null)
+  const [formType, setFormType] = useState('task')
+  const [completionDate, setCompletionDate] = useState(new Date())
   console.log('highlightButton', highlightButton)
   console.log('tasks', tasks)
   console.log('tasks?.[0]?._id.$oid', tasks?.[0]?._id.$oid)
   console.log('isModalVisible', isModalVisible)
+  console.log('completionDate', completionDate)
 
   async function fetchTasks() {
     console.log('called fetchTasks')
@@ -29,8 +33,19 @@ export default function App() {
     try {
       const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config)
       const serializedTasksResponse = await response.json()
-      setTasks(serializedTasksResponse)
       console.log('serializedTasksResponse', serializedTasksResponse || [])
+      const tasksWithMoss = map(serializedTasksResponse, task => {
+        const dateDifference = new Date() - new Date(task.latest_event_date)
+        console.log('dateDifference', dateDifference)
+        const daysDifference = Math.round(dateDifference / (1000 * 60 * 60 * 24))
+        console.log('daysDifference', daysDifference)
+        return {
+          ...task,
+          moss: task.latest_event_date ? daysDifference : null,
+        }
+      })
+      const sortedTasksWithMoss = orderBy(tasksWithMoss, 'moss', 'desc')
+      setTasks(sortedTasksWithMoss)
       result = serializedTasksResponse
     } catch (err) {
       console.log('err', err)
@@ -40,26 +55,6 @@ export default function App() {
   }
 
   useEffect(() => {
-    async function fetchBooks() {
-      const config = {
-        method: 'GET',
-        headers: {
-          "Content-Type": "application/json"
-        }
-      }
-      let result
-      try {
-        const response = await fetch(`${mossyBackendDevUrl}api/books`, config)
-        const serializedBooksResponse = await response.json()
-        console.log('serializedBooksResponse', serializedBooksResponse)
-        result = serializedBooksResponse.author
-      } catch (err) {
-        console.log('err', err)
-        result = err.message
-      }
-      setButtonLabel(result)
-    }
-    fetchBooks()
     fetchTasks()
   }, [])
 
@@ -165,6 +160,36 @@ export default function App() {
     saveTask()
   }
 
+  function handleCompleteTask() {
+    console.log('called handleCompleteTask')
+    async function completeTask() {
+      console.log('called completeTask')
+      const event = {
+        task: highlightButton,
+        date: completionDate,
+      }
+      const config = {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(event),
+      }
+      let result
+      try {
+        const response = await fetch(`${mossyBackendDevUrl}api/events`, config)
+        const serializedCreateEventResponse = await response.json()
+        console.log('serializedCreateEventResponse', serializedCreateEventResponse)
+        result = serializedCreateEventResponse
+        fetchTasks()
+      } catch (err) {
+        console.log('err', err)
+        result = err.message
+      }
+    }
+    completeTask()
+  }
+
   function handleCreate() {
     setIsModalVisible(true)
     setName('')
@@ -174,6 +199,7 @@ export default function App() {
   function handleCloseModal() {
     setHighlightButton(null)
     setIsModalVisible(false)
+    setFormType('task')
   }
 
   function handleSave() {
@@ -185,21 +211,100 @@ export default function App() {
     handleCloseModal()
   }
 
+  function handleComplete() {
+    setFormType('event')
+  }
+
+  function handleSaveComplete() {
+    handleCompleteTask()
+    handleCloseModal()
+  }
+
+  function confirmDelete() {
+    setFormType('delete')
+  }
+
   function handleDelete() {
     handleDeleteTasks()
     handleCloseModal()
   }
 
-  function handleLogTasks() {
-    async function getTaskList() {
-      const result = await fetchTasks()
-      console.log('result', result)
-    }
-    getTaskList()
-  }
-
   function handleChangeField(value, setFunc) {
     setFunc(value)
+  }
+
+  function handleChangeDate(e, date, setFunc) {
+    console.log('e', e)
+    if (e.type === 'set') {
+      console.log('e.value', e.value)
+      setFunc(date)
+    }
+  }
+
+  function renderForm() {
+    if (formType === 'event') {
+      return (
+        <>
+              <Text style={styles.modalText}>Complete Task</Text>
+                <DateTimePicker
+                  mode="date"
+                  value={completionDate}
+                  onChange={(e, date) => handleChangeDate(e, date, setCompletionDate)}
+                  style={styles.completionDatePicker}
+                />
+                <Pressable
+                  style={styles.modalButton}
+                  onPress={handleSaveComplete}>
+                  <Text style={styles.textStyle}>Save</Text>
+                </Pressable>
+              </>
+      )
+    }
+    if (formType === 'delete') {
+      return (
+        <>
+              <Text style={styles.modalText}>Confirm Delete</Text>
+                <Pressable
+                  style={styles.modalButton}
+                  onPress={handleDelete}>
+                  <Text style={styles.textStyle}>Delete</Text>
+                </Pressable>
+              </>
+      )
+    }
+    return (
+      <>
+                <Text style={styles.modalText}>Edit Task</Text>
+                <TextInput 
+                  value={name}
+                  onChangeText={value => handleChangeField(value, setName)}
+                  placeholder="Name"
+                  style={styles.textInput}
+                />
+                <TextInput 
+                  value={frequency}
+                  onChangeText={value => handleChangeField(value, setFrequency)}
+                  placeholder="Frequency"
+                  inputMode="numeric"
+                  style={styles.textInput}
+                />
+                <Pressable
+                  style={styles.modalButton}
+                  onPress={handleSave}>
+                  <Text style={styles.textStyle}>Save</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.modalButton}
+                  onPress={confirmDelete}>
+                  <Text style={styles.textStyle}>Delete</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.modalButton}
+                  onPress={handleComplete}>
+                  <Text style={styles.textStyle}>Complete</Text>
+                </Pressable>
+              </>
+    )
   }
 
   return (
@@ -214,14 +319,18 @@ export default function App() {
                   <Pressable onPress={() => handleTaskCardPress(task._id.$oid)} key={task._id.$oid}>
                   <View style={styles.taskCardHighlighted}>
                     <Text style={styles.taskTitleHighlighted}>{task.name}</Text>
-                    <Text style={styles.taskFrequencyHighlighted}>{`${task.frequency} Day(s)`}</Text>
+                    <Text style={styles.taskFrequencyHighlighted}>{`Every ${task.frequency} Day(s)`}</Text>
+                    <Text style={styles.taskFrequencyHighlighted}>{`${task.moss > 0 ? task.moss : 0} Day(s) since`}</Text>
+                    <Text style={styles.taskFrequencyHighlighted}>{`${task.moss > 0 && task.moss > task.frequency ? task.moss - task.frequency : 0 } Day(s) overdue`}</Text>
                   </View>
                 </Pressable>
                 ) : (
                   <Pressable onPress={() => handleTaskCardPress(task._id.$oid)} key={task._id.$oid}>
                     <View style={styles.taskCard}>
                       <Text style={styles.taskTitle}>{task.name}</Text>
-                      <Text style={styles.taskFrequency}>{`${task.frequency} Day(s)`}</Text>
+                      <Text style={styles.taskFrequency}>{`Every ${task.frequency} Day(s)`}</Text>
+                      <Text style={styles.taskFrequency}>{`${task.moss > 0 ? task.moss : 0} Day(s) since`}</Text>
+                      <Text style={styles.taskFrequency}>{`${task.moss > 0 && task.moss > task.frequency ? task.moss - task.frequency : 0 } Day(s) overdue`}</Text>
                     </View>
                   </Pressable>
                 ))}
@@ -246,30 +355,7 @@ export default function App() {
       >
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
-            <Text style={styles.modalText}>Edit Task</Text>
-            <TextInput 
-              value={name}
-              onChangeText={value => handleChangeField(value, setName)}
-              placeholder="Name"
-              style={styles.textInput}
-            />
-            <TextInput 
-              value={frequency}
-              onChangeText={value => handleChangeField(value, setFrequency)}
-              placeholder="Frequency"
-              inputMode="numeric"
-              style={styles.textInput}
-            />
-            <Pressable
-              style={styles.modalButton}
-              onPress={handleSave}>
-              <Text style={styles.textStyle}>Save</Text>
-            </Pressable>
-            <Pressable
-              style={styles.modalButton}
-              onPress={handleDelete}>
-              <Text style={styles.textStyle}>Delete</Text>
-            </Pressable>
+            {renderForm()}
             <Pressable
               style={styles.modalButton}
               onPress={handleCloseModal}>
@@ -382,4 +468,8 @@ const styles = StyleSheet.create({
   createButtonWrapper: {
     marginTop: 25,
   },
+  completionDatePicker: {
+    marginLeft: -10,
+    marginBottom: 25,
+  }
 });
