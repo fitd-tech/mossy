@@ -15,14 +15,9 @@ export default function App() {
   const [frequency, setFrequency] = useState(null)
   const [formType, setFormType] = useState('task')
   const [completionDate, setCompletionDate] = useState(new Date())
-  console.log('highlightButton', highlightButton)
   console.log('tasks', tasks)
-  console.log('tasks?.[0]?._id.$oid', tasks?.[0]?._id.$oid)
-  console.log('isModalVisible', isModalVisible)
-  console.log('completionDate', completionDate)
 
   async function fetchTasks() {
-    console.log('called fetchTasks')
     const config = {
       method: 'GET',
       headers: {
@@ -33,22 +28,19 @@ export default function App() {
     try {
       const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config)
       const serializedTasksResponse = await response.json()
-      console.log('serializedTasksResponse', serializedTasksResponse || [])
       const tasksWithMoss = map(serializedTasksResponse, task => {
         const dateDifference = new Date() - new Date(task.latest_event_date)
-        console.log('dateDifference', dateDifference)
         const daysDifference = Math.round(dateDifference / (1000 * 60 * 60 * 24))
-        console.log('daysDifference', daysDifference)
         return {
           ...task,
-          moss: task.latest_event_date ? daysDifference : null,
+          daysSince: task.latest_event_date ? daysDifference : null,
+          moss: task.latest_event_date ? daysDifference - task.frequency : null,
         }
       })
       const sortedTasksWithMoss = orderBy(tasksWithMoss, 'moss', 'desc')
       setTasks(sortedTasksWithMoss)
       result = serializedTasksResponse
     } catch (err) {
-      console.log('err', err)
       result = err.message
     }
     return result
@@ -60,7 +52,6 @@ export default function App() {
 
   useEffect(() => {
     if (highlightButton) {
-      console.log(`find(tasks, ['_id.$oid', highlightButton])`, find(tasks, ['_id.$oid', highlightButton]))
       const selectedTaskName = find(tasks, ['_id.$oid', highlightButton]).name
       const selectedTaskFrequency = find(tasks, ['_id.$oid', highlightButton]).frequency
       setName(selectedTaskName)
@@ -74,9 +65,7 @@ export default function App() {
   }
 
   function handleCreateTask() {
-    console.log('called handleCreateTask')
     async function postTask() {
-      console.log('called postTask')
       const taskData = {
         name,
         frequency: frequency ? Number(frequency) : 0,
@@ -92,11 +81,9 @@ export default function App() {
       try {
         const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config)
         const serializedCreateTaskResponse = await response.json()
-        console.log('serializedCreateTaskResponse', serializedCreateTaskResponse)
         result = serializedCreateTaskResponse
         fetchTasks()
       } catch (err) {
-        console.log('err', err)
         result = err.message
       }
     }
@@ -104,9 +91,7 @@ export default function App() {
   }
 
   function handleDeleteTasks() {
-    console.log('called handleDeleteTasks')
     async function deleteTasks() {
-      console.log('called deleteTask')
       const config = {
         method: 'DELETE',
         headers: {
@@ -118,11 +103,9 @@ export default function App() {
       try {
         const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config)
         const serializedDeleteTasksResponse = await response.json()
-        console.log('serializedDeleteTasksResponse', serializedDeleteTasksResponse)
         result = serializedDeleteTasksResponse
         fetchTasks()
       } catch (err) {
-        console.log('err', err)
         result = err.message
       }
     }
@@ -130,9 +113,7 @@ export default function App() {
   }
 
   function handleSaveTask() {
-    console.log('called handleSaveTask')
     async function saveTask() {
-      console.log('called saveTask')
       const task = {
         _id: highlightButton,
         name,
@@ -149,11 +130,9 @@ export default function App() {
       try {
         const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config)
         const serializedUpdateTaskResponse = await response.json()
-        console.log('serializedUpdateTaskResponse', serializedUpdateTaskResponse)
         result = serializedUpdateTaskResponse
         fetchTasks()
       } catch (err) {
-        console.log('err', err)
         result = err.message
       }
     }
@@ -161,9 +140,7 @@ export default function App() {
   }
 
   function handleCompleteTask() {
-    console.log('called handleCompleteTask')
     async function completeTask() {
-      console.log('called completeTask')
       const event = {
         task: highlightButton,
         date: completionDate,
@@ -179,11 +156,9 @@ export default function App() {
       try {
         const response = await fetch(`${mossyBackendDevUrl}api/events`, config)
         const serializedCreateEventResponse = await response.json()
-        console.log('serializedCreateEventResponse', serializedCreateEventResponse)
         result = serializedCreateEventResponse
         fetchTasks()
       } catch (err) {
-        console.log('err', err)
         result = err.message
       }
     }
@@ -234,9 +209,7 @@ export default function App() {
   }
 
   function handleChangeDate(e, date, setFunc) {
-    console.log('e', e)
     if (e.type === 'set') {
-      console.log('e.value', e.value)
       setFunc(date)
     }
   }
@@ -315,25 +288,70 @@ export default function App() {
           <View style={styles.taskCardContainer}>
             {size(tasks) ? (
               <>
-                {map(tasks, task => highlightButton === task._id.$oid ? (
+                {map(tasks, task => {
+                  const taskSelected = highlightButton === task._id.$oid
+                  const daysSinceLastEvent = task.daysSince > 0 ? task.daysSince : 0
+                  const daysOverdue = task.moss > 0 ? task.moss : 0 
+                  const isOverdue = task.moss > 0
+                  const neverCompleted = !task.moss
+                  let taskCardStyle
+                  if (taskSelected) {
+                    taskCardStyle = styles.taskCardHighlighted
+                  } else if (isOverdue) {
+                    taskCardStyle = styles.taskCardOverdue
+                  } else if (neverCompleted) {
+                    taskCardStyle = styles.taskCardNeverCompleted
+                  } else {
+                    taskCardStyle = styles.taskCard
+                  }
+                  let taskTitleStyle
+                  if (taskSelected) {
+                    taskTitleStyle = styles.taskTitleHighlighted
+                  } else if (isOverdue) {
+                    taskTitleStyle = styles.taskTitleOverdue
+                  } else if (neverCompleted) {
+                    taskTitleStyle = styles.taskTitleNeverCompleted
+                  } else {
+                    taskTitleStyle = styles.taskTitle
+                  } 
+                  let taskTextStyle
+                  if (taskSelected) {
+                    taskTextStyle = styles.taskTextHighlighted
+                  } else if (isOverdue) {
+                    taskTextStyle = styles.taskTextOverdue
+                  } else if (neverCompleted) {
+                    taskTextStyle = styles.taskTextNeverCompleted
+                  } else {
+                    taskTextStyle = styles.taskText
+                  }
+                  const daysSinceStatus = task.moss ? `${daysSinceLastEvent} Day(s) since` : 'Never completed!'
+                  let overdueStatus
+                  if (!task.moss) {
+                    overdueStatus = ''
+                  } else if (daysOverdue <= 0) {
+                    overdueStatus = ''
+                  } else {
+                    overdueStatus = `${daysOverdue} Day(s) overdue`
+                  }
+                  const titleLength = size(task.name)
+                  let titleFontSize
+                  if (titleLength < 15) {
+                    titleFontSize = styles.taskTitleFontSizeLarge
+                  } else if (titleLength >= 15 && titleLength < 25) {
+                    titleFontSize = styles.taskTitleFontSizeMedium
+                  } else {
+                    titleFontSize = styles.taskTitleFontSizeSmall
+                  }
+                  return  (
                   <Pressable onPress={() => handleTaskCardPress(task._id.$oid)} key={task._id.$oid}>
-                  <View style={styles.taskCardHighlighted}>
-                    <Text style={styles.taskTitleHighlighted}>{task.name}</Text>
-                    <Text style={styles.taskFrequencyHighlighted}>{`Every ${task.frequency} Day(s)`}</Text>
-                    <Text style={styles.taskFrequencyHighlighted}>{`${task.moss > 0 ? task.moss : 0} Day(s) since`}</Text>
-                    <Text style={styles.taskFrequencyHighlighted}>{`${task.moss > 0 && task.moss > task.frequency ? task.moss - task.frequency : 0 } Day(s) overdue`}</Text>
+                  <View style={taskCardStyle}>
+                    <Text style={[taskTitleStyle, titleFontSize]}>{task.name}</Text>
+                    <Text style={taskTextStyle}>{`Every ${task.frequency} Day(s)`}</Text>
+                    <Text style={taskTextStyle}>{daysSinceStatus}</Text>
+                    <Text style={taskTextStyle}>{overdueStatus}</Text>
                   </View>
                 </Pressable>
-                ) : (
-                  <Pressable onPress={() => handleTaskCardPress(task._id.$oid)} key={task._id.$oid}>
-                    <View style={styles.taskCard}>
-                      <Text style={styles.taskTitle}>{task.name}</Text>
-                      <Text style={styles.taskFrequency}>{`Every ${task.frequency} Day(s)`}</Text>
-                      <Text style={styles.taskFrequency}>{`${task.moss > 0 ? task.moss : 0} Day(s) since`}</Text>
-                      <Text style={styles.taskFrequency}>{`${task.moss > 0 && task.moss > task.frequency ? task.moss - task.frequency : 0 } Day(s) overdue`}</Text>
-                    </View>
-                  </Pressable>
-                ))}
+                )})}
               </>
             ) : (
               <View style={styles.placeholder}>
@@ -343,7 +361,7 @@ export default function App() {
             }
           </View>
           <View style={styles.createButtonWrapper}>
-            <Button title="Make a task" onPress={handleCreate} />
+            <Button title="Make a task" color="#55286f" onPress={handleCreate} />
           </View>
           <StatusBar style="auto" />
         </View>
@@ -383,6 +401,15 @@ const styles = StyleSheet.create({
     width: '90%',
     justifyContent: 'center',
   },
+  taskTitleFontSizeLarge: {
+    fontSize: 30,
+  },
+  taskTitleFontSizeMedium: { 
+    fontSize: 25,
+  },
+  taskTitleFontSizeSmall: {
+    fontSize: 20,
+  },
   taskCard: {
     width: 160,
     height: 160,
@@ -392,10 +419,9 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   taskTitle: {
-    fontSize: 30,
     fontWeight: 700,
   },
-  taskFrequency: {
+  taskText: {
     fontSize: 15,
     color: 'darkgrey',
     fontWeight: 600,
@@ -407,14 +433,49 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 2,
     borderRadius: 5,
-    backgroundColor: 'mediumvioletred',
+    backgroundColor: '#210B2C',
   },
   taskTitleHighlighted: {
-    fontSize: 30,
     fontWeight: 700,
     color: 'white',
   },
-  taskFrequencyHighlighted: {
+  taskTextHighlighted: {
+    fontSize: 15,
+    color: 'white',
+    fontWeight: 600,
+  },
+  taskCardOverdue: {
+    width: 160,
+    height: 160,
+    margin: 5,
+    padding: 10,
+    borderWidth: 2,
+    borderRadius: 5,
+    backgroundColor: '#55286F',
+  },
+  taskTitleOverdue: {
+    fontWeight: 700,
+    color: 'white',
+  },
+  taskTextOverdue: {
+    fontSize: 15,
+    color: 'white',
+    fontWeight: 600,
+  },
+  taskCardNeverCompleted: {
+    width: 160,
+    height: 160,
+    margin: 5,
+    padding: 10,
+    borderWidth: 2,
+    borderRadius: 5,
+    backgroundColor: '#BC96E6',
+  },
+  taskTitleNeverCompleted: {
+    fontWeight: 700,
+    color: 'white',
+  },
+  taskTextNeverCompleted: {
     fontSize: 15,
     color: 'white',
     fontWeight: 600,
