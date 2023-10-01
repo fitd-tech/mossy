@@ -1,1 +1,0 @@
-export const mossyBackendDevUrl = 'https://f507-2600-1700-7ba0-a320-e4e8-43e6-2526-2fc6.ngrok-free.app/'

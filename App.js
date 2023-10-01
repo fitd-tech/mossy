@@ -4,9 +4,10 @@ import { StyleSheet, Text, View, Button, Pressable, ScrollView, Modal, TextInput
 import { map, size, find, orderBy } from 'lodash'
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import { mossyBackendDevUrl } from './constants';
+const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL
 
 export default function App() {
+  console.log('mossyBackendDevUrl', mossyBackendDevUrl)
   const [buttonLabel, setButtonLabel] = useState('loading...')
   const [highlightButton, setHighlightButton] = useState(null)
   const [isModalVisible, setIsModalVisible] = useState(false)
