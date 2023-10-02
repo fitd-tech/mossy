@@ -26,6 +26,7 @@ export default function App() {
   const [formType, setFormType] = useState("task");
   const [completionDate, setCompletionDate] = useState(new Date());
   console.log("tasks", tasks);
+  console.log("highlightButton", highlightButton);
 
   async function fetchTasks() {
     const config = {
@@ -182,6 +183,7 @@ export default function App() {
 
   function handleCreate() {
     setIsModalVisible(true);
+    setFormType("edit");
     setName("");
     setFrequency("");
   }
@@ -190,6 +192,10 @@ export default function App() {
     setHighlightButton(null);
     setIsModalVisible(false);
     setFormType("task");
+  }
+
+  function handleEdit() {
+    setFormType("edit");
   }
 
   function handleSave() {
@@ -230,10 +236,33 @@ export default function App() {
   }
 
   function renderForm() {
+    if (formType === "edit") {
+      return (
+        <>
+          <Text style={styles.modalTitle}>Edit Task</Text>
+          <TextInput
+            value={name}
+            onChangeText={(value) => handleChangeField(value, setName)}
+            placeholder="Name"
+            style={styles.textInput}
+          />
+          <TextInput
+            value={frequency}
+            onChangeText={(value) => handleChangeField(value, setFrequency)}
+            placeholder="Frequency"
+            inputMode="numeric"
+            style={styles.textInput}
+          />
+          <Pressable style={styles.modalButton} onPress={handleSave}>
+            <Text style={styles.textStyle}>Save</Text>
+          </Pressable>
+        </>
+      );
+    }
     if (formType === "event") {
       return (
         <>
-          <Text style={styles.modalText}>Complete Task</Text>
+          <Text style={styles.modalTitle}>Complete Task</Text>
           <DateTimePicker
             mode="date"
             value={completionDate}
@@ -249,31 +278,45 @@ export default function App() {
     if (formType === "delete") {
       return (
         <>
-          <Text style={styles.modalText}>Confirm Delete</Text>
+          <Text style={styles.modalTitle}>Confirm Delete</Text>
           <Pressable style={styles.modalButton} onPress={handleDelete}>
             <Text style={styles.textStyle}>Delete</Text>
           </Pressable>
         </>
       );
     }
+    const task = find(tasks, (task) => {
+      console.log("task from find", task);
+      return task._id.$oid === highlightButton;
+    });
+    console.log("task from modal", task);
+    const daysSinceLastEvent = task?.daysSince > 0 ? task?.daysSince : 0;
+    const daysOverdue = task?.moss > 0 ? task?.moss : 0;
+    const daysSinceStatus = task?.moss
+      ? `${daysSinceLastEvent} Day(s) since`
+      : "Never completed!";
+    let overdueStatus;
+    if (!task?.moss) {
+      overdueStatus = "";
+    } else if (daysOverdue <= 0) {
+      overdueStatus = "";
+    } else {
+      overdueStatus = `${daysOverdue} Day(s) overdue`;
+    }
     return (
       <>
-        <Text style={styles.modalText}>Edit Task</Text>
-        <TextInput
-          value={name}
-          onChangeText={(value) => handleChangeField(value, setName)}
-          placeholder="Name"
-          style={styles.textInput}
-        />
-        <TextInput
-          value={frequency}
-          onChangeText={(value) => handleChangeField(value, setFrequency)}
-          placeholder="Frequency"
-          inputMode="numeric"
-          style={styles.textInput}
-        />
-        <Pressable style={styles.modalButton} onPress={handleSave}>
-          <Text style={styles.textStyle}>Save</Text>
+        <View style={styles.taskDetailsWrapper}>
+          <Text style={styles.modalTitle}>Task Details</Text>
+          <Text
+            style={styles.taskDetailsText}
+          >{`Every ${task?.frequency} Day(s)`}</Text>
+          <Text style={styles.taskDetailsText}>{daysSinceStatus}</Text>
+          {overdueStatus && (
+            <Text style={styles.taskDetailsText}>{overdueStatus}</Text>
+          )}
+        </View>
+        <Pressable style={styles.modalButton} onPress={handleEdit}>
+          <Text style={styles.textStyle}>Edit</Text>
         </Pressable>
         <Pressable style={styles.modalButton} onPress={confirmDelete}>
           <Text style={styles.textStyle}>Delete</Text>
@@ -320,27 +363,6 @@ export default function App() {
                   } else {
                     taskTitleStyle = styles.taskTitle;
                   }
-                  let taskTextStyle;
-                  if (taskSelected) {
-                    taskTextStyle = styles.taskTextHighlighted;
-                  } else if (isOverdue) {
-                    taskTextStyle = styles.taskTextOverdue;
-                  } else if (neverCompleted) {
-                    taskTextStyle = styles.taskTextNeverCompleted;
-                  } else {
-                    taskTextStyle = styles.taskText;
-                  }
-                  const daysSinceStatus = task.moss
-                    ? `${daysSinceLastEvent} Day(s) since`
-                    : "Never completed!";
-                  let overdueStatus;
-                  if (!task.moss) {
-                    overdueStatus = "";
-                  } else if (daysOverdue <= 0) {
-                    overdueStatus = "";
-                  } else {
-                    overdueStatus = `${daysOverdue} Day(s) overdue`;
-                  }
                   const titleLength = size(task.name);
                   let titleFontSize;
                   if (titleLength < 15) {
@@ -349,6 +371,17 @@ export default function App() {
                     titleFontSize = styles.taskTitleFontSizeMedium;
                   } else {
                     titleFontSize = styles.taskTitleFontSizeSmall;
+                  }
+                  const noHighlight =
+                    taskSelected || isOverdue || neverCompleted;
+                  let badgeStyles;
+                  if (noHighlight) {
+                    badgeStyles = [
+                      styles.taskCardBadge,
+                      styles.taskCardBadgeNoBorderColor,
+                    ];
+                  } else {
+                    badgeStyles = styles.taskCardBadge;
                   }
                   return (
                     <Pressable
@@ -359,11 +392,24 @@ export default function App() {
                         <Text style={[taskTitleStyle, titleFontSize]}>
                           {task.name}
                         </Text>
-                        <Text
-                          style={taskTextStyle}
-                        >{`Every ${task.frequency} Day(s)`}</Text>
-                        <Text style={taskTextStyle}>{daysSinceStatus}</Text>
-                        <Text style={taskTextStyle}>{overdueStatus}</Text>
+                        <View style={styles.badgeWrapper}>
+                          <View style={badgeStyles}>
+                            <Text style={styles.badgeTitle}>
+                              {task.frequency}
+                            </Text>
+                            <Text style={styles.badgeUom}>Days</Text>
+                          </View>
+                          <View style={badgeStyles}>
+                            <Text style={styles.badgeTitle}>
+                              {daysSinceLastEvent}
+                            </Text>
+                            <Text style={styles.badgeUom}>Days</Text>
+                          </View>
+                          <View style={badgeStyles}>
+                            <Text style={styles.badgeTitle}>{daysOverdue}</Text>
+                            <Text style={styles.badgeUom}>Days</Text>
+                          </View>
+                        </View>
                       </View>
                     </Pressable>
                   );
@@ -424,6 +470,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   taskCard: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
     width: 160,
     height: 160,
     margin: 5,
@@ -434,12 +483,15 @@ const styles = StyleSheet.create({
   taskTitle: {
     fontWeight: 700,
   },
-  taskText: {
+  taskDetailsText: {
     fontSize: 15,
     color: "darkgrey",
     fontWeight: 600,
   },
   taskCardHighlighted: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
     width: 160,
     height: 160,
     margin: 5,
@@ -458,6 +510,9 @@ const styles = StyleSheet.create({
     fontWeight: 600,
   },
   taskCardOverdue: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
     width: 160,
     height: 160,
     margin: 5,
@@ -476,6 +531,9 @@ const styles = StyleSheet.create({
     fontWeight: 600,
   },
   taskCardNeverCompleted: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
     width: 160,
     height: 160,
     margin: 5,
@@ -519,7 +577,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
   },
-  modalText: {
+  modalTitle: {
     marginBottom: 15,
     textAlign: "center",
   },
@@ -544,6 +602,42 @@ const styles = StyleSheet.create({
   },
   completionDatePicker: {
     marginLeft: -10,
+    marginBottom: 25,
+  },
+  badgeWrapper: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    height: "30%",
+  },
+  taskCardBadge: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-around",
+    alignItems: "center",
+    minWidth: "30%",
+    maxWidth: "30%",
+    height: "30%",
+    maxHeight: "100%",
+    minHeight: "100%",
+    borderWidth: 2,
+    borderRadius: 5,
+    backgroundColor: "white",
+  },
+  taskCardBadgeNoBorderColor: {
+    borderColor: "white",
+  },
+  badgeTitle: {
+    fontSize: 25,
+    fontWeight: 600,
+  },
+  badgeUom: {
+    fontSize: 8,
+  },
+  taskDetailsWrapper: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
     marginBottom: 25,
   },
 });
