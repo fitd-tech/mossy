@@ -1,68 +1,82 @@
-import { useState, useEffect } from 'react'
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Button, Pressable, ScrollView, Modal, TextInput } from 'react-native';
-import { map, size, find, orderBy } from 'lodash'
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { useState, useEffect } from "react";
+import { StatusBar } from "expo-status-bar";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Button,
+  Pressable,
+  ScrollView,
+  Modal,
+  TextInput,
+} from "react-native";
+import { map, size, find, orderBy } from "lodash";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
-const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL
+const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function App() {
-  console.log('mossyBackendDevUrl', mossyBackendDevUrl)
-  const [buttonLabel, setButtonLabel] = useState('loading...')
-  const [highlightButton, setHighlightButton] = useState(null)
-  const [isModalVisible, setIsModalVisible] = useState(false)
-  const [tasks, setTasks] = useState([])
-  const [name, setName] = useState(null)
-  const [frequency, setFrequency] = useState(null)
-  const [formType, setFormType] = useState('task')
-  const [completionDate, setCompletionDate] = useState(new Date())
-  console.log('tasks', tasks)
+  console.log("mossyBackendDevUrl", mossyBackendDevUrl);
+  const [buttonLabel, setButtonLabel] = useState("loading...");
+  const [highlightButton, setHighlightButton] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [tasks, setTasks] = useState([]);
+  const [name, setName] = useState(null);
+  const [frequency, setFrequency] = useState(null);
+  const [formType, setFormType] = useState("task");
+  const [completionDate, setCompletionDate] = useState(new Date());
+  console.log("tasks", tasks);
 
   async function fetchTasks() {
     const config = {
-      method: 'GET',
+      method: "GET",
       headers: {
-        "Content-Type": "application/json"
-      }
-    }
-    let result
+        "Content-Type": "application/json",
+      },
+    };
+    let result;
     try {
-      const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config)
-      const serializedTasksResponse = await response.json()
-      const tasksWithMoss = map(serializedTasksResponse, task => {
-        const dateDifference = new Date() - new Date(task.latest_event_date)
-        const daysDifference = Math.round(dateDifference / (1000 * 60 * 60 * 24))
+      const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config);
+      const serializedTasksResponse = await response.json();
+      const tasksWithMoss = map(serializedTasksResponse, (task) => {
+        const dateDifference = new Date() - new Date(task.latest_event_date);
+        const daysDifference = Math.round(
+          dateDifference / (1000 * 60 * 60 * 24),
+        );
         return {
           ...task,
           daysSince: task.latest_event_date ? daysDifference : null,
           moss: task.latest_event_date ? daysDifference - task.frequency : null,
-        }
-      })
-      const sortedTasksWithMoss = orderBy(tasksWithMoss, 'moss', 'desc')
-      setTasks(sortedTasksWithMoss)
-      result = serializedTasksResponse
+        };
+      });
+      const sortedTasksWithMoss = orderBy(tasksWithMoss, "moss", "desc");
+      setTasks(sortedTasksWithMoss);
+      result = serializedTasksResponse;
     } catch (err) {
-      result = err.message
+      result = err.message;
     }
-    return result
+    return result;
   }
 
   useEffect(() => {
-    fetchTasks()
-  }, [])
+    fetchTasks();
+  }, []);
 
   useEffect(() => {
     if (highlightButton) {
-      const selectedTaskName = find(tasks, ['_id.$oid', highlightButton]).name
-      const selectedTaskFrequency = find(tasks, ['_id.$oid', highlightButton]).frequency
-      setName(selectedTaskName)
-      setFrequency(String(selectedTaskFrequency))
+      const selectedTaskName = find(tasks, ["_id.$oid", highlightButton]).name;
+      const selectedTaskFrequency = find(tasks, [
+        "_id.$oid",
+        highlightButton,
+      ]).frequency;
+      setName(selectedTaskName);
+      setFrequency(String(selectedTaskFrequency));
     }
-  }, [highlightButton])
+  }, [highlightButton]);
 
   function handleTaskCardPress(id) {
-    setHighlightButton(id)
-    setIsModalVisible(true)
+    setHighlightButton(id);
+    setIsModalVisible(true);
   }
 
   function handleCreateTask() {
@@ -70,47 +84,47 @@ export default function App() {
       const taskData = {
         name,
         frequency: frequency ? Number(frequency) : 0,
-      }
+      };
       const config = {
-        method: 'POST',
+        method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(taskData),
-      }
-      let result
+      };
+      let result;
       try {
-        const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config)
-        const serializedCreateTaskResponse = await response.json()
-        result = serializedCreateTaskResponse
-        fetchTasks()
+        const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config);
+        const serializedCreateTaskResponse = await response.json();
+        result = serializedCreateTaskResponse;
+        fetchTasks();
       } catch (err) {
-        result = err.message
+        result = err.message;
       }
     }
-    postTask()
+    postTask();
   }
 
   function handleDeleteTasks() {
     async function deleteTasks() {
       const config = {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify([highlightButton]),
-      }
-      let result
+      };
+      let result;
       try {
-        const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config)
-        const serializedDeleteTasksResponse = await response.json()
-        result = serializedDeleteTasksResponse
-        fetchTasks()
+        const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config);
+        const serializedDeleteTasksResponse = await response.json();
+        result = serializedDeleteTasksResponse;
+        fetchTasks();
       } catch (err) {
-        result = err.message
+        result = err.message;
       }
     }
-    deleteTasks()
+    deleteTasks();
   }
 
   function handleSaveTask() {
@@ -119,25 +133,25 @@ export default function App() {
         _id: highlightButton,
         name,
         frequency: frequency ? Number(frequency) : 0,
-      }
+      };
       const config = {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(task),
-      }
-      let result
+      };
+      let result;
       try {
-        const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config)
-        const serializedUpdateTaskResponse = await response.json()
-        result = serializedUpdateTaskResponse
-        fetchTasks()
+        const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config);
+        const serializedUpdateTaskResponse = await response.json();
+        result = serializedUpdateTaskResponse;
+        fetchTasks();
       } catch (err) {
-        result = err.message
+        result = err.message;
       }
     }
-    saveTask()
+    saveTask();
   }
 
   function handleCompleteTask() {
@@ -145,140 +159,130 @@ export default function App() {
       const event = {
         task: highlightButton,
         date: completionDate,
-      }
+      };
       const config = {
-        method: 'POST',
+        method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(event),
-      }
-      let result
+      };
+      let result;
       try {
-        const response = await fetch(`${mossyBackendDevUrl}api/events`, config)
-        const serializedCreateEventResponse = await response.json()
-        result = serializedCreateEventResponse
-        fetchTasks()
+        const response = await fetch(`${mossyBackendDevUrl}api/events`, config);
+        const serializedCreateEventResponse = await response.json();
+        result = serializedCreateEventResponse;
+        fetchTasks();
       } catch (err) {
-        result = err.message
+        result = err.message;
       }
     }
-    completeTask()
+    completeTask();
   }
 
   function handleCreate() {
-    setIsModalVisible(true)
-    setName('')
-    setFrequency('')
+    setIsModalVisible(true);
+    setName("");
+    setFrequency("");
   }
 
   function handleCloseModal() {
-    setHighlightButton(null)
-    setIsModalVisible(false)
-    setFormType('task')
+    setHighlightButton(null);
+    setIsModalVisible(false);
+    setFormType("task");
   }
 
   function handleSave() {
     if (highlightButton) {
-      handleSaveTask()
+      handleSaveTask();
     } else {
-      handleCreateTask()
+      handleCreateTask();
     }
-    handleCloseModal()
+    handleCloseModal();
   }
 
   function handleComplete() {
-    setFormType('event')
+    setFormType("event");
   }
 
   function handleSaveComplete() {
-    handleCompleteTask()
-    handleCloseModal()
+    handleCompleteTask();
+    handleCloseModal();
   }
 
   function confirmDelete() {
-    setFormType('delete')
+    setFormType("delete");
   }
 
   function handleDelete() {
-    handleDeleteTasks()
-    handleCloseModal()
+    handleDeleteTasks();
+    handleCloseModal();
   }
 
   function handleChangeField(value, setFunc) {
-    setFunc(value)
+    setFunc(value);
   }
 
   function handleChangeDate(e, date, setFunc) {
-    if (e.type === 'set') {
-      setFunc(date)
+    if (e.type === "set") {
+      setFunc(date);
     }
   }
 
   function renderForm() {
-    if (formType === 'event') {
+    if (formType === "event") {
       return (
         <>
-              <Text style={styles.modalText}>Complete Task</Text>
-                <DateTimePicker
-                  mode="date"
-                  value={completionDate}
-                  onChange={(e, date) => handleChangeDate(e, date, setCompletionDate)}
-                  style={styles.completionDatePicker}
-                />
-                <Pressable
-                  style={styles.modalButton}
-                  onPress={handleSaveComplete}>
-                  <Text style={styles.textStyle}>Save</Text>
-                </Pressable>
-              </>
-      )
+          <Text style={styles.modalText}>Complete Task</Text>
+          <DateTimePicker
+            mode="date"
+            value={completionDate}
+            onChange={(e, date) => handleChangeDate(e, date, setCompletionDate)}
+            style={styles.completionDatePicker}
+          />
+          <Pressable style={styles.modalButton} onPress={handleSaveComplete}>
+            <Text style={styles.textStyle}>Save</Text>
+          </Pressable>
+        </>
+      );
     }
-    if (formType === 'delete') {
+    if (formType === "delete") {
       return (
         <>
-              <Text style={styles.modalText}>Confirm Delete</Text>
-                <Pressable
-                  style={styles.modalButton}
-                  onPress={handleDelete}>
-                  <Text style={styles.textStyle}>Delete</Text>
-                </Pressable>
-              </>
-      )
+          <Text style={styles.modalText}>Confirm Delete</Text>
+          <Pressable style={styles.modalButton} onPress={handleDelete}>
+            <Text style={styles.textStyle}>Delete</Text>
+          </Pressable>
+        </>
+      );
     }
     return (
       <>
-                <Text style={styles.modalText}>Edit Task</Text>
-                <TextInput 
-                  value={name}
-                  onChangeText={value => handleChangeField(value, setName)}
-                  placeholder="Name"
-                  style={styles.textInput}
-                />
-                <TextInput 
-                  value={frequency}
-                  onChangeText={value => handleChangeField(value, setFrequency)}
-                  placeholder="Frequency"
-                  inputMode="numeric"
-                  style={styles.textInput}
-                />
-                <Pressable
-                  style={styles.modalButton}
-                  onPress={handleSave}>
-                  <Text style={styles.textStyle}>Save</Text>
-                </Pressable>
-                <Pressable
-                  style={styles.modalButton}
-                  onPress={confirmDelete}>
-                  <Text style={styles.textStyle}>Delete</Text>
-                </Pressable>
-                <Pressable
-                  style={styles.modalButton}
-                  onPress={handleComplete}>
-                  <Text style={styles.textStyle}>Complete</Text>
-                </Pressable>
-              </>
-    )
+        <Text style={styles.modalText}>Edit Task</Text>
+        <TextInput
+          value={name}
+          onChangeText={(value) => handleChangeField(value, setName)}
+          placeholder="Name"
+          style={styles.textInput}
+        />
+        <TextInput
+          value={frequency}
+          onChangeText={(value) => handleChangeField(value, setFrequency)}
+          placeholder="Frequency"
+          inputMode="numeric"
+          style={styles.textInput}
+        />
+        <Pressable style={styles.modalButton} onPress={handleSave}>
+          <Text style={styles.textStyle}>Save</Text>
+        </Pressable>
+        <Pressable style={styles.modalButton} onPress={confirmDelete}>
+          <Text style={styles.textStyle}>Delete</Text>
+        </Pressable>
+        <Pressable style={styles.modalButton} onPress={handleComplete}>
+          <Text style={styles.textStyle}>Complete</Text>
+        </Pressable>
+      </>
+    );
   }
 
   return (
@@ -289,95 +293,103 @@ export default function App() {
           <View style={styles.taskCardContainer}>
             {size(tasks) ? (
               <>
-                {map(tasks, task => {
-                  const taskSelected = highlightButton === task._id.$oid
-                  const daysSinceLastEvent = task.daysSince > 0 ? task.daysSince : 0
-                  const daysOverdue = task.moss > 0 ? task.moss : 0 
-                  const isOverdue = task.moss > 0
-                  const neverCompleted = !task.moss
-                  let taskCardStyle
+                {map(tasks, (task) => {
+                  const taskSelected = highlightButton === task._id.$oid;
+                  const daysSinceLastEvent =
+                    task.daysSince > 0 ? task.daysSince : 0;
+                  const daysOverdue = task.moss > 0 ? task.moss : 0;
+                  const isOverdue = task.moss > 0;
+                  const neverCompleted = !task.moss;
+                  let taskCardStyle;
                   if (taskSelected) {
-                    taskCardStyle = styles.taskCardHighlighted
+                    taskCardStyle = styles.taskCardHighlighted;
                   } else if (isOverdue) {
-                    taskCardStyle = styles.taskCardOverdue
+                    taskCardStyle = styles.taskCardOverdue;
                   } else if (neverCompleted) {
-                    taskCardStyle = styles.taskCardNeverCompleted
+                    taskCardStyle = styles.taskCardNeverCompleted;
                   } else {
-                    taskCardStyle = styles.taskCard
+                    taskCardStyle = styles.taskCard;
                   }
-                  let taskTitleStyle
+                  let taskTitleStyle;
                   if (taskSelected) {
-                    taskTitleStyle = styles.taskTitleHighlighted
+                    taskTitleStyle = styles.taskTitleHighlighted;
                   } else if (isOverdue) {
-                    taskTitleStyle = styles.taskTitleOverdue
+                    taskTitleStyle = styles.taskTitleOverdue;
                   } else if (neverCompleted) {
-                    taskTitleStyle = styles.taskTitleNeverCompleted
+                    taskTitleStyle = styles.taskTitleNeverCompleted;
                   } else {
-                    taskTitleStyle = styles.taskTitle
-                  } 
-                  let taskTextStyle
-                  if (taskSelected) {
-                    taskTextStyle = styles.taskTextHighlighted
-                  } else if (isOverdue) {
-                    taskTextStyle = styles.taskTextOverdue
-                  } else if (neverCompleted) {
-                    taskTextStyle = styles.taskTextNeverCompleted
-                  } else {
-                    taskTextStyle = styles.taskText
+                    taskTitleStyle = styles.taskTitle;
                   }
-                  const daysSinceStatus = task.moss ? `${daysSinceLastEvent} Day(s) since` : 'Never completed!'
-                  let overdueStatus
+                  let taskTextStyle;
+                  if (taskSelected) {
+                    taskTextStyle = styles.taskTextHighlighted;
+                  } else if (isOverdue) {
+                    taskTextStyle = styles.taskTextOverdue;
+                  } else if (neverCompleted) {
+                    taskTextStyle = styles.taskTextNeverCompleted;
+                  } else {
+                    taskTextStyle = styles.taskText;
+                  }
+                  const daysSinceStatus = task.moss
+                    ? `${daysSinceLastEvent} Day(s) since`
+                    : "Never completed!";
+                  let overdueStatus;
                   if (!task.moss) {
-                    overdueStatus = ''
+                    overdueStatus = "";
                   } else if (daysOverdue <= 0) {
-                    overdueStatus = ''
+                    overdueStatus = "";
                   } else {
-                    overdueStatus = `${daysOverdue} Day(s) overdue`
+                    overdueStatus = `${daysOverdue} Day(s) overdue`;
                   }
-                  const titleLength = size(task.name)
-                  let titleFontSize
+                  const titleLength = size(task.name);
+                  let titleFontSize;
                   if (titleLength < 15) {
-                    titleFontSize = styles.taskTitleFontSizeLarge
+                    titleFontSize = styles.taskTitleFontSizeLarge;
                   } else if (titleLength >= 15 && titleLength < 25) {
-                    titleFontSize = styles.taskTitleFontSizeMedium
+                    titleFontSize = styles.taskTitleFontSizeMedium;
                   } else {
-                    titleFontSize = styles.taskTitleFontSizeSmall
+                    titleFontSize = styles.taskTitleFontSizeSmall;
                   }
-                  return  (
-                  <Pressable onPress={() => handleTaskCardPress(task._id.$oid)} key={task._id.$oid}>
-                  <View style={taskCardStyle}>
-                    <Text style={[taskTitleStyle, titleFontSize]}>{task.name}</Text>
-                    <Text style={taskTextStyle}>{`Every ${task.frequency} Day(s)`}</Text>
-                    <Text style={taskTextStyle}>{daysSinceStatus}</Text>
-                    <Text style={taskTextStyle}>{overdueStatus}</Text>
-                  </View>
-                </Pressable>
-                )})}
+                  return (
+                    <Pressable
+                      onPress={() => handleTaskCardPress(task._id.$oid)}
+                      key={task._id.$oid}
+                    >
+                      <View style={taskCardStyle}>
+                        <Text style={[taskTitleStyle, titleFontSize]}>
+                          {task.name}
+                        </Text>
+                        <Text
+                          style={taskTextStyle}
+                        >{`Every ${task.frequency} Day(s)`}</Text>
+                        <Text style={taskTextStyle}>{daysSinceStatus}</Text>
+                        <Text style={taskTextStyle}>{overdueStatus}</Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
               </>
             ) : (
               <View style={styles.placeholder}>
                 <Text style={styles.placeholderText}>Create some tasks!</Text>
               </View>
-            )
-            }
+            )}
           </View>
           <View style={styles.createButtonWrapper}>
-            <Button title="Make a task" color="#55286f" onPress={handleCreate} />
+            <Button
+              title="Make a task"
+              color="#55286f"
+              onPress={handleCreate}
+            />
           </View>
           <StatusBar style="auto" />
         </View>
       </ScrollView>
-      <Modal
-        animationType="slide"
-        transparent
-        visible={isModalVisible}
-      >
+      <Modal animationType="slide" transparent visible={isModalVisible}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             {renderForm()}
-            <Pressable
-              style={styles.modalButton}
-              onPress={handleCloseModal}>
+            <Pressable style={styles.modalButton} onPress={handleCloseModal}>
               <Text style={styles.textStyle}>Cancel</Text>
             </Pressable>
           </View>
@@ -390,22 +402,22 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 50,
   },
   taskCardContainer: {
     flex: 0.8,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    width: '90%',
-    justifyContent: 'center',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    width: "90%",
+    justifyContent: "center",
   },
   taskTitleFontSizeLarge: {
     fontSize: 30,
   },
-  taskTitleFontSizeMedium: { 
+  taskTitleFontSizeMedium: {
     fontSize: 25,
   },
   taskTitleFontSizeSmall: {
@@ -424,7 +436,7 @@ const styles = StyleSheet.create({
   },
   taskText: {
     fontSize: 15,
-    color: 'darkgrey',
+    color: "darkgrey",
     fontWeight: 600,
   },
   taskCardHighlighted: {
@@ -434,15 +446,15 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 2,
     borderRadius: 5,
-    backgroundColor: '#210B2C',
+    backgroundColor: "#210B2C",
   },
   taskTitleHighlighted: {
     fontWeight: 700,
-    color: 'white',
+    color: "white",
   },
   taskTextHighlighted: {
     fontSize: 15,
-    color: 'white',
+    color: "white",
     fontWeight: 600,
   },
   taskCardOverdue: {
@@ -452,15 +464,15 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 2,
     borderRadius: 5,
-    backgroundColor: '#55286F',
+    backgroundColor: "#55286F",
   },
   taskTitleOverdue: {
     fontWeight: 700,
-    color: 'white',
+    color: "white",
   },
   taskTextOverdue: {
     fontSize: 15,
-    color: 'white',
+    color: "white",
     fontWeight: 600,
   },
   taskCardNeverCompleted: {
@@ -470,30 +482,30 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 2,
     borderRadius: 5,
-    backgroundColor: '#BC96E6',
+    backgroundColor: "#BC96E6",
   },
   taskTitleNeverCompleted: {
     fontWeight: 700,
-    color: 'white',
+    color: "white",
   },
   taskTextNeverCompleted: {
     fontSize: 15,
-    color: 'white',
+    color: "white",
     fontWeight: 600,
   },
   centeredView: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 22,
   },
   modalView: {
     margin: 20,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 20,
     padding: 35,
-    alignItems: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -503,13 +515,13 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   textStyle: {
-    color: 'black',
-    fontWeight: 'bold',
-    textAlign: 'center',
+    color: "black",
+    fontWeight: "bold",
+    textAlign: "center",
   },
   modalText: {
     marginBottom: 15,
-    textAlign: 'center',
+    textAlign: "center",
   },
   placeholder: {
     marginTop: 100,
@@ -533,5 +545,5 @@ const styles = StyleSheet.create({
   completionDatePicker: {
     marginLeft: -10,
     marginBottom: 25,
-  }
+  },
 });
