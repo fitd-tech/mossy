@@ -10,7 +10,7 @@ import {
   Modal,
   TextInput,
 } from "react-native";
-import { map, size, find, orderBy } from "lodash";
+import { map, size, find, orderBy, noop } from "lodash";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from '@expo/vector-icons'; 
 
@@ -190,6 +190,7 @@ export default function App() {
   }
 
   function handleCloseModal() {
+    console.log('called handleCloseModal')
     setHighlightButton(null);
     setIsModalVisible(false);
     setFormType("task");
@@ -427,15 +428,22 @@ export default function App() {
           <StatusBar style="auto" />
         </View>
       </ScrollView>
+      {isModalVisible && (
+        <View style={styles.modalOverlay} />
+      )}
       <Modal animationType="slide" transparent visible={isModalVisible}>
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            {renderForm()}
-            <Pressable style={styles.modalButton} onPress={handleCloseModal}>
-              <Text style={styles.textStyle}>Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
+          <Pressable onPress={() => handleCloseModal()} style={styles.modalPressOut}>
+            <View style={styles.centeredView}>
+                <View style={styles.modalView}>
+                  <Pressable onPress={noop}>
+                    {renderForm()}
+                    <Pressable style={styles.modalButton} onPress={handleCloseModal}>
+                      <Text style={styles.textStyle}>Cancel</Text>
+                    </Pressable>
+                  </Pressable>
+                </View>
+            </View>
+          </Pressable>
       </Modal>
       <View style={styles.addTaskButtonWrapper}>
         <Pressable onPress={handleCreate}>
@@ -517,7 +525,6 @@ const styles = StyleSheet.create({
     height: 160,
     margin: 5,
     padding: 10,
-    borderWidth: 2,
     borderRadius: 5,
     backgroundColor: "#55286F",
   },
@@ -538,7 +545,6 @@ const styles = StyleSheet.create({
     height: 160,
     margin: 5,
     padding: 10,
-    borderWidth: 2,
     borderRadius: 5,
     backgroundColor: "#BC96E6",
   },
@@ -550,6 +556,21 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "white",
     fontWeight: 600,
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    minWidth: '100%',
+    minHeight: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    zIndex: 1,
+  },
+  modalPressOut: {
+    flex: 1,
+  },
+  modalTouchReset: {
+    flex: 1,
   },
   centeredView: {
     flex: 1,
