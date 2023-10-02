@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { map, size, find, orderBy } from "lodash";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { Ionicons } from '@expo/vector-icons'; 
 
 const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -423,13 +424,6 @@ export default function App() {
               </View>
             )}
           </View>
-          <View style={styles.createButtonWrapper}>
-            <Button
-              title="Make a task"
-              color="#55286f"
-              onPress={handleCreate}
-            />
-          </View>
           <StatusBar style="auto" />
         </View>
       </ScrollView>
@@ -443,6 +437,11 @@ export default function App() {
           </View>
         </View>
       </Modal>
+      <View style={styles.addTaskButtonWrapper}>
+        <Pressable onPress={handleCreate}>
+          <Ionicons name="ios-add-circle" size={48} color="#BC96E6" />
+        </Pressable>
+      </View>
     </>
   );
 }
@@ -651,4 +650,9 @@ const styles = StyleSheet.create({
     width: '100%',
     borderBottomWidth: 1,
   },
+  addTaskButtonWrapper: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+  },  
 });
