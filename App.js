@@ -330,9 +330,11 @@ export default function App() {
 
   return (
     <>
+      <View style={styles.appTitleWrapper}>
+        <Text style={styles.appTitle}>mossy</Text>
+      </View>
       <ScrollView>
         <View style={styles.container}>
-          <Text>mossy</Text>
           <View style={styles.taskCardContainer}>
             {size(tasks) ? (
               <>
@@ -451,7 +453,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 50,
   },
   taskCardContainer: {
     flex: 0.8,
@@ -639,5 +640,15 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "center",
     marginBottom: 25,
+  },
+  appTitle: {},
+  appTitleWrapper: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 50,
+    paddingBottom: 5,
+    width: '100%',
+    borderBottomWidth: 1,
   },
 });
