@@ -255,8 +255,8 @@ export default function App() {
             inputMode="numeric"
             style={styles.textInput}
           />
-          <Pressable style={styles.modalButton} onPress={handleSave}>
-            <Text style={styles.textStyle}>Save</Text>
+          <Pressable style={[styles.button, styles.primaryButtonColor]} onPress={handleSave}>
+            <Text style={styles.buttonText}>Save</Text>
           </Pressable>
         </>
       );
@@ -271,8 +271,8 @@ export default function App() {
             onChange={(e, date) => handleChangeDate(e, date, setCompletionDate)}
             style={styles.completionDatePicker}
           />
-          <Pressable style={styles.modalButton} onPress={handleSaveComplete}>
-            <Text style={styles.textStyle}>Save</Text>
+          <Pressable style={[styles.button, styles.primaryButtonColor]} onPress={handleSaveComplete}>
+            <Text style={styles.buttonText}>Save</Text>
           </Pressable>
         </>
       );
@@ -281,8 +281,8 @@ export default function App() {
       return (
         <>
           <Text style={styles.modalTitle}>Confirm Delete</Text>
-          <Pressable style={styles.modalButton} onPress={handleDelete}>
-            <Text style={styles.textStyle}>Delete</Text>
+          <Pressable style={[styles.button, styles.primaryButtonColor]} onPress={handleDelete}>
+            <Text style={styles.buttonText}>Delete</Text>
           </Pressable>
         </>
       );
@@ -317,14 +317,14 @@ export default function App() {
             <Text style={styles.taskDetailsText}>{overdueStatus}</Text>
           )}
         </View>
-        <Pressable style={styles.modalButton} onPress={handleEdit}>
-          <Text style={styles.textStyle}>Edit</Text>
+        <Pressable style={[styles.button, styles.primaryButtonColor]} onPress={handleEdit}>
+          <Text style={styles.buttonText}>Edit</Text>
         </Pressable>
-        <Pressable style={styles.modalButton} onPress={confirmDelete}>
-          <Text style={styles.textStyle}>Delete</Text>
+        <Pressable style={[styles.button, styles.primaryButtonColor]} onPress={confirmDelete}>
+          <Text style={styles.buttonText}>Delete</Text>
         </Pressable>
-        <Pressable style={styles.modalButton} onPress={handleComplete}>
-          <Text style={styles.textStyle}>Complete</Text>
+        <Pressable style={[styles.button, styles.primaryButtonColor]} onPress={handleComplete}>
+          <Text style={styles.buttonText}>Complete</Text>
         </Pressable>
       </>
     );
@@ -424,10 +424,10 @@ export default function App() {
           <Pressable onPress={() => handleCloseModal()} style={styles.modalPressOut}>
             <View style={styles.centeredView}>
                 <View style={styles.modalView}>
-                  <Pressable onPress={noop}>
+                  <Pressable onPress={noop} style={styles.modalPressReset}>
                     {renderForm()}
-                    <Pressable style={styles.modalButton} onPress={handleCloseModal}>
-                      <Text style={styles.textStyle}>Cancel</Text>
+                    <Pressable style={[styles.button, styles.secondaryButtonColor]} onPress={handleCloseModal}>
+                      <Text style={styles.buttonText}>Cancel</Text>
                     </Pressable>
                   </Pressable>
                 </View>
@@ -442,6 +442,10 @@ export default function App() {
     </>
   );
 }
+
+const color1 = "#55286F"
+const color2 = "#BC96E6"
+const color3 = "#210B2C"
 
 const styles = StyleSheet.create({
   container: {
@@ -495,8 +499,8 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 2,
     borderRadius: 5,
-    borderColor: "#210B2C",
-    backgroundColor: "#210B2C",
+    borderColor: color3,
+    backgroundColor: color3,
   },
   taskTitleHighlighted: {
     fontWeight: 700,
@@ -517,8 +521,8 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 2,
     borderRadius: 5,
-    borderColor: "#55286F",
-    backgroundColor: "#55286F",
+    borderColor: color1,
+    backgroundColor: color1,
   },
   taskTitleOverdue: {
     fontWeight: 700,
@@ -539,8 +543,8 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 2,
     borderRadius: 5,
-    borderColor: "#BC96E6",
-    backgroundColor: "#BC96E6",
+    borderColor: color2,
+    backgroundColor: color2,
   },
   taskTitleNeverCompleted: {
     fontWeight: 700,
@@ -563,8 +567,8 @@ const styles = StyleSheet.create({
   modalPressOut: {
     flex: 1,
   },
-  modalTouchReset: {
-    flex: 1,
+  modalPressReset: {
+    width: 200,
   },
   centeredView: {
     flex: 1,
@@ -586,6 +590,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+    minWidth: '60%',
   },
   textStyle: {
     color: "black",
@@ -595,6 +600,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     marginBottom: 15,
     textAlign: "center",
+    fontWeight: 700,
   },
   placeholder: {
     marginTop: 100,
@@ -609,8 +615,24 @@ const styles = StyleSheet.create({
     height: 30,
     marginBottom: 25,
   },
-  modalButton: {
+  button: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 2,
     marginBottom: 15,
+  },
+  primaryButtonColor: {
+    backgroundColor: color1,
+  },
+  secondaryButtonColor: {
+    backgroundColor: color2,
+  },
+  buttonText: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
   },
   createButtonWrapper: {
     marginTop: 25,
