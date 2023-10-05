@@ -29,6 +29,10 @@ export default function App() {
   console.log("tasks", tasks);
   console.log("highlightButton", highlightButton);
 
+  useEffect(() => {
+    console.log('getDate', completionDate.getDate())
+  }, [completionDate])
+
   async function fetchTasks() {
     const config = {
       method: "GET",
@@ -210,6 +214,7 @@ export default function App() {
   }
 
   function handleComplete() {
+    setCompletionDate(new Date())
     setFormType("event");
   }
 
@@ -262,15 +267,26 @@ export default function App() {
       );
     }
     if (formType === "event") {
+      let dateTimePickerStyles
+      if (completionDate.getDate() < 10) {
+        dateTimePickerStyles = [
+          styles.dateTimePicker,
+          styles.dateTimePickerForceCenter,
+        ]
+      } else {
+        dateTimePickerStyles = styles.dateTimePicker
+      }
       return (
         <>
           <Text style={styles.modalTitle}>Complete Task</Text>
-          <DateTimePicker
-            mode="date"
-            value={completionDate}
-            onChange={(e, date) => handleChangeDate(e, date, setCompletionDate)}
-            style={styles.completionDatePicker}
-          />
+          <View style={styles.dateWrapper}>
+            <DateTimePicker
+              mode="date"
+              value={completionDate}
+              onChange={(e, date) => handleChangeDate(e, date, setCompletionDate)}
+              style={dateTimePickerStyles}
+            />
+          </View>
           <Pressable style={[styles.button, styles.primaryButtonColor]} onPress={handleSaveComplete}>
             <Text style={styles.buttonText}>Save</Text>
           </Pressable>
@@ -320,11 +336,11 @@ export default function App() {
         <Pressable style={[styles.button, styles.primaryButtonColor]} onPress={handleEdit}>
           <Text style={styles.buttonText}>Edit</Text>
         </Pressable>
-        <Pressable style={[styles.button, styles.primaryButtonColor]} onPress={confirmDelete}>
-          <Text style={styles.buttonText}>Delete</Text>
-        </Pressable>
         <Pressable style={[styles.button, styles.primaryButtonColor]} onPress={handleComplete}>
           <Text style={styles.buttonText}>Complete</Text>
+        </Pressable>
+        <Pressable style={[styles.button, styles.primaryButtonColor]} onPress={confirmDelete}>
+          <Text style={styles.buttonText}>Delete</Text>
         </Pressable>
       </>
     );
@@ -637,9 +653,13 @@ const styles = StyleSheet.create({
   createButtonWrapper: {
     marginTop: 25,
   },
-  completionDatePicker: {
+  dateWrapper: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  dateTimePickerForceCenter: {
     marginLeft: -10,
-    marginBottom: 25,
   },
   badgeWrapper: {
     display: "flex",
