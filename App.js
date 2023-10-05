@@ -376,17 +376,6 @@ export default function App() {
                   } else {
                     titleFontSize = styles.taskTitleFontSizeSmall;
                   }
-                  const noHighlight =
-                    taskSelected || isOverdue || neverCompleted;
-                  let badgeStyles;
-                  if (noHighlight) {
-                    badgeStyles = [
-                      styles.taskCardBadge,
-                      styles.taskCardBadgeNoBorderColor,
-                    ];
-                  } else {
-                    badgeStyles = styles.taskCardBadge;
-                  }
                   return (
                     <Pressable
                       onPress={() => handleTaskCardPress(task._id.$oid)}
@@ -397,19 +386,19 @@ export default function App() {
                           {task.name}
                         </Text>
                         <View style={styles.badgeWrapper}>
-                          <View style={badgeStyles}>
+                          <View style={styles.taskCardBadge}>
                             <Text style={styles.badgeTitle}>
                               {task.frequency}
                             </Text>
                             <Text style={styles.badgeUom}>Days</Text>
                           </View>
-                          <View style={badgeStyles}>
+                          <View style={styles.taskCardBadge}>
                             <Text style={styles.badgeTitle}>
                               {daysSinceLastEvent}
                             </Text>
                             <Text style={styles.badgeUom}>Days</Text>
                           </View>
-                          <View style={badgeStyles}>
+                          <View style={styles.taskCardBadge}>
                             <Text style={styles.badgeTitle}>{daysOverdue}</Text>
                             <Text style={styles.badgeUom}>Days</Text>
                           </View>
@@ -506,6 +495,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 2,
     borderRadius: 5,
+    borderColor: "#210B2C",
     backgroundColor: "#210B2C",
   },
   taskTitleHighlighted: {
@@ -525,7 +515,9 @@ const styles = StyleSheet.create({
     height: 160,
     margin: 5,
     padding: 10,
+    borderWidth: 2,
     borderRadius: 5,
+    borderColor: "#55286F",
     backgroundColor: "#55286F",
   },
   taskTitleOverdue: {
@@ -545,7 +537,9 @@ const styles = StyleSheet.create({
     height: 160,
     margin: 5,
     padding: 10,
+    borderWidth: 2,
     borderRadius: 5,
+    borderColor: "#BC96E6",
     backgroundColor: "#BC96E6",
   },
   taskTitleNeverCompleted: {
@@ -641,15 +635,11 @@ const styles = StyleSheet.create({
     height: "30%",
     maxHeight: "100%",
     minHeight: "100%",
-    borderWidth: 2,
     borderRadius: 5,
     backgroundColor: "white",
   },
-  taskCardBadgeNoBorderColor: {
-    borderColor: "white",
-  },
   badgeTitle: {
-    fontSize: 25,
+    fontSize: 24,
     fontWeight: 600,
   },
   badgeUom: {
