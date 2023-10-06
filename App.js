@@ -10,6 +10,7 @@ import {
   Modal,
   TextInput,
   Animated,
+  ActivityIndicator,
 } from "react-native";
 import { map, size, find, orderBy, noop } from "lodash";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -28,6 +29,7 @@ export default function App() {
   const [frequency, setFrequency] = useState(null);
   const [formType, setFormType] = useState("task");
   const [completionDate, setCompletionDate] = useState(new Date());
+  const [loading, setLoading] = useState(false)
 
   async function fetchTasks() {
     const config = {
@@ -81,8 +83,15 @@ export default function App() {
     setIsModalVisible(true);
   }
 
+  function handleCloseModal() {
+    setHighlightButton(null);
+    setIsModalVisible(false);
+    setFormType("task");
+  }
+
   function handleCreateTask() {
     async function postTask() {
+      setLoading(true)
       const taskData = {
         name,
         frequency: frequency ? Number(frequency) : 0,
@@ -99,16 +108,19 @@ export default function App() {
         const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config);
         const serializedCreateTaskResponse = await response.json();
         result = serializedCreateTaskResponse;
-        fetchTasks();
+        await fetchTasks();
+        handleCloseModal()
       } catch (err) {
         result = err.message;
       }
+      setLoading(false)
     }
     postTask();
   }
 
   function handleDeleteTasks() {
     async function deleteTasks() {
+      setLoading(true)
       const config = {
         method: "DELETE",
         headers: {
@@ -121,16 +133,19 @@ export default function App() {
         const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config);
         const serializedDeleteTasksResponse = await response.json();
         result = serializedDeleteTasksResponse;
-        fetchTasks();
+        await fetchTasks();
+        handleCloseModal()
       } catch (err) {
         result = err.message;
       }
+      setLoading(false)
     }
     deleteTasks();
   }
 
   function handleSaveTask() {
     async function saveTask() {
+      setLoading(true)
       const task = {
         _id: highlightButton,
         name,
@@ -148,16 +163,19 @@ export default function App() {
         const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config);
         const serializedUpdateTaskResponse = await response.json();
         result = serializedUpdateTaskResponse;
-        fetchTasks();
+        await fetchTasks();
+        handleCloseModal()
       } catch (err) {
         result = err.message;
       }
+      setLoading(false)
     }
     saveTask();
   }
 
   function handleCompleteTask() {
     async function completeTask() {
+      setLoading(true)
       const event = {
         task: highlightButton,
         date: completionDate,
@@ -175,9 +193,11 @@ export default function App() {
         const serializedCreateEventResponse = await response.json();
         result = serializedCreateEventResponse;
         fetchTasks();
+        handleCloseModal()
       } catch (err) {
         result = err.message;
       }
+      setLoading(false)
     }
     completeTask();
   }
@@ -187,12 +207,6 @@ export default function App() {
     setFormType("edit");
     setName("");
     setFrequency("");
-  }
-
-  function handleCloseModal() {
-    setHighlightButton(null);
-    setIsModalVisible(false);
-    setFormType("task");
   }
 
   function handleEdit() {
@@ -205,7 +219,6 @@ export default function App() {
     } else {
       handleCreateTask();
     }
-    handleCloseModal();
   }
 
   function handleComplete() {
@@ -215,7 +228,6 @@ export default function App() {
 
   function handleSaveComplete() {
     handleCompleteTask();
-    handleCloseModal();
   }
 
   function confirmDelete() {
@@ -224,7 +236,6 @@ export default function App() {
 
   function handleDelete() {
     handleDeleteTasks();
-    handleCloseModal();
   }
 
   function handleChangeField(value, setFunc) {
@@ -256,7 +267,11 @@ export default function App() {
             style={styles.textInput}
           />
           <Pressable style={[styles.button, styles.primaryButtonColor]} onPress={handleSave}>
-            <Text style={styles.buttonText}>Save</Text>
+            {loading ? (
+              <ActivityIndicator size="small" />
+            ) : (
+              <Text style={styles.buttonText}>Save</Text>
+            )}
           </Pressable>
         </>
       );
@@ -283,7 +298,11 @@ export default function App() {
             />
           </View>
           <Pressable style={[styles.button, styles.primaryButtonColor]} onPress={handleSaveComplete}>
-            <Text style={styles.buttonText}>Save</Text>
+          {loading ? (
+              <ActivityIndicator size="small" />
+            ) : (
+              <Text style={styles.buttonText}>Save</Text>
+            )}
           </Pressable>
         </>
       );
@@ -293,7 +312,11 @@ export default function App() {
         <>
           <Text style={styles.modalTitle}>Confirm Delete</Text>
           <Pressable style={[styles.button, styles.primaryButtonColor]} onPress={handleDelete}>
-            <Text style={styles.buttonText}>Delete</Text>
+          {loading ? (
+              <ActivityIndicator size="small" />
+            ) : (
+              <Text style={styles.buttonText}>Delete</Text>
+            )}
           </Pressable>
         </>
       );
