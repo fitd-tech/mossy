@@ -9,15 +9,17 @@ import {
   ScrollView,
   Modal,
   TextInput,
+  Animated,
 } from "react-native";
 import { map, size, find, orderBy, noop } from "lodash";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from '@expo/vector-icons'; 
 
+import FadeTransitionOverlay from "./components/FadeTransitionOverlay";
+
 const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function App() {
-  console.log("mossyBackendDevUrl", mossyBackendDevUrl);
   const [buttonLabel, setButtonLabel] = useState("loading...");
   const [highlightButton, setHighlightButton] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -26,12 +28,6 @@ export default function App() {
   const [frequency, setFrequency] = useState(null);
   const [formType, setFormType] = useState("task");
   const [completionDate, setCompletionDate] = useState(new Date());
-  console.log("tasks", tasks);
-  console.log("highlightButton", highlightButton);
-
-  useEffect(() => {
-    console.log('getDate', completionDate.getDate())
-  }, [completionDate])
 
   async function fetchTasks() {
     const config = {
@@ -194,7 +190,6 @@ export default function App() {
   }
 
   function handleCloseModal() {
-    console.log('called handleCloseModal')
     setHighlightButton(null);
     setIsModalVisible(false);
     setFormType("task");
@@ -304,10 +299,8 @@ export default function App() {
       );
     }
     const task = find(tasks, (task) => {
-      console.log("task from find", task);
       return task._id.$oid === highlightButton;
     });
-    console.log("task from modal", task);
     const daysSinceLastEvent = task?.daysSince > 0 ? task?.daysSince : 0;
     const daysOverdue = task?.moss > 0 ? task?.moss : 0;
     const daysSinceStatus = task?.moss
@@ -433,9 +426,7 @@ export default function App() {
           <StatusBar style="auto" />
         </View>
       </ScrollView>
-      {isModalVisible && (
-        <View style={styles.modalOverlay} />
-      )}
+      <FadeTransitionOverlay isVisible={isModalVisible} />
       <Modal animationType="slide" transparent visible={isModalVisible}>
           <Pressable onPress={() => handleCloseModal()} style={styles.modalPressOut}>
             <View style={styles.centeredView}>
