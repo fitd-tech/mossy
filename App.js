@@ -21,7 +21,6 @@ import { pluralize } from "./utilities/formatStrings";
 const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function App() {
-  const [buttonLabel, setButtonLabel] = useState("loading...");
   const [highlightButton, setHighlightButton] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [tasks, setTasks] = useState([]);
@@ -29,7 +28,6 @@ export default function App() {
   const [frequency, setFrequency] = useState(null);
   const [formType, setFormType] = useState("task");
   const [completionDate, setCompletionDate] = useState(new Date());
-  console.log('highlightButton', highlightButton)
 
   async function fetchTasks() {
     const config = {
