@@ -30,6 +30,7 @@ export default function App() {
   const [formType, setFormType] = useState("task");
   const [completionDate, setCompletionDate] = useState(new Date());
   const [loading, setLoading] = useState(false)
+  console.log('tasks', tasks)
 
   async function fetchTasks() {
     const config = {
@@ -378,7 +379,7 @@ export default function App() {
                     task.daysSince > 0 ? task.daysSince : 0;
                   const daysOverdue = task.moss > 0 ? task.moss : 0;
                   const isOverdue = task.moss > 0;
-                  const neverCompleted = !task.moss;
+                  const neverCompleted = task.moss === null;
                   let taskCardStyle;
                   if (taskSelected) {
                     taskCardStyle = styles.taskCardHighlighted;
