@@ -16,6 +16,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from '@expo/vector-icons'; 
 
 import FadeTransitionOverlay from "./components/FadeTransitionOverlay";
+import { pluralize } from "./utilities/formatStrings";
 
 const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -28,6 +29,7 @@ export default function App() {
   const [frequency, setFrequency] = useState(null);
   const [formType, setFormType] = useState("task");
   const [completionDate, setCompletionDate] = useState(new Date());
+  console.log('highlightButton', highlightButton)
 
   async function fetchTasks() {
     const config = {
@@ -241,7 +243,7 @@ export default function App() {
     if (formType === "edit") {
       return (
         <>
-          <Text style={styles.modalTitle}>Edit Task</Text>
+          <Text style={styles.modalTitle}>{highlightButton ? 'Edit Task' : 'Create Task'}</Text>
           <TextInput
             value={name}
             onChangeText={(value) => handleChangeField(value, setName)}
@@ -304,7 +306,7 @@ export default function App() {
     const daysSinceLastEvent = task?.daysSince > 0 ? task?.daysSince : 0;
     const daysOverdue = task?.moss > 0 ? task?.moss : 0;
     const daysSinceStatus = task?.moss
-      ? `${daysSinceLastEvent} Day(s) since`
+      ? `${daysSinceLastEvent} ${pluralize('day', daysSinceLastEvent)} since`
       : "Never completed!";
     let overdueStatus;
     if (!task?.moss) {
@@ -312,7 +314,7 @@ export default function App() {
     } else if (daysOverdue <= 0) {
       overdueStatus = "";
     } else {
-      overdueStatus = `${daysOverdue} Day(s) overdue`;
+      overdueStatus = `${daysOverdue} ${pluralize('day', daysOverdue)} overdue`;
     }
     return (
       <>
@@ -320,7 +322,7 @@ export default function App() {
           <Text style={styles.modalTitle}>Task Details</Text>
           <Text
             style={styles.taskDetailsText}
-          >{`Every ${task?.frequency} Day(s)`}</Text>
+          >{`Every ${task?.frequency} ${pluralize('day', task?.frequency)}`}</Text>
           <Text style={styles.taskDetailsText}>{daysSinceStatus}</Text>
           {overdueStatus && (
             <Text style={styles.taskDetailsText}>{overdueStatus}</Text>
@@ -399,17 +401,17 @@ export default function App() {
                             <Text style={styles.badgeTitle}>
                               {task.frequency}
                             </Text>
-                            <Text style={styles.badgeUom}>Days</Text>
+                            <Text style={styles.badgeUom}>{pluralize('day', task.frequency, {capitalize: true})}</Text>
                           </View>
                           <View style={styles.taskCardBadge}>
                             <Text style={styles.badgeTitle}>
                               {daysSinceLastEvent}
                             </Text>
-                            <Text style={styles.badgeUom}>Days</Text>
+                            <Text style={styles.badgeUom}>{pluralize('day', daysSinceLastEvent, {capitalize: true})}</Text>
                           </View>
                           <View style={styles.taskCardBadge}>
                             <Text style={styles.badgeTitle}>{daysOverdue}</Text>
-                            <Text style={styles.badgeUom}>Days</Text>
+                            <Text style={styles.badgeUom}>{pluralize('day', daysOverdue, {capitalize: true})}</Text>
                           </View>
                         </View>
                       </View>
@@ -607,7 +609,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     marginBottom: 15,
     textAlign: "center",
-    fontWeight: 700,
+    fontWeight: 'bold',
   },
   placeholder: {
     marginTop: 100,
