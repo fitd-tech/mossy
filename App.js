@@ -25,14 +25,18 @@ export default function App() {
   const [highlightButton, setHighlightButton] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [tasks, setTasks] = useState([]);
+  const [events, setEvents] = useState([])
+  const [tags, setTags] = useState([])
   const [name, setName] = useState(null);
   const [frequency, setFrequency] = useState(null);
   const [formType, setFormType] = useState("task");
   const [completionDate, setCompletionDate] = useState(new Date());
   const [loading, setLoading] = useState(false)
-  console.log('tasks', tasks)
+  const [viewType, setViewType] = useState('tasks')
+  console.log('viewType', viewType)
+  console.log('events', events)
 
-  async function fetchTasks() {
+  async function fetchTasks() { 
     const config = {
       method: "GET",
       headers: {
@@ -63,9 +67,34 @@ export default function App() {
     return result;
   }
 
+  async function fetchEvents() {
+    const config = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    let result;
+    try {
+      const response = await fetch(`${mossyBackendDevUrl}api/events`, config);
+      const serializedTasksResponse = await response.json();
+      setTasks(serializedTasksResponse);
+      result = serializedTasksResponse;
+    } catch (err) {
+      result = err.message;
+    }
+    return result;
+  }
+
   useEffect(() => {
-    fetchTasks();
-  }, []);
+    if (viewType === 'tasks') {
+      fetchTasks();
+    } else if (viewType === 'events') {
+      fetchEvents()
+    } else if (viewType === 'tags') {
+      noop
+    }
+  }, [viewType]);
 
   useEffect(() => {
     if (highlightButton) {
@@ -249,7 +278,61 @@ export default function App() {
     }
   }
 
+  function handleOpenMenu() {
+    setFormType('menu')
+    setIsModalVisible(true)
+  }
+
+  function handleViewTasks() {
+    setViewType('tasks')
+    setIsModalVisible(false)
+  }
+
+  function handleViewEvents() {
+    setViewType('events')
+    setIsModalVisible(false)
+  }
+
+  function handleViewTags() {
+    setViewType('tags')
+    setIsModalVisible(false)
+  }
+
+  function handleViewSettings() {
+    setFormType('settings')
+  }
+
   function renderForm() {
+    if (formType === 'menu') {
+      return (
+        <>
+        <View style={styles.taskDetailsWrapper}>
+          <Text style={styles.modalTitle}>Menu</Text>
+        </View>
+        <Pressable style={[styles.button, styles.primaryButtonColor]} onPress={handleViewTasks}>
+          <Text style={styles.buttonText}>Tasks</Text>
+        </Pressable>
+        <Pressable style={[styles.button, styles.primaryButtonColor]} onPress={handleViewEvents}>
+          <Text style={styles.buttonText}>Events</Text>
+        </Pressable>
+        <Pressable style={[styles.button, styles.primaryButtonColor]} onPress={handleViewTags}>
+          <Text style={styles.buttonText}>Tags</Text>
+        </Pressable>
+        <Pressable style={[styles.button, styles.primaryButtonColor]} onPress={handleViewSettings}>
+          <Text style={styles.buttonText}>Settings</Text>
+        </Pressable>
+      </>
+      )
+    }
+    if (formType === 'settings') {
+      return (
+        <>
+          <View style={styles.taskDetailsWrapper}>
+            <Text style={styles.modalTitle}>Settings</Text>
+          </View>
+        </>
+      )
+    }
     if (formType === "edit") {
       return (
         <>
@@ -363,93 +446,153 @@ export default function App() {
     );
   }
 
-  return (
-    <>
-      <View style={styles.appTitleWrapper}>
-        <Text style={styles.appTitle}>mossy</Text>
-      </View>
-      <ScrollView>
-        <View style={styles.container}>
-          <View style={styles.taskCardContainer}>
-            {size(tasks) ? (
-              <>
-                {map(tasks, (task) => {
-                  const taskSelected = highlightButton === task._id.$oid;
-                  const daysSinceLastEvent =
-                    task.daysSince > 0 ? task.daysSince : 0;
-                  const daysOverdue = task.moss > 0 ? task.moss : 0;
-                  const isOverdue = task.moss > 0;
-                  const neverCompleted = task.moss === null;
-                  let taskCardStyle;
-                  if (taskSelected) {
-                    taskCardStyle = styles.taskCardHighlighted;
-                  } else if (isOverdue) {
-                    taskCardStyle = styles.taskCardOverdue;
-                  } else if (neverCompleted) {
-                    taskCardStyle = styles.taskCardNeverCompleted;
-                  } else {
-                    taskCardStyle = styles.taskCard;
-                  }
-                  let taskTitleStyle;
-                  if (taskSelected) {
-                    taskTitleStyle = styles.taskTitleHighlighted;
-                  } else if (isOverdue) {
-                    taskTitleStyle = styles.taskTitleOverdue;
-                  } else if (neverCompleted) {
-                    taskTitleStyle = styles.taskTitleNeverCompleted;
-                  } else {
-                    taskTitleStyle = styles.taskTitle;
-                  }
-                  const titleLength = size(task.name);
-                  let titleFontSize;
-                  if (titleLength < 15) {
-                    titleFontSize = styles.taskTitleFontSizeLarge;
-                  } else if (titleLength >= 15 && titleLength < 25) {
-                    titleFontSize = styles.taskTitleFontSizeMedium;
-                  } else {
-                    titleFontSize = styles.taskTitleFontSizeSmall;
-                  }
-                  return (
-                    <Pressable
-                      onPress={() => handleTaskCardPress(task._id.$oid)}
-                      key={task._id.$oid}
-                    >
-                      <View style={taskCardStyle}>
-                        <Text style={[taskTitleStyle, titleFontSize]}>
-                          {task.name}
-                        </Text>
-                        <View style={styles.badgeWrapper}>
-                          <View style={styles.taskCardBadge}>
-                            <Text style={styles.badgeTitle}>
-                              {task.frequency}
-                            </Text>
-                            <Text style={styles.badgeUom}>{pluralize('day', task.frequency, {capitalize: true})}</Text>
-                          </View>
-                          <View style={styles.taskCardBadge}>
-                            <Text style={styles.badgeTitle}>
-                              {daysSinceLastEvent}
-                            </Text>
-                            <Text style={styles.badgeUom}>{pluralize('day', daysSinceLastEvent, {capitalize: true})}</Text>
-                          </View>
-                          <View style={styles.taskCardBadge}>
-                            <Text style={styles.badgeTitle}>{daysOverdue}</Text>
-                            <Text style={styles.badgeUom}>{pluralize('day', daysOverdue, {capitalize: true})}</Text>
+  function renderView() {
+    if (viewType === 'tasks') {
+      return (
+        <ScrollView>
+          <View style={styles.container}>
+            <View style={styles.taskCardContainer}>
+              {size(tasks) ? (
+                <>
+                  {map(tasks, (task) => {
+                    const taskSelected = highlightButton === task._id.$oid;
+                    const daysSinceLastEvent =
+                      task.daysSince > 0 ? task.daysSince : 0;
+                    const daysOverdue = task.moss > 0 ? task.moss : 0;
+                    const isOverdue = task.moss > 0;
+                    const neverCompleted = task.moss === null;
+                    let taskCardStyle;
+                    if (taskSelected) {
+                      taskCardStyle = styles.taskCardHighlighted;
+                    } else if (isOverdue) {
+                      taskCardStyle = styles.taskCardOverdue;
+                    } else if (neverCompleted) {
+                      taskCardStyle = styles.taskCardNeverCompleted;
+                    } else {
+                      taskCardStyle = styles.taskCard;
+                    }
+                    let taskTitleStyle;
+                    if (taskSelected) {
+                      taskTitleStyle = styles.taskTitleHighlighted;
+                    } else if (isOverdue) {
+                      taskTitleStyle = styles.taskTitleOverdue;
+                    } else if (neverCompleted) {
+                      taskTitleStyle = styles.taskTitleNeverCompleted;
+                    } else {
+                      taskTitleStyle = styles.taskTitle;
+                    }
+                    const titleLength = size(task.name);
+                    let titleFontSize;
+                    if (titleLength < 15) {
+                      titleFontSize = styles.taskTitleFontSizeLarge;
+                    } else if (titleLength >= 15 && titleLength < 25) {
+                      titleFontSize = styles.taskTitleFontSizeMedium;
+                    } else {
+                      titleFontSize = styles.taskTitleFontSizeSmall;
+                    }
+                    return (
+                      <Pressable
+                        onPress={() => handleTaskCardPress(task._id.$oid)}
+                        key={task._id.$oid}
+                      >
+                        <View style={taskCardStyle}>
+                          <Text style={[taskTitleStyle, titleFontSize]}>
+                            {task.name}
+                          </Text>
+                          <View style={styles.badgeWrapper}>
+                            <View style={styles.taskCardBadge}>
+                              <Text style={styles.badgeTitle}>
+                                {task.frequency}
+                              </Text>
+                              <Text style={styles.badgeUom}>{pluralize('day', task.frequency, {capitalize: true})}</Text>
+                            </View>
+                            <View style={styles.taskCardBadge}>
+                              <Text style={styles.badgeTitle}>
+                                {daysSinceLastEvent}
+                              </Text>
+                              <Text style={styles.badgeUom}>{pluralize('day', daysSinceLastEvent, {capitalize: true})}</Text>
+                            </View>
+                            <View style={styles.taskCardBadge}>
+                              <Text style={styles.badgeTitle}>{daysOverdue}</Text>
+                              <Text style={styles.badgeUom}>{pluralize('day', daysOverdue, {capitalize: true})}</Text>
+                            </View>
                           </View>
                         </View>
-                      </View>
-                    </Pressable>
+                      </Pressable>
+                    );
+                  })}
+                </>
+              ) : (
+                <View style={styles.placeholder}>
+                  <Text style={styles.placeholderText}>Create some tasks!</Text>
+                </View>
+              )}
+            </View>
+            <StatusBar style="auto" />
+          </View>
+        </ScrollView>
+      )
+    }
+    if (viewType === 'events') {
+      return (
+        <ScrollView>
+        <View style={styles.container}>
+          <View style={styles.eventCardContainer}>
+            {size(events) ? (
+              <>
+                {map(events, (event) => {
+                  return (
+                    <View>
+                      <Text>Event</Text>
+                    </View>
                   );
                 })}
               </>
             ) : (
               <View style={styles.placeholder}>
-                <Text style={styles.placeholderText}>Create some tasks!</Text>
+                <Text style={styles.placeholderText}>Create some events!</Text>
               </View>
             )}
           </View>
           <StatusBar style="auto" />
         </View>
       </ScrollView>
+      )
+    }
+    if (viewType === 'tags') {
+      return (
+        <ScrollView>
+        <View style={styles.container}>
+          <View style={styles.eventCardContainer}>
+            {size(tags) ? (
+              <>
+                {map(tags, (tag) => {
+                  return (
+                    <View>
+                      <Text>Tag</Text>
+                    </View>
+                  );
+                })}
+              </>
+            ) : (
+              <View style={styles.placeholder}>
+                <Text style={styles.placeholderText}>Create some tags!</Text>
+              </View>
+            )}
+          </View>
+          <StatusBar style="auto" />
+        </View>
+      </ScrollView>
+      )
+    }
+  }
+
+  return (
+    <>
+      <View style={styles.appTitleWrapper}>
+        <Text style={styles.appTitle}>mossy</Text>
+      </View>
+      {renderView()}
       <FadeTransitionOverlay isVisible={isModalVisible} />
       <Modal animationType="slide" transparent visible={isModalVisible}>
           <Pressable onPress={() => handleCloseModal()} style={styles.modalPressOut}>
@@ -465,6 +608,11 @@ export default function App() {
             </View>
           </Pressable>
       </Modal>
+      <View style={styles.menuButtonWrapper}>
+        <Pressable onPress={handleOpenMenu}>
+          <Ionicons name="menu" size={48} color="#BC96E6" />
+        </Pressable>
+      </View>
       <View style={styles.addTaskButtonWrapper}>
         <Pressable onPress={handleCreate}>
           <Ionicons name="ios-add-circle" size={48} color="#BC96E6" />
@@ -492,6 +640,8 @@ const styles = StyleSheet.create({
     width: "90%",
     justifyContent: "center",
   },
+  eventCardContainer: {},
+  tagCardContainer: {},
   taskTitleFontSizeLarge: {
     fontSize: 30,
   },
@@ -718,6 +868,11 @@ const styles = StyleSheet.create({
     width: '100%',
     borderBottomWidth: 1,
   },
+  menuButtonWrapper: {
+    position: 'absolute',
+    bottom: 30,
+    left: 30,
+  },  
   addTaskButtonWrapper: {
     position: 'absolute',
     bottom: 30,
