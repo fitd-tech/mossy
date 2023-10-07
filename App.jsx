@@ -32,6 +32,8 @@ import { pluralize } from './utilities/formatStrings';
 import appStyles from './appStyles.js';
 import TagsList from './components/TagsList';
 import TagsSelectList from './components/TagsSelectList';
+import TasksList from './components/TasksList';
+import EventsList from './components/EventsList';
 
 const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -853,175 +855,34 @@ export default function App() {
   function renderView() {
     if (viewType === 'tasks') {
       return (
-        <ScrollView
-          refreshControl={
-            <RefreshControl refreshing={fetchingTasks} onRefresh={fetchTasks} />
-          }
-        >
-          <View style={appStyles.container}>
-            <View style={appStyles.taskCardContainer}>
-              {size(tasks) ? (
-                <>
-                  {map(tasks, (task) => {
-                    const taskSelected = highlightButton === task._id.$oid;
-                    const daysSinceLastEvent =
-                      task.daysSince > 0 ? task.daysSince : 0;
-                    const daysOverdue = task.moss > 0 ? task.moss : 0;
-                    const isOverdue = task.moss > 0;
-                    const neverCompleted = task.moss === null;
-                    let taskCardStyle;
-                    if (taskSelected) {
-                      taskCardStyle = appStyles.taskCardHighlighted;
-                    } else if (isOverdue) {
-                      taskCardStyle = appStyles.taskCardOverdue;
-                    } else if (neverCompleted) {
-                      taskCardStyle = appStyles.taskCardNeverCompleted;
-                    } else {
-                      taskCardStyle = appStyles.taskCard;
-                    }
-                    let taskTitleStyle;
-                    if (taskSelected) {
-                      taskTitleStyle = appStyles.taskTitleHighlighted;
-                    } else if (isOverdue) {
-                      taskTitleStyle = appStyles.taskTitleOverdue;
-                    } else if (neverCompleted) {
-                      taskTitleStyle = appStyles.taskTitleNeverCompleted;
-                    } else {
-                      taskTitleStyle = appStyles.taskTitle;
-                    }
-                    const titleLength = size(task.name);
-                    let titleFontSize;
-                    if (titleLength < 15) {
-                      titleFontSize = appStyles.taskTitleFontSizeLarge;
-                    } else if (titleLength >= 15 && titleLength < 25) {
-                      titleFontSize = appStyles.taskTitleFontSizeMedium;
-                    } else {
-                      titleFontSize = appStyles.taskTitleFontSizeSmall;
-                    }
-                    return (
-                      <Pressable
-                        onPress={() => handleTaskCardPress(task._id.$oid)}
-                        key={task._id.$oid}
-                      >
-                        <View style={taskCardStyle}>
-                          <Text style={[taskTitleStyle, titleFontSize]}>
-                            {task.name}
-                          </Text>
-                          <View style={appStyles.badgeWrapper}>
-                            <View style={appStyles.taskCardBadge}>
-                              <Text style={appStyles.badgeTitle}>
-                                {task.frequency}
-                              </Text>
-                              <Text style={appStyles.badgeUom}>
-                                {pluralize('day', task.frequency, {
-                                  capitalize: true,
-                                })}
-                              </Text>
-                            </View>
-                            <View style={appStyles.taskCardBadge}>
-                              <Text style={appStyles.badgeTitle}>
-                                {daysSinceLastEvent}
-                              </Text>
-                              <Text style={appStyles.badgeUom}>
-                                {pluralize('day', daysSinceLastEvent, {
-                                  capitalize: true,
-                                })}
-                              </Text>
-                            </View>
-                            <View style={appStyles.taskCardBadge}>
-                              <Text style={appStyles.badgeTitle}>
-                                {daysOverdue}
-                              </Text>
-                              <Text style={appStyles.badgeUom}>
-                                {pluralize('day', daysOverdue, {
-                                  capitalize: true,
-                                })}
-                              </Text>
-                            </View>
-                          </View>
-                        </View>
-                      </Pressable>
-                    );
-                  })}
-                </>
-              ) : (
-                <View style={appStyles.placeholder}>
-                  <Text style={appStyles.placeholderText}>
-                    Create some tasks!
-                  </Text>
-                </View>
-              )}
-            </View>
-            <StatusBar style="auto" />
-          </View>
-        </ScrollView>
+        <TasksList
+          tasks={tasks}
+          fetchingTasks={fetchingTasks}
+          fetchTasks={fetchTasks}
+          highlightButton={highlightButton}
+          onPress={handleTaskCardPress}
+        />
       );
     }
     if (viewType === 'events') {
       return (
-        <ScrollView
-          refreshControl={
-            <RefreshControl
-              refreshing={fetchingEvents}
-              onRefresh={fetchEvents}
-            />
-          }
-        >
-          <View style={appStyles.container}>
-            <View style={appStyles.eventCardContainer}>
-              {size(events) ? (
-                <>
-                  {map(events, (event) => {
-                    console.log('event.task', event.task);
-                    let cardStyles;
-                    if (event._id.$oid === highlightButton) {
-                      cardStyles = [
-                        appStyles.eventCard,
-                        appStyles.eventCardHighlightedColor,
-                      ];
-                    } else {
-                      cardStyles = [
-                        appStyles.eventCard,
-                        appStyles.eventCardStandardColor,
-                      ];
-                    }
-                    return (
-                      <Pressable
-                        key={event._id.$oid}
-                        style={cardStyles}
-                        onPress={() => handleEventCardPress(event._id.$oid)}
-                      >
-                        <Text style={appStyles.eventCardTitle}>
-                          {truncate(event.task, { length: 40 })}
-                        </Text>
-                        <Text style={appStyles.eventCardText}>
-                          {new Date(event.date).toLocaleDateString()}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </>
-              ) : (
-                <View style={appStyles.placeholder}>
-                  <Text style={appStyles.placeholderText}>
-                    Create some events!
-                  </Text>
-                </View>
-              )}
-            </View>
-            <StatusBar style="auto" />
-          </View>
-        </ScrollView>
+        <EventsList
+          events={events}
+          fetchingEvents={fetchingEvents}
+          fetchEvents={fetchEvents}
+          highlightButton={highlightButton}
+          onPress={handleEventCardPress}
+        />
       );
     }
     if (viewType === 'tags') {
       return (
         <TagsList
           tags={tags}
-          highlightButton={highlightButton}
-          onPress={handleTagCardPress}
           fetchingTags={fetchingTags}
           fetchTags={fetchTags}
+          highlightButton={highlightButton}
+          onPress={handleTagCardPress}
         />
       );
     }
