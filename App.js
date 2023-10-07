@@ -13,12 +13,25 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { map, size, find, orderBy, noop, truncate } from 'lodash';
+import {
+  map,
+  size,
+  find,
+  orderBy,
+  noop,
+  truncate,
+  includes,
+  reject,
+} from 'lodash';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
 
 import FadeTransitionOverlay from './components/FadeTransitionOverlay';
 import { pluralize } from './utilities/formatStrings';
+import appStyles from './appStyles.js';
+import TagsList from './components/TagsList';
+import TagsSelectList from './components/TagsSelectList';
 
 const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -29,18 +42,25 @@ export default function App() {
   const [events, setEvents] = useState([]);
   const [tags, setTags] = useState([]);
   const [name, setName] = useState(null);
+  const [description, setDescription] = useState('');
   const [frequency, setFrequency] = useState(null);
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [parentTag, setParentTag] = useState(null);
   const [formType, setFormType] = useState('task');
   const [completionDate, setCompletionDate] = useState(new Date());
-  const [fetching, setFetching] = useState(false);
+  const [fetchingTasks, setFetchingTasks] = useState(false);
+  const [fetchingEvents, setFetchingEvents] = useState(false);
+  const [fetchingTags, setFetchingTags] = useState(false);
   const [loading, setLoading] = useState(false);
   const [viewType, setViewType] = useState('tasks');
   console.log('viewType', viewType);
   console.log('events', events);
   console.log('loading', loading);
+  console.log('parentTag', parentTag);
+  console.log('selectedTags', selectedTags);
 
   async function fetchTasks() {
-    setFetching(true);
+    setFetchingTasks(true);
     const config = {
       method: 'GET',
       headers: {
@@ -68,12 +88,12 @@ export default function App() {
     } catch (err) {
       result = err.message;
     }
-    setFetching(false);
+    setFetchingTasks(false);
     return result;
   }
 
   async function fetchEvents() {
-    setFetching(true);
+    setFetchingEvents(true);
     const config = {
       method: 'GET',
       headers: {
@@ -92,7 +112,28 @@ export default function App() {
     } catch (err) {
       result = err.message;
     }
-    setFetching(false);
+    setFetchingEvents(false);
+    return result;
+  }
+
+  async function fetchTags() {
+    setFetchingTags(true);
+    const config = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
+    let result;
+    try {
+      const response = await fetch(`${mossyBackendDevUrl}api/tags`, config);
+      const serializedTagsResponse = await response.json();
+      setTags(serializedTagsResponse);
+      result = serializedTagsResponse;
+    } catch (err) {
+      result = err.message;
+    }
+    setFetchingTags(false);
     return result;
   }
 
@@ -102,22 +143,29 @@ export default function App() {
     } else if (viewType === 'events') {
       fetchEvents();
     } else if (viewType === 'tags') {
-      noop;
+      fetchTags();
     }
   }, [viewType]);
 
   useEffect(() => {
     if (highlightButton && viewType === 'tasks') {
       const task = find(tasks, ['_id.$oid', highlightButton]);
+      console.log('task', task);
       setName(task.name);
       setFrequency(String(task.frequency));
+      setSelectedTags(map(task.tags || [], (tag) => tag.$oid));
     } else if (highlightButton && viewType === 'events') {
       const event = find(events, ['_id.$oid', highlightButton]);
       setCompletionDate(new Date(event.date));
+    } else if (highlightButton && viewType === 'tags') {
+      const tag = find(tags, ['_id.$oid', highlightButton]);
+      setName(tag.name);
+      setParentTag(tag.parent_tag?.$oid);
     }
   }, [highlightButton]);
 
   function handleTaskCardPress(id) {
+    fetchTags();
     setHighlightButton(id);
     setFormType('taskDetails');
     setIsModalVisible(true);
@@ -129,18 +177,38 @@ export default function App() {
     setIsModalVisible(true);
   }
 
+  function handleTagCardPress(id) {
+    setHighlightButton(id);
+    setFormType('editTag');
+    setIsModalVisible(true);
+  }
+
+  function handleTagSelectCardPress(id) {
+    console.log('id from handleTagSelectCardPress', id);
+    setSelectedTags((selectedTagsPrevious) => {
+      let newSelectedTags;
+      if (includes(selectedTagsPrevious, id)) {
+        newSelectedTags = reject(selectedTagsPrevious, (tag) => tag === id);
+      } else {
+        newSelectedTags = [...selectedTagsPrevious, id];
+      }
+      return newSelectedTags;
+    });
+  }
+
   function handleCloseModal() {
     setIsModalVisible(false);
     setHighlightButton(null);
     setFormType(null);
   }
 
-  function handleCreateTask() {
+  function createTask() {
     async function postTask() {
       setLoading(true);
       const taskData = {
         name,
         frequency: frequency ? Number(frequency) : 0,
+        tags: selectedTags,
       };
       const config = {
         method: 'POST',
@@ -164,8 +232,37 @@ export default function App() {
     postTask();
   }
 
-  function handleDeleteTasks() {
-    async function deleteTasks() {
+  function createTag() {
+    async function postTag() {
+      setLoading(true);
+      const tagData = {
+        name,
+        parent_tag: parentTag === 'placeholder' ? null : parentTag,
+      };
+      const config = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(tagData),
+      };
+      let result;
+      try {
+        const response = await fetch(`${mossyBackendDevUrl}api/tags`, config);
+        const serializedCreateTagResponse = await response.json();
+        result = serializedCreateTagResponse;
+        await fetchTags();
+        handleCloseModal();
+      } catch (err) {
+        result = err.message;
+      }
+      setLoading(false);
+    }
+    postTag();
+  }
+
+  function deleteTasks() {
+    async function _deleteTasks() {
       setLoading(true);
       const config = {
         method: 'DELETE',
@@ -186,11 +283,11 @@ export default function App() {
       }
       setLoading(false);
     }
-    deleteTasks();
+    _deleteTasks();
   }
 
-  function handleDeleteEvents() {
-    async function deleteEvents() {
+  function deleteEvents() {
+    async function _deleteEvents() {
       setLoading(true);
       const config = {
         method: 'DELETE',
@@ -211,17 +308,44 @@ export default function App() {
       }
       setLoading(false);
     }
-    deleteEvents();
+    _deleteEvents();
   }
 
-  function handleSaveTask() {
-    async function saveTask() {
+  function deleteTags() {
+    async function _deleteTags() {
+      setLoading(true);
+      const config = {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify([highlightButton]),
+      };
+      let result;
+      try {
+        const response = await fetch(`${mossyBackendDevUrl}api/tags`, config);
+        const serializedDeleteTagsResponse = await response.json();
+        result = serializedDeleteTagsResponse;
+        await fetchTags();
+        handleCloseModal();
+      } catch (err) {
+        result = err.message;
+      }
+      setLoading(false);
+    }
+    _deleteTags();
+  }
+
+  function saveTask() {
+    async function updateTask() {
       setLoading(true);
       const task = {
         _id: highlightButton,
         name,
         frequency: frequency ? Number(frequency) : 0,
+        tags: selectedTags,
       };
+      console.log('task from saveTask', task);
       const config = {
         method: 'PATCH',
         headers: {
@@ -241,11 +365,11 @@ export default function App() {
       }
       setLoading(false);
     }
-    saveTask();
+    updateTask();
   }
 
-  function handleCompleteTask() {
-    async function completeTask() {
+  function completeTask() {
+    async function _completeTask() {
       setLoading(true);
       const event = {
         task: highlightButton,
@@ -270,11 +394,11 @@ export default function App() {
       }
       setLoading(false);
     }
-    completeTask();
+    _completeTask();
   }
 
-  function handleSaveEvent() {
-    async function saveEvent() {
+  function saveEvent() {
+    async function updateEvent() {
       setLoading(true);
       const event = find(events, ['_id.$oid', highlightButton]);
       const updatedEvent = {
@@ -301,25 +425,70 @@ export default function App() {
       }
       setLoading(false);
     }
-    saveEvent();
+    updateEvent();
+  }
+
+  function saveTag() {
+    async function updateTag() {
+      setLoading(true);
+      const tag = {
+        _id: highlightButton,
+        name,
+        parent_tag: parentTag === 'plcaeholder' ? null : parentTag,
+      };
+      const config = {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(tag),
+      };
+      let result;
+      try {
+        const response = await fetch(`${mossyBackendDevUrl}api/tags`, config);
+        const serializedUpdateTagResponse = await response.json();
+        result = serializedUpdateTagResponse;
+        fetchTags();
+        handleCloseModal();
+      } catch (err) {
+        result = err.message;
+      }
+      setLoading(false);
+    }
+    updateTag();
   }
 
   function handleCreate() {
+    if (viewType === 'tasks') {
+      fetchTags();
+      setName('');
+      setFrequency('');
+      setFormType('editTask');
+    } else if (viewType === 'tags') {
+      setName('');
+      setParentTag(null);
+      setFormType('editTag');
+    }
     setIsModalVisible(true);
-    setFormType('editTask');
-    setName('');
-    setFrequency('');
   }
 
   function handleEdit() {
     setFormType('editTask');
   }
 
-  function handleSave() {
+  function handleSaveTask() {
     if (highlightButton) {
-      handleSaveTask();
+      saveTask();
     } else {
-      handleCreateTask();
+      createTask();
+    }
+  }
+
+  function handleSaveTag() {
+    if (highlightButton) {
+      saveTag();
+    } else {
+      createTag();
     }
   }
 
@@ -329,7 +498,7 @@ export default function App() {
   }
 
   function handleSaveComplete() {
-    handleCompleteTask();
+    completeTask();
   }
 
   function confirmDelete() {
@@ -338,9 +507,11 @@ export default function App() {
 
   function handleDelete() {
     if (viewType === 'tasks') {
-      handleDeleteTasks();
+      deleteTasks();
     } else if (viewType === 'events') {
-      handleDeleteEvents();
+      deleteEvents();
+    } else if (viewType === 'tags') {
+      deleteTags();
     }
   }
 
@@ -382,45 +553,52 @@ export default function App() {
     let dateTimePickerStyles;
     if (date.getDate() < 10) {
       dateTimePickerStyles = [
-        styles.dateTimePicker,
-        styles.dateTimePickerForceCenter,
+        appStyles.dateTimePicker,
+        appStyles.dateTimePickerForceCenter,
       ];
     } else {
-      dateTimePickerStyles = styles.dateTimePicker;
+      dateTimePickerStyles = appStyles.dateTimePicker;
     }
     return dateTimePickerStyles;
   }
 
   function renderForm() {
     if (formType === 'menu') {
+      function generateButtonStyles(buttonView) {
+        if (buttonView === viewType) {
+          return [appStyles.button, appStyles.secondaryButtonColor];
+        } else {
+          return [appStyles.button, appStyles.primaryButtonColor];
+        }
+      }
       return (
         <>
-          <View style={styles.taskDetailsWrapper}>
-            <Text style={styles.modalTitle}>Menu</Text>
+          <View style={appStyles.taskDetailsWrapper}>
+            <Text style={appStyles.modalTitle}>Menu</Text>
           </View>
           <Pressable
-            style={[styles.button, styles.primaryButtonColor]}
+            style={generateButtonStyles('tasks')}
             onPress={handleViewTasks}
           >
-            <Text style={styles.buttonText}>Tasks</Text>
+            <Text style={appStyles.buttonText}>Tasks</Text>
           </Pressable>
           <Pressable
-            style={[styles.button, styles.primaryButtonColor]}
+            style={generateButtonStyles('events')}
             onPress={handleViewEvents}
           >
-            <Text style={styles.buttonText}>Events</Text>
+            <Text style={appStyles.buttonText}>Events</Text>
           </Pressable>
           <Pressable
-            style={[styles.button, styles.primaryButtonColor]}
+            style={generateButtonStyles('tags')}
             onPress={handleViewTags}
           >
-            <Text style={styles.buttonText}>Tags</Text>
+            <Text style={appStyles.buttonText}>Tags</Text>
           </Pressable>
           <Pressable
-            style={[styles.button, styles.primaryButtonColor]}
+            style={[appStyles.button, appStyles.primaryButtonColor]}
             onPress={handleViewSettings}
           >
-            <Text style={styles.buttonText}>Settings</Text>
+            <Text style={appStyles.buttonText}>Settings</Text>
           </Pressable>
         </>
       );
@@ -428,8 +606,8 @@ export default function App() {
     if (formType === 'settings') {
       return (
         <>
-          <View style={styles.taskDetailsWrapper}>
-            <Text style={styles.modalTitle}>Settings</Text>
+          <View style={appStyles.taskDetailsWrapper}>
+            <Text style={appStyles.modalTitle}>Settings</Text>
           </View>
         </>
       );
@@ -437,30 +615,35 @@ export default function App() {
     if (formType === 'editTask') {
       return (
         <>
-          <Text style={styles.modalTitle}>
+          <Text style={appStyles.modalTitle}>
             {highlightButton ? 'Edit Task' : 'Create Task'}
           </Text>
           <TextInput
             value={name}
             onChangeText={(value) => handleChangeField(value, setName)}
             placeholder="Name"
-            style={styles.textInput}
+            style={appStyles.textInput}
           />
           <TextInput
             value={frequency}
             onChangeText={(value) => handleChangeField(value, setFrequency)}
             placeholder="Frequency"
             inputMode="numeric"
-            style={styles.textInput}
+            style={appStyles.textInput}
+          />
+          <TagsSelectList
+            tags={tags}
+            selectedTags={selectedTags}
+            onPress={handleTagSelectCardPress}
           />
           <Pressable
-            style={[styles.button, styles.primaryButtonColor]}
-            onPress={handleSave}
+            style={[appStyles.button, appStyles.primaryButtonColor]}
+            onPress={handleSaveTask}
           >
             {loading ? (
               <ActivityIndicator size="small" />
             ) : (
-              <Text style={styles.buttonText}>Save</Text>
+              <Text style={appStyles.buttonText}>Save</Text>
             )}
           </Pressable>
         </>
@@ -470,8 +653,8 @@ export default function App() {
       const dateTimePickerStyles = generateDateTimePickerStyles(completionDate);
       return (
         <>
-          <Text style={styles.modalTitle}>Complete Task</Text>
-          <View style={styles.dateWrapper}>
+          <Text style={appStyles.modalTitle}>Complete Task</Text>
+          <View style={appStyles.dateWrapper}>
             <DateTimePicker
               mode="date"
               value={completionDate}
@@ -482,13 +665,13 @@ export default function App() {
             />
           </View>
           <Pressable
-            style={[styles.button, styles.primaryButtonColor]}
+            style={[appStyles.button, appStyles.primaryButtonColor]}
             onPress={handleSaveComplete}
           >
             {loading ? (
               <ActivityIndicator size="small" />
             ) : (
-              <Text style={styles.buttonText}>Save</Text>
+              <Text style={appStyles.buttonText}>Save</Text>
             )}
           </Pressable>
         </>
@@ -497,15 +680,15 @@ export default function App() {
     if (formType === 'delete') {
       return (
         <>
-          <Text style={styles.modalTitle}>Confirm Delete</Text>
+          <Text style={appStyles.modalTitle}>Confirm Delete</Text>
           <Pressable
-            style={[styles.button, styles.primaryButtonColor]}
+            style={[appStyles.button, appStyles.primaryButtonColor]}
             onPress={handleDelete}
           >
             {loading ? (
               <ActivityIndicator size="small" />
             ) : (
-              <Text style={styles.buttonText}>Delete</Text>
+              <Text style={appStyles.buttonText}>Delete</Text>
             )}
           </Pressable>
         </>
@@ -533,33 +716,33 @@ export default function App() {
       }
       return (
         <>
-          <View style={styles.taskDetailsWrapper}>
-            <Text style={styles.modalTitle}>Task Details</Text>
-            <Text style={styles.taskDetailsText}>{`Every ${
+          <View style={appStyles.taskDetailsWrapper}>
+            <Text style={appStyles.modalTitle}>Task Details</Text>
+            <Text style={appStyles.taskDetailsText}>{`Every ${
               task?.frequency
             } ${pluralize('day', task?.frequency)}`}</Text>
-            <Text style={styles.taskDetailsText}>{daysSinceStatus}</Text>
+            <Text style={appStyles.taskDetailsText}>{daysSinceStatus}</Text>
             {overdueStatus && (
-              <Text style={styles.taskDetailsText}>{overdueStatus}</Text>
+              <Text style={appStyles.taskDetailsText}>{overdueStatus}</Text>
             )}
           </View>
           <Pressable
-            style={[styles.button, styles.primaryButtonColor]}
+            style={[appStyles.button, appStyles.primaryButtonColor]}
             onPress={handleEdit}
           >
-            <Text style={styles.buttonText}>Edit</Text>
+            <Text style={appStyles.buttonText}>Edit</Text>
           </Pressable>
           <Pressable
-            style={[styles.button, styles.primaryButtonColor]}
+            style={[appStyles.button, appStyles.primaryButtonColor]}
             onPress={handleComplete}
           >
-            <Text style={styles.buttonText}>Complete</Text>
+            <Text style={appStyles.buttonText}>Complete</Text>
           </Pressable>
           <Pressable
-            style={[styles.button, styles.primaryButtonColor]}
+            style={[appStyles.button, appStyles.primaryButtonColor]}
             onPress={confirmDelete}
           >
-            <Text style={styles.buttonText}>Delete</Text>
+            <Text style={appStyles.buttonText}>Delete</Text>
           </Pressable>
         </>
       );
@@ -571,11 +754,11 @@ export default function App() {
       const dateTimePickerStyles = generateDateTimePickerStyles(completionDate);
       return (
         <>
-          <Text style={styles.modalTitle}>Edit Event</Text>
-          <View style={styles.modalTextWrapper}>
+          <Text style={appStyles.modalTitle}>Edit Event</Text>
+          <View style={appStyles.modalTextWrapper}>
             <Text>{event?.task}</Text>
           </View>
-          <View style={styles.dateWrapper}>
+          <View style={appStyles.dateWrapper}>
             <DateTimePicker
               mode="date"
               value={completionDate}
@@ -586,21 +769,82 @@ export default function App() {
             />
           </View>
           <Pressable
-            style={[styles.button, styles.primaryButtonColor]}
-            onPress={handleSaveEvent}
+            style={[appStyles.button, appStyles.primaryButtonColor]}
+            onPress={saveEvent}
           >
             {loading ? (
               <ActivityIndicator size="small" />
             ) : (
-              <Text style={styles.buttonText}>Save</Text>
+              <Text style={appStyles.buttonText}>Save</Text>
             )}
           </Pressable>
           <Pressable
-            style={[styles.button, styles.primaryButtonColor]}
+            style={[appStyles.button, appStyles.primaryButtonColor]}
             onPress={confirmDelete}
           >
-            <Text style={styles.buttonText}>Delete</Text>
+            <Text style={appStyles.buttonText}>Delete</Text>
           </Pressable>
+        </>
+      );
+    }
+    if (formType === 'editTag') {
+      console.log('highlightButton', highlightButton);
+      const tagChoices = [
+        {
+          _id: {
+            $oid: 'placeholder',
+          },
+          name: 'Parent tag',
+        },
+        ...tags,
+      ];
+      return (
+        <>
+          <Text style={appStyles.modalTitle}>
+            {highlightButton ? 'Edit Tag' : 'Create Tag'}
+          </Text>
+          <TextInput
+            value={name}
+            onChangeText={(value) => handleChangeField(value, setName)}
+            placeholder="Name"
+            style={appStyles.textInput}
+          />
+          <TextInput
+            value={description}
+            onChangeText={(value) => handleChangeField(value, setDescription)}
+            placeholder="Description"
+            style={appStyles.textInput}
+          />
+          <Picker
+            selectedValue={parentTag}
+            onValueChange={(itemValue, _itemIndex) => setParentTag(itemValue)}
+          >
+            {map(tagChoices, (tag) => (
+              <Picker.Item
+                key={tag._id.$oid}
+                label={tag.name}
+                value={tag._id.$oid}
+              />
+            ))}
+          </Picker>
+          <Pressable
+            style={[appStyles.button, appStyles.primaryButtonColor]}
+            onPress={handleSaveTag}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" />
+            ) : (
+              <Text style={appStyles.buttonText}>Save</Text>
+            )}
+          </Pressable>
+          {highlightButton && (
+            <Pressable
+              style={[appStyles.button, appStyles.primaryButtonColor]}
+              onPress={confirmDelete}
+            >
+              <Text style={appStyles.buttonText}>Delete</Text>
+            </Pressable>
+          )}
         </>
       );
     }
@@ -611,11 +855,11 @@ export default function App() {
       return (
         <ScrollView
           refreshControl={
-            <RefreshControl refreshing={fetching} onRefresh={fetchTasks} />
+            <RefreshControl refreshing={fetchingTasks} onRefresh={fetchTasks} />
           }
         >
-          <View style={styles.container}>
-            <View style={styles.taskCardContainer}>
+          <View style={appStyles.container}>
+            <View style={appStyles.taskCardContainer}>
               {size(tasks) ? (
                 <>
                   {map(tasks, (task) => {
@@ -627,32 +871,32 @@ export default function App() {
                     const neverCompleted = task.moss === null;
                     let taskCardStyle;
                     if (taskSelected) {
-                      taskCardStyle = styles.taskCardHighlighted;
+                      taskCardStyle = appStyles.taskCardHighlighted;
                     } else if (isOverdue) {
-                      taskCardStyle = styles.taskCardOverdue;
+                      taskCardStyle = appStyles.taskCardOverdue;
                     } else if (neverCompleted) {
-                      taskCardStyle = styles.taskCardNeverCompleted;
+                      taskCardStyle = appStyles.taskCardNeverCompleted;
                     } else {
-                      taskCardStyle = styles.taskCard;
+                      taskCardStyle = appStyles.taskCard;
                     }
                     let taskTitleStyle;
                     if (taskSelected) {
-                      taskTitleStyle = styles.taskTitleHighlighted;
+                      taskTitleStyle = appStyles.taskTitleHighlighted;
                     } else if (isOverdue) {
-                      taskTitleStyle = styles.taskTitleOverdue;
+                      taskTitleStyle = appStyles.taskTitleOverdue;
                     } else if (neverCompleted) {
-                      taskTitleStyle = styles.taskTitleNeverCompleted;
+                      taskTitleStyle = appStyles.taskTitleNeverCompleted;
                     } else {
-                      taskTitleStyle = styles.taskTitle;
+                      taskTitleStyle = appStyles.taskTitle;
                     }
                     const titleLength = size(task.name);
                     let titleFontSize;
                     if (titleLength < 15) {
-                      titleFontSize = styles.taskTitleFontSizeLarge;
+                      titleFontSize = appStyles.taskTitleFontSizeLarge;
                     } else if (titleLength >= 15 && titleLength < 25) {
-                      titleFontSize = styles.taskTitleFontSizeMedium;
+                      titleFontSize = appStyles.taskTitleFontSizeMedium;
                     } else {
-                      titleFontSize = styles.taskTitleFontSizeSmall;
+                      titleFontSize = appStyles.taskTitleFontSizeSmall;
                     }
                     return (
                       <Pressable
@@ -663,32 +907,32 @@ export default function App() {
                           <Text style={[taskTitleStyle, titleFontSize]}>
                             {task.name}
                           </Text>
-                          <View style={styles.badgeWrapper}>
-                            <View style={styles.taskCardBadge}>
-                              <Text style={styles.badgeTitle}>
+                          <View style={appStyles.badgeWrapper}>
+                            <View style={appStyles.taskCardBadge}>
+                              <Text style={appStyles.badgeTitle}>
                                 {task.frequency}
                               </Text>
-                              <Text style={styles.badgeUom}>
+                              <Text style={appStyles.badgeUom}>
                                 {pluralize('day', task.frequency, {
                                   capitalize: true,
                                 })}
                               </Text>
                             </View>
-                            <View style={styles.taskCardBadge}>
-                              <Text style={styles.badgeTitle}>
+                            <View style={appStyles.taskCardBadge}>
+                              <Text style={appStyles.badgeTitle}>
                                 {daysSinceLastEvent}
                               </Text>
-                              <Text style={styles.badgeUom}>
+                              <Text style={appStyles.badgeUom}>
                                 {pluralize('day', daysSinceLastEvent, {
                                   capitalize: true,
                                 })}
                               </Text>
                             </View>
-                            <View style={styles.taskCardBadge}>
-                              <Text style={styles.badgeTitle}>
+                            <View style={appStyles.taskCardBadge}>
+                              <Text style={appStyles.badgeTitle}>
                                 {daysOverdue}
                               </Text>
-                              <Text style={styles.badgeUom}>
+                              <Text style={appStyles.badgeUom}>
                                 {pluralize('day', daysOverdue, {
                                   capitalize: true,
                                 })}
@@ -701,8 +945,10 @@ export default function App() {
                   })}
                 </>
               ) : (
-                <View style={styles.placeholder}>
-                  <Text style={styles.placeholderText}>Create some tasks!</Text>
+                <View style={appStyles.placeholder}>
+                  <Text style={appStyles.placeholderText}>
+                    Create some tasks!
+                  </Text>
                 </View>
               )}
             </View>
@@ -715,11 +961,14 @@ export default function App() {
       return (
         <ScrollView
           refreshControl={
-            <RefreshControl refreshing={fetching} onRefresh={fetchEvents} />
+            <RefreshControl
+              refreshing={fetchingEvents}
+              onRefresh={fetchEvents}
+            />
           }
         >
-          <View style={styles.container}>
-            <View style={styles.eventCardContainer}>
+          <View style={appStyles.container}>
+            <View style={appStyles.eventCardContainer}>
               {size(events) ? (
                 <>
                   {map(events, (event) => {
@@ -727,13 +976,13 @@ export default function App() {
                     let cardStyles;
                     if (event._id.$oid === highlightButton) {
                       cardStyles = [
-                        styles.eventCard,
-                        styles.eventCardHighlightedColor,
+                        appStyles.eventCard,
+                        appStyles.eventCardHighlightedColor,
                       ];
                     } else {
                       cardStyles = [
-                        styles.eventCard,
-                        styles.eventCardStandardColor,
+                        appStyles.eventCard,
+                        appStyles.eventCardStandardColor,
                       ];
                     }
                     return (
@@ -742,10 +991,10 @@ export default function App() {
                         style={cardStyles}
                         onPress={() => handleEventCardPress(event._id.$oid)}
                       >
-                        <Text style={styles.eventCardTitle}>
+                        <Text style={appStyles.eventCardTitle}>
                           {truncate(event.task, { length: 40 })}
                         </Text>
-                        <Text style={styles.eventCardText}>
+                        <Text style={appStyles.eventCardText}>
                           {new Date(event.date).toLocaleDateString()}
                         </Text>
                       </Pressable>
@@ -753,8 +1002,8 @@ export default function App() {
                   })}
                 </>
               ) : (
-                <View style={styles.placeholder}>
-                  <Text style={styles.placeholderText}>
+                <View style={appStyles.placeholder}>
+                  <Text style={appStyles.placeholderText}>
                     Create some events!
                   </Text>
                 </View>
@@ -767,371 +1016,56 @@ export default function App() {
     }
     if (viewType === 'tags') {
       return (
-        <ScrollView>
-          <View style={styles.container}>
-            <View style={styles.eventCardContainer}>
-              {size(tags) ? (
-                <>
-                  {map(tags, (tag) => {
-                    return (
-                      <View>
-                        <Text>Tag</Text>
-                      </View>
-                    );
-                  })}
-                </>
-              ) : (
-                <View style={styles.placeholder}>
-                  <Text style={styles.placeholderText}>Create some tags!</Text>
-                </View>
-              )}
-            </View>
-            <StatusBar style="auto" />
-          </View>
-        </ScrollView>
+        <TagsList
+          tags={tags}
+          highlightButton={highlightButton}
+          onPress={handleTagCardPress}
+          fetchingTags={fetchingTags}
+          fetchTags={fetchTags}
+        />
       );
     }
   }
 
   return (
     <>
-      <View style={styles.appTitleWrapper}>
-        <Text style={styles.appTitle}>mossy</Text>
+      <View style={appStyles.appTitleWrapper}>
+        <Text style={appStyles.appTitle}>mossy</Text>
       </View>
       {renderView()}
       <FadeTransitionOverlay isVisible={isModalVisible} />
       <Modal animationType="slide" transparent visible={isModalVisible}>
         <Pressable
           onPress={() => handleCloseModal()}
-          style={styles.modalPressOut}
+          style={appStyles.modalPressOut}
         >
-          <View style={styles.centeredView}>
-            <View style={styles.modalView}>
-              <Pressable onPress={noop} style={styles.modalPressReset}>
+          <View style={appStyles.centeredView}>
+            <View style={appStyles.modalView}>
+              <Pressable onPress={noop} style={appStyles.modalPressReset}>
                 {renderForm()}
                 <Pressable
-                  style={[styles.button, styles.secondaryButtonColor]}
+                  style={[appStyles.button, appStyles.secondaryButtonColor]}
                   onPress={handleCloseModal}
                 >
-                  <Text style={styles.buttonText}>Cancel</Text>
+                  <Text style={appStyles.buttonText}>Cancel</Text>
                 </Pressable>
               </Pressable>
             </View>
           </View>
         </Pressable>
       </Modal>
-      <View style={styles.menuButtonWrapper}>
+      <View style={appStyles.menuButtonWrapper}>
         <Pressable onPress={handleOpenMenu}>
           <Ionicons name="menu" size={48} color="#BC96E6" />
         </Pressable>
       </View>
-      <View style={styles.addTaskButtonWrapper}>
-        <Pressable onPress={handleCreate}>
-          <Ionicons name="ios-add-circle" size={48} color="#BC96E6" />
-        </Pressable>
-      </View>
+      {viewType !== 'events' && (
+        <View style={appStyles.addTaskButtonWrapper}>
+          <Pressable onPress={handleCreate}>
+            <Ionicons name="ios-add-circle" size={48} color="#BC96E6" />
+          </Pressable>
+        </View>
+      )}
     </>
   );
 }
-
-const color1 = '#55286F';
-const color2 = '#BC96E6';
-const color3 = '#210B2C';
-const color4 = '#ae759f';
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  taskCardContainer: {
-    flex: 0.8,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    width: '90%',
-    justifyContent: 'center',
-  },
-  eventCardContainer: {
-    flex: 0.8,
-    flexDirection: 'column',
-    width: '90%',
-    alignItems: 'center',
-  },
-  tagCardContainer: {
-    flex: 0.8,
-    flexDirection: 'column',
-    width: '90%',
-    alignItems: 'center',
-  },
-  taskTitleFontSizeLarge: {
-    fontSize: 30,
-  },
-  taskTitleFontSizeMedium: {
-    fontSize: 25,
-  },
-  taskTitleFontSizeSmall: {
-    fontSize: 20,
-  },
-  taskCard: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    width: 160,
-    height: 160,
-    margin: 5,
-    padding: 10,
-    borderWidth: 2,
-    borderRadius: 5,
-  },
-  eventCard: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    height: 50,
-    margin: 5,
-    padding: 10,
-    borderWidth: 2,
-    borderRadius: 5,
-  },
-  eventCardStandardColor: {
-    borderColor: color1,
-    backgroundColor: color1,
-  },
-  eventCardHighlightedColor: {
-    borderColor: color3,
-    backgroundColor: color3,
-  },
-  eventCardTitle: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  eventCardText: {
-    color: 'white',
-  },
-  taskTitle: {
-    fontWeight: 700,
-  },
-  taskDetailsText: {
-    fontSize: 15,
-    color: 'darkgrey',
-    fontWeight: 600,
-  },
-  taskCardHighlighted: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    width: 160,
-    height: 160,
-    margin: 5,
-    padding: 10,
-    borderWidth: 2,
-    borderRadius: 5,
-    borderColor: color3,
-    backgroundColor: color3,
-  },
-  taskTitleHighlighted: {
-    fontWeight: 700,
-    color: 'white',
-  },
-  taskTextHighlighted: {
-    fontSize: 15,
-    color: 'white',
-    fontWeight: 600,
-  },
-  taskCardOverdue: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    width: 160,
-    height: 160,
-    margin: 5,
-    padding: 10,
-    borderWidth: 2,
-    borderRadius: 5,
-    borderColor: color1,
-    backgroundColor: color1,
-  },
-  taskTitleOverdue: {
-    fontWeight: 700,
-    color: 'white',
-  },
-  taskTextOverdue: {
-    fontSize: 15,
-    color: 'white',
-    fontWeight: 600,
-  },
-  taskCardNeverCompleted: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    width: 160,
-    height: 160,
-    margin: 5,
-    padding: 10,
-    borderWidth: 2,
-    borderRadius: 5,
-    borderColor: color2,
-    backgroundColor: color2,
-  },
-  taskTitleNeverCompleted: {
-    fontWeight: 700,
-    color: 'white',
-  },
-  taskTextNeverCompleted: {
-    fontSize: 15,
-    color: 'white',
-    fontWeight: 600,
-  },
-  modalOverlay: {
-    position: 'absolute',
-    top: 0,
-    minWidth: '100%',
-    minHeight: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    zIndex: 1,
-  },
-  modalPressOut: {
-    flex: 1,
-  },
-  modalPressReset: {
-    width: 200,
-  },
-  centeredView: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 22,
-  },
-  modalView: {
-    margin: 20,
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 35,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-    minWidth: '60%',
-  },
-  textStyle: {
-    color: 'black',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  modalTitle: {
-    marginBottom: 15,
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-  modalTextWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  placeholder: {
-    marginTop: 100,
-    marginBottom: 100,
-  },
-  placeholderText: {
-    fontSize: 20,
-  },
-  textInput: {
-    borderBottomWidth: 1,
-    width: 200,
-    height: 30,
-    marginBottom: 25,
-  },
-  button: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 2,
-    marginBottom: 15,
-  },
-  primaryButtonColor: {
-    backgroundColor: color1,
-  },
-  secondaryButtonColor: {
-    backgroundColor: color2,
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  createButtonWrapper: {
-    marginTop: 25,
-  },
-  dateWrapper: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  dateTimePickerForceCenter: {
-    marginLeft: -10,
-  },
-  badgeWrapper: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    height: '30%',
-  },
-  taskCardBadge: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    minWidth: '30%',
-    maxWidth: '30%',
-    height: '30%',
-    maxHeight: '100%',
-    minHeight: '100%',
-    borderRadius: 5,
-    backgroundColor: 'white',
-  },
-  badgeTitle: {
-    fontSize: 24,
-    fontWeight: 600,
-  },
-  badgeUom: {
-    fontSize: 8,
-  },
-  taskDetailsWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    marginBottom: 25,
-  },
-  appTitle: {},
-  appTitleWrapper: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 50,
-    paddingBottom: 5,
-    width: '100%',
-    borderBottomWidth: 1,
-  },
-  menuButtonWrapper: {
-    position: 'absolute',
-    bottom: 30,
-    left: 30,
-  },
-  addTaskButtonWrapper: {
-    position: 'absolute',
-    bottom: 30,
-    right: 30,
-  },
-});
