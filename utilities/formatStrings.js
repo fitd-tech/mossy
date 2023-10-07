@@ -1,20 +1,20 @@
-import { startCase } from "lodash";
-import { pluralsMap } from './constants'
+import { startCase } from 'lodash';
+import { pluralsMap } from './constants';
 
 export function pluralize(word, quantity, options) {
-  const {capitalize} = options || {}
-  let result
+  const { capitalize } = options || {};
+  let result;
   if (quantity !== 1) {
     if (pluralsMap[word]) {
-      result = pluralsMap[word]
+      result = pluralsMap[word];
     } else {
-      result = `${word}s`
+      result = `${word}s`;
     }
   } else {
-    result = word
+    result = word;
   }
   if (capitalize) {
-    result = startCase(result)
+    result = startCase(result);
   }
-  return result
+  return result;
 }
