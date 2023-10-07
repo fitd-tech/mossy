@@ -11,6 +11,7 @@ import {
   TextInput,
   Animated,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { map, size, find, orderBy, noop, truncate } from 'lodash';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -31,12 +32,15 @@ export default function App() {
   const [frequency, setFrequency] = useState(null);
   const [formType, setFormType] = useState('task');
   const [completionDate, setCompletionDate] = useState(new Date());
+  const [fetching, setFetching] = useState(false);
   const [loading, setLoading] = useState(false);
   const [viewType, setViewType] = useState('tasks');
   console.log('viewType', viewType);
   console.log('events', events);
+  console.log('loading', loading);
 
   async function fetchTasks() {
+    setFetching(true);
     const config = {
       method: 'GET',
       headers: {
@@ -64,10 +68,12 @@ export default function App() {
     } catch (err) {
       result = err.message;
     }
+    setFetching(false);
     return result;
   }
 
   async function fetchEvents() {
+    setFetching(true);
     const config = {
       method: 'GET',
       headers: {
@@ -86,6 +92,7 @@ export default function App() {
     } catch (err) {
       result = err.message;
     }
+    setFetching(false);
     return result;
   }
 
@@ -602,7 +609,11 @@ export default function App() {
   function renderView() {
     if (viewType === 'tasks') {
       return (
-        <ScrollView>
+        <ScrollView
+          refreshControl={
+            <RefreshControl refreshing={fetching} onRefresh={fetchTasks} />
+          }
+        >
           <View style={styles.container}>
             <View style={styles.taskCardContainer}>
               {size(tasks) ? (
@@ -702,7 +713,11 @@ export default function App() {
     }
     if (viewType === 'events') {
       return (
-        <ScrollView>
+        <ScrollView
+          refreshControl={
+            <RefreshControl refreshing={fetching} onRefresh={fetchEvents} />
+          }
+        >
           <View style={styles.container}>
             <View style={styles.eventCardContainer}>
               {size(events) ? (
