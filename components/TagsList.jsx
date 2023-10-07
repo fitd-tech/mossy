@@ -20,15 +20,7 @@ import appStyles from '../appStyles.js';
 import tagsListStyles from './tagsListStyles.js';
 import { DataContext, StaticContext } from '../appContext';
 
-export default function TagsList(
-  {
-    /* tags,
-  highlightButton,
-  onPress,
-  fetchingTags,
-  fetchTags, */
-  },
-) {
+export default function TagsList() {
   const { tags, fetchingTags, highlightButton } = useContext(DataContext);
   const {
     fetchTags,
