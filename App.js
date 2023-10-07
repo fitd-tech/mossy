@@ -12,7 +12,7 @@ import {
   Animated,
   ActivityIndicator,
 } from 'react-native';
-import { map, size, find, orderBy, noop } from 'lodash';
+import { map, size, find, orderBy, noop, truncate } from 'lodash';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -76,10 +76,13 @@ export default function App() {
     };
     let result;
     try {
-      const response = await fetch(`${mossyBackendDevUrl}api/events`, config);
-      const serializedTasksResponse = await response.json();
-      setTasks(serializedTasksResponse);
-      result = serializedTasksResponse;
+      const response = await fetch(
+        `${mossyBackendDevUrl}api/events-string`,
+        config,
+      );
+      const serializedEventsResponse = await response.json();
+      setEvents(serializedEventsResponse);
+      result = serializedEventsResponse;
     } catch (err) {
       result = err.message;
     }
@@ -97,26 +100,32 @@ export default function App() {
   }, [viewType]);
 
   useEffect(() => {
-    if (highlightButton) {
-      const selectedTaskName = find(tasks, ['_id.$oid', highlightButton]).name;
-      const selectedTaskFrequency = find(tasks, [
-        '_id.$oid',
-        highlightButton,
-      ]).frequency;
-      setName(selectedTaskName);
-      setFrequency(String(selectedTaskFrequency));
+    if (highlightButton && viewType === 'tasks') {
+      const task = find(tasks, ['_id.$oid', highlightButton]);
+      setName(task.name);
+      setFrequency(String(task.frequency));
+    } else if (highlightButton && viewType === 'events') {
+      const event = find(events, ['_id.$oid', highlightButton]);
+      setCompletionDate(new Date(event.date));
     }
   }, [highlightButton]);
 
   function handleTaskCardPress(id) {
     setHighlightButton(id);
+    setFormType('taskDetails');
+    setIsModalVisible(true);
+  }
+
+  function handleEventCardPress(id) {
+    setHighlightButton(id);
+    setFormType('editEvent');
     setIsModalVisible(true);
   }
 
   function handleCloseModal() {
-    setHighlightButton(null);
     setIsModalVisible(false);
-    setFormType('task');
+    setHighlightButton(null);
+    setFormType(null);
   }
 
   function handleCreateTask() {
@@ -171,6 +180,31 @@ export default function App() {
       setLoading(false);
     }
     deleteTasks();
+  }
+
+  function handleDeleteEvents() {
+    async function deleteEvents() {
+      setLoading(true);
+      const config = {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify([highlightButton]),
+      };
+      let result;
+      try {
+        const response = await fetch(`${mossyBackendDevUrl}api/events`, config);
+        const serializedDeleteEventsResponse = await response.json();
+        result = serializedDeleteEventsResponse;
+        await fetchEvents();
+        handleCloseModal();
+      } catch (err) {
+        result = err.message;
+      }
+      setLoading(false);
+    }
+    deleteEvents();
   }
 
   function handleSaveTask() {
@@ -232,15 +266,46 @@ export default function App() {
     completeTask();
   }
 
+  function handleSaveEvent() {
+    async function saveEvent() {
+      setLoading(true);
+      const event = find(events, ['_id.$oid', highlightButton]);
+      const updatedEvent = {
+        _id: event._id,
+        task: event.task,
+        date: completionDate,
+      };
+      const config = {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedEvent),
+      };
+      let result;
+      try {
+        const response = await fetch(`${mossyBackendDevUrl}api/events`, config);
+        const serializedUpdateEventResponse = await response.json();
+        result = serializedUpdateEventResponse;
+        fetchEvents();
+        handleCloseModal();
+      } catch (err) {
+        result = err.message;
+      }
+      setLoading(false);
+    }
+    saveEvent();
+  }
+
   function handleCreate() {
     setIsModalVisible(true);
-    setFormType('edit');
+    setFormType('editTask');
     setName('');
     setFrequency('');
   }
 
   function handleEdit() {
-    setFormType('edit');
+    setFormType('editTask');
   }
 
   function handleSave() {
@@ -253,7 +318,7 @@ export default function App() {
 
   function handleComplete() {
     setCompletionDate(new Date());
-    setFormType('event');
+    setFormType('completeEvent');
   }
 
   function handleSaveComplete() {
@@ -265,7 +330,11 @@ export default function App() {
   }
 
   function handleDelete() {
-    handleDeleteTasks();
+    if (viewType === 'tasks') {
+      handleDeleteTasks();
+    } else if (viewType === 'events') {
+      handleDeleteEvents();
+    }
   }
 
   function handleChangeField(value, setFunc) {
@@ -300,6 +369,19 @@ export default function App() {
 
   function handleViewSettings() {
     setFormType('settings');
+  }
+
+  function generateDateTimePickerStyles(date) {
+    let dateTimePickerStyles;
+    if (date.getDate() < 10) {
+      dateTimePickerStyles = [
+        styles.dateTimePicker,
+        styles.dateTimePickerForceCenter,
+      ];
+    } else {
+      dateTimePickerStyles = styles.dateTimePicker;
+    }
+    return dateTimePickerStyles;
   }
 
   function renderForm() {
@@ -345,7 +427,7 @@ export default function App() {
         </>
       );
     }
-    if (formType === 'edit') {
+    if (formType === 'editTask') {
       return (
         <>
           <Text style={styles.modalTitle}>
@@ -377,16 +459,8 @@ export default function App() {
         </>
       );
     }
-    if (formType === 'event') {
-      let dateTimePickerStyles;
-      if (completionDate.getDate() < 10) {
-        dateTimePickerStyles = [
-          styles.dateTimePicker,
-          styles.dateTimePickerForceCenter,
-        ];
-      } else {
-        dateTimePickerStyles = styles.dateTimePicker;
-      }
+    if (formType === 'completeEvent') {
+      const dateTimePickerStyles = generateDateTimePickerStyles(completionDate);
       return (
         <>
           <Text style={styles.modalTitle}>Complete Task</Text>
@@ -430,54 +504,99 @@ export default function App() {
         </>
       );
     }
-    const task = find(tasks, (task) => {
-      return task._id.$oid === highlightButton;
-    });
-    const daysSinceLastEvent = task?.daysSince > 0 ? task?.daysSince : 0;
-    const daysOverdue = task?.moss > 0 ? task?.moss : 0;
-    const daysSinceStatus = task?.moss
-      ? `${daysSinceLastEvent} ${pluralize('day', daysSinceLastEvent)} since`
-      : 'Never completed!';
-    let overdueStatus;
-    if (!task?.moss) {
-      overdueStatus = '';
-    } else if (daysOverdue <= 0) {
-      overdueStatus = '';
-    } else {
-      overdueStatus = `${daysOverdue} ${pluralize('day', daysOverdue)} overdue`;
+    if (formType === 'taskDetails') {
+      const task = find(tasks, (task) => {
+        return task._id.$oid === highlightButton;
+      });
+      const daysSinceLastEvent = task?.daysSince > 0 ? task?.daysSince : 0;
+      const daysOverdue = task?.moss > 0 ? task?.moss : 0;
+      const daysSinceStatus = task?.moss
+        ? `${daysSinceLastEvent} ${pluralize('day', daysSinceLastEvent)} since`
+        : 'Never completed!';
+      let overdueStatus;
+      if (!task?.moss) {
+        overdueStatus = '';
+      } else if (daysOverdue <= 0) {
+        overdueStatus = '';
+      } else {
+        overdueStatus = `${daysOverdue} ${pluralize(
+          'day',
+          daysOverdue,
+        )} overdue`;
+      }
+      return (
+        <>
+          <View style={styles.taskDetailsWrapper}>
+            <Text style={styles.modalTitle}>Task Details</Text>
+            <Text style={styles.taskDetailsText}>{`Every ${
+              task?.frequency
+            } ${pluralize('day', task?.frequency)}`}</Text>
+            <Text style={styles.taskDetailsText}>{daysSinceStatus}</Text>
+            {overdueStatus && (
+              <Text style={styles.taskDetailsText}>{overdueStatus}</Text>
+            )}
+          </View>
+          <Pressable
+            style={[styles.button, styles.primaryButtonColor]}
+            onPress={handleEdit}
+          >
+            <Text style={styles.buttonText}>Edit</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.button, styles.primaryButtonColor]}
+            onPress={handleComplete}
+          >
+            <Text style={styles.buttonText}>Complete</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.button, styles.primaryButtonColor]}
+            onPress={confirmDelete}
+          >
+            <Text style={styles.buttonText}>Delete</Text>
+          </Pressable>
+        </>
+      );
     }
-    return (
-      <>
-        <View style={styles.taskDetailsWrapper}>
-          <Text style={styles.modalTitle}>Task Details</Text>
-          <Text style={styles.taskDetailsText}>{`Every ${
-            task?.frequency
-          } ${pluralize('day', task?.frequency)}`}</Text>
-          <Text style={styles.taskDetailsText}>{daysSinceStatus}</Text>
-          {overdueStatus && (
-            <Text style={styles.taskDetailsText}>{overdueStatus}</Text>
-          )}
-        </View>
-        <Pressable
-          style={[styles.button, styles.primaryButtonColor]}
-          onPress={handleEdit}
-        >
-          <Text style={styles.buttonText}>Edit</Text>
-        </Pressable>
-        <Pressable
-          style={[styles.button, styles.primaryButtonColor]}
-          onPress={handleComplete}
-        >
-          <Text style={styles.buttonText}>Complete</Text>
-        </Pressable>
-        <Pressable
-          style={[styles.button, styles.primaryButtonColor]}
-          onPress={confirmDelete}
-        >
-          <Text style={styles.buttonText}>Delete</Text>
-        </Pressable>
-      </>
-    );
+    if (formType === 'editEvent') {
+      console.log('highlightButton', highlightButton);
+      const event = find(events, ['_id.$oid', highlightButton]);
+      console.log('event', event);
+      const dateTimePickerStyles = generateDateTimePickerStyles(completionDate);
+      return (
+        <>
+          <Text style={styles.modalTitle}>Edit Event</Text>
+          <View style={styles.modalTextWrapper}>
+            <Text>{event?.task}</Text>
+          </View>
+          <View style={styles.dateWrapper}>
+            <DateTimePicker
+              mode="date"
+              value={completionDate}
+              onChange={(e, date) =>
+                handleChangeDate(e, date, setCompletionDate)
+              }
+              style={dateTimePickerStyles}
+            />
+          </View>
+          <Pressable
+            style={[styles.button, styles.primaryButtonColor]}
+            onPress={handleSaveEvent}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" />
+            ) : (
+              <Text style={styles.buttonText}>Save</Text>
+            )}
+          </Pressable>
+          <Pressable
+            style={[styles.button, styles.primaryButtonColor]}
+            onPress={confirmDelete}
+          >
+            <Text style={styles.buttonText}>Delete</Text>
+          </Pressable>
+        </>
+      );
+    }
   }
 
   function renderView() {
@@ -589,10 +708,32 @@ export default function App() {
               {size(events) ? (
                 <>
                   {map(events, (event) => {
+                    console.log('event.task', event.task);
+                    let cardStyles;
+                    if (event._id.$oid === highlightButton) {
+                      cardStyles = [
+                        styles.eventCard,
+                        styles.eventCardHighlightedColor,
+                      ];
+                    } else {
+                      cardStyles = [
+                        styles.eventCard,
+                        styles.eventCardStandardColor,
+                      ];
+                    }
                     return (
-                      <View>
-                        <Text>Event</Text>
-                      </View>
+                      <Pressable
+                        key={event._id.$oid}
+                        style={cardStyles}
+                        onPress={() => handleEventCardPress(event._id.$oid)}
+                      >
+                        <Text style={styles.eventCardTitle}>
+                          {truncate(event.task, { length: 40 })}
+                        </Text>
+                        <Text style={styles.eventCardText}>
+                          {new Date(event.date).toLocaleDateString()}
+                        </Text>
+                      </Pressable>
                     );
                   })}
                 </>
@@ -681,6 +822,7 @@ export default function App() {
 const color1 = '#55286F';
 const color2 = '#BC96E6';
 const color3 = '#210B2C';
+const color4 = '#ae759f';
 
 const styles = StyleSheet.create({
   container: {
@@ -696,8 +838,18 @@ const styles = StyleSheet.create({
     width: '90%',
     justifyContent: 'center',
   },
-  eventCardContainer: {},
-  tagCardContainer: {},
+  eventCardContainer: {
+    flex: 0.8,
+    flexDirection: 'column',
+    width: '90%',
+    alignItems: 'center',
+  },
+  tagCardContainer: {
+    flex: 0.8,
+    flexDirection: 'column',
+    width: '90%',
+    alignItems: 'center',
+  },
   taskTitleFontSizeLarge: {
     fontSize: 30,
   },
@@ -717,6 +869,33 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 2,
     borderRadius: 5,
+  },
+  eventCard: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    height: 50,
+    margin: 5,
+    padding: 10,
+    borderWidth: 2,
+    borderRadius: 5,
+  },
+  eventCardStandardColor: {
+    borderColor: color1,
+    backgroundColor: color1,
+  },
+  eventCardHighlightedColor: {
+    borderColor: color3,
+    backgroundColor: color3,
+  },
+  eventCardTitle: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  eventCardText: {
+    color: 'white',
   },
   taskTitle: {
     fontWeight: 700,
@@ -838,6 +1017,12 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     textAlign: 'center',
     fontWeight: 'bold',
+  },
+  modalTextWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    marginBottom: 15,
   },
   placeholder: {
     marginTop: 100,
