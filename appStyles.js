@@ -132,8 +132,12 @@ const appStyles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  dateTimePickerForceCenter: {
+  dateTimePicker: {},
+  dateTimePickerOffsetOneDigit: {
     marginLeft: -10,
+  },
+  dateTimePickerOffsetTwoDigits: {
+    marginLeft: -20,
   },
   taskDetailsWrapper: {
     display: 'flex',
@@ -203,7 +207,6 @@ const appStyles = StyleSheet.create({
   },
   badgeTitle: {
     fontSize: 24,
-    // fontWeight: 600,
     color: 'white',
   },
   badgeUom: {

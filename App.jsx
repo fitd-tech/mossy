@@ -547,11 +547,18 @@ export default function App() {
   }
 
   function generateDateTimePickerStyles(date) {
+    console.log('date', date);
+    console.log('date.getMonth()', date.getMonth());
     let dateTimePickerStyles;
-    if (date.getDate() < 10) {
+    if (date.getDate() < 10 && date.getMonth() < 10) {
       dateTimePickerStyles = [
         appStyles.dateTimePicker,
-        appStyles.dateTimePickerForceCenter,
+        appStyles.dateTimePickerOffsetTwoDigits,
+      ];
+    } else if (date.getDate() < 10 || date.getMonth() < 10) {
+      dateTimePickerStyles = [
+        appStyles.dateTimePicker,
+        appStyles.dateTimePickerOffsetOneDigit,
       ];
     } else {
       dateTimePickerStyles = appStyles.dateTimePicker;
@@ -753,7 +760,9 @@ export default function App() {
                     })}
                   </Text>
                 </View>
-                <Text>since last completed</Text>
+                <Text>
+                  {!task?.moss ? 'never completed!' : 'since last completed'}
+                </Text>
               </View>
               <View style={appStyles.taskStatusRow}>
                 <View style={badgeStyles}>
