@@ -28,7 +28,6 @@ export default function EventsList({
   onPress, */
   navigation,
 }) {
-  console.log('navigation', navigation);
   const { events, fetchingEvents, highlightButton } = useContext(DataContext);
   const {
     fetchEvents,
@@ -60,7 +59,6 @@ export default function EventsList({
           {size(events) ? (
             <>
               {map(events, (event) => {
-                console.log('event.task', event.task);
                 let cardStyles;
                 if (event._id.$oid === highlightButton) {
                   cardStyles = [

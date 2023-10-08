@@ -60,11 +60,6 @@ export default function App() {
   const [fetchingTags, setFetchingTags] = useState(false);
   const [loading, setLoading] = useState(false);
   const [viewType, setViewType] = useState('tasks');
-  console.log('viewType', viewType);
-  console.log('events', events);
-  console.log('loading', loading);
-  console.log('parentTag', parentTag);
-  console.log('selectedTags', selectedTags);
 
   async function fetchTasks() {
     setFetchingTasks(true);
@@ -153,7 +148,6 @@ export default function App() {
   useEffect(() => {
     if (highlightButton && viewType === 'tasks') {
       const task = find(tasks, ['_id.$oid', highlightButton]);
-      console.log('task', task);
       setName(task.name);
       setFrequency(String(task.frequency));
       setSelectedTags(map(task.tags || [], (tag) => tag.$oid));
@@ -187,7 +181,6 @@ export default function App() {
   }
 
   function handleTagSelectCardPress(id) {
-    console.log('id from handleTagSelectCardPress', id);
     setSelectedTags((selectedTagsPrevious) => {
       let newSelectedTags;
       if (includes(selectedTagsPrevious, id)) {
@@ -348,7 +341,6 @@ export default function App() {
         frequency: frequency ? Number(frequency) : 0,
         tags: selectedTags,
       };
-      console.log('task from saveTask', task);
       const config = {
         method: 'PATCH',
         headers: {
@@ -751,9 +743,7 @@ export default function App() {
       );
     }
     if (formType === 'editEvent') {
-      console.log('highlightButton', highlightButton);
       const event = find(events, ['_id.$oid', highlightButton]);
-      console.log('event', event);
       const dateTimePickerStyles = generateDateTimePickerStyles(completionDate);
       return (
         <>
@@ -791,7 +781,6 @@ export default function App() {
       );
     }
     if (formType === 'editTag') {
-      console.log('highlightButton', highlightButton);
       const tagChoices = [
         {
           _id: {
