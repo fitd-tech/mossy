@@ -21,15 +21,7 @@ import appStyles from '../appStyles';
 import tasksListStyles from './tasksListStyles';
 import { DataContext, StaticContext } from '../appContext';
 
-export default function TasksList(
-  {
-    /* tasks,
-  fetchingTasks,
-  fetchTasks,
-  highlightButton,
-  onPress, */
-  },
-) {
+export default function TasksList() {
   const { tasks, fetchingTasks, highlightButton } = useContext(DataContext);
   const {
     fetchTasks,

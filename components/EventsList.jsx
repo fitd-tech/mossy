@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -13,22 +13,25 @@ import {
   RefreshControl,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { size, map, truncate } from 'lodash';
+import { size, map, truncate, noop } from 'lodash';
 import { useFocusEffect } from '@react-navigation/native';
 
 import appStyles from '../appStyles';
 import eventsListStyles from './eventsListStyles';
 import { DataContext, StaticContext } from '../appContext';
 
-export default function EventsList({
-  /* events,
-  fetchingEvents,
-  fetchEvents,
-  highlightButton,
-  onPress, */
-  navigation,
-}) {
+export default function EventsList() {
+  // Attemp to prevent registering event card touch when quicklyswiping during navigation
+  const [settled, setSettled] = useState(false);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setSettled(true);
+    });
+  }, [500]);
+
   const { events, fetchingEvents, highlightButton } = useContext(DataContext);
+
   const {
     fetchEvents,
     onPressEventCard: onPress,
@@ -75,7 +78,7 @@ export default function EventsList({
                   <Pressable
                     key={event._id.$oid}
                     style={cardStyles}
-                    onPress={() => onPress(event._id.$oid)}
+                    onPress={settled ? () => onPress(event._id.$oid) : noop}
                   >
                     <Text style={eventsListStyles.eventCardTitle}>
                       {truncate(event.task, { length: 40 })}

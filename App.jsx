@@ -37,6 +37,7 @@ import TagsSelectList from './components/TagsSelectList';
 import TasksList from './components/TasksList';
 import EventsList from './components/EventsList';
 import { StaticContext, DataContext } from './appContext';
+import { navigationRef, navigate } from './RootNavigation';
 
 const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -526,17 +527,17 @@ export default function App() {
   }
 
   function handleViewTasks() {
-    setViewType('tasks');
+    navigate('tasks');
     setIsModalVisible(false);
   }
 
   function handleViewEvents() {
-    setViewType('events');
+    navigate('events');
     setIsModalVisible(false);
   }
 
   function handleViewTags() {
-    setViewType('tags');
+    navigate('tags');
     setIsModalVisible(false);
   }
 
@@ -889,11 +890,12 @@ export default function App() {
       <View style={appStyles.appTitleWrapper}>
         <Text style={appStyles.appTitle}>mossy</Text>
       </View>
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         <StaticContext.Provider value={staticContext}>
           <DataContext.Provider value={dataContext}>
             {/* renderView() */}
             <Tab.Navigator
+              initialRouteName="tasks"
               screenOptions={{
                 tabBarStyle: {
                   height: 0,
