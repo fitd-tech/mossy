@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, createContext, useMemo } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import {
   StyleSheet,
@@ -26,6 +26,8 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
+import { NavigationContainer } from '@react-navigation/native';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 
 import FadeTransitionOverlay from './components/FadeTransitionOverlay';
 import { pluralize } from './utilities/formatStrings';
@@ -34,8 +36,11 @@ import TagsList from './components/TagsList';
 import TagsSelectList from './components/TagsSelectList';
 import TasksList from './components/TasksList';
 import EventsList from './components/EventsList';
+import { StaticContext, DataContext } from './appContext';
 
 const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
+
+const Tab = createMaterialTopTabNavigator();
 
 export default function App() {
   const [highlightButton, setHighlightButton] = useState(null);
@@ -140,14 +145,10 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (viewType === 'tasks') {
-      fetchTasks();
-    } else if (viewType === 'events') {
-      fetchEvents();
-    } else if (viewType === 'tags') {
-      fetchTags();
-    }
-  }, [viewType]);
+    fetchTasks();
+    fetchEvents();
+    fetchTags();
+  }, []);
 
   useEffect(() => {
     if (highlightButton && viewType === 'tasks') {
@@ -852,48 +853,71 @@ export default function App() {
     }
   }
 
-  function renderView() {
-    if (viewType === 'tasks') {
-      return (
-        <TasksList
-          tasks={tasks}
-          fetchingTasks={fetchingTasks}
-          fetchTasks={fetchTasks}
-          highlightButton={highlightButton}
-          onPress={handleTaskCardPress}
-        />
-      );
-    }
-    if (viewType === 'events') {
-      return (
-        <EventsList
-          events={events}
-          fetchingEvents={fetchingEvents}
-          fetchEvents={fetchEvents}
-          highlightButton={highlightButton}
-          onPress={handleEventCardPress}
-        />
-      );
-    }
-    if (viewType === 'tags') {
-      return (
-        <TagsList
-          tags={tags}
-          fetchingTags={fetchingTags}
-          fetchTags={fetchTags}
-          highlightButton={highlightButton}
-          onPress={handleTagCardPress}
-        />
-      );
-    }
-  }
+  const dataContext = useMemo(
+    () => ({
+      tasks,
+      events,
+      tags,
+      fetchingTasks,
+      fetchingEvents,
+      fetchingTags,
+      highlightButton,
+    }),
+    [
+      tasks,
+      events,
+      tags,
+      fetchingTasks,
+      fetchingEvents,
+      fetchingTags,
+      highlightButton,
+    ],
+  );
+
+  const staticContext = useMemo(
+    () => ({
+      fetchTasks,
+      fetchEvents,
+      fetchTags,
+      onPressTaskCard: handleTaskCardPress,
+      onPressEventCard: handleEventCardPress,
+      onPressTagCard: handleTagCardPress,
+      setViewType,
+    }),
+    [
+      fetchTasks,
+      fetchEvents,
+      fetchTags,
+      handleTaskCardPress,
+      handleEventCardPress,
+      handleTagCardPress,
+      setViewType,
+    ],
+  );
 
   return (
     <>
       <View style={appStyles.appTitleWrapper}>
         <Text style={appStyles.appTitle}>mossy</Text>
       </View>
-      {renderView()}
+      <NavigationContainer>
+        <StaticContext.Provider value={staticContext}>
+          <DataContext.Provider value={dataContext}>
+            {/* renderView() */}
+            <Tab.Navigator
+              screenOptions={{
+                tabBarStyle: {
+                  height: 0,
+                },
+              }}
+            >
+              <Tab.Screen name="tasks" component={TasksList} />
+              <Tab.Screen name="events" component={EventsList} />
+              <Tab.Screen name="tags" component={TagsList} />
+            </Tab.Navigator>
+          </DataContext.Provider>
+        </StaticContext.Provider>
+      </NavigationContainer>
       <FadeTransitionOverlay isVisible={isModalVisible} />
       <Modal animationType="slide" transparent visible={isModalVisible}>
         <Pressable
@@ -915,17 +939,21 @@ export default function App() {
           </View>
         </Pressable>
       </Modal>
-      <View style={appStyles.menuButtonWrapper}>
-        <Pressable onPress={handleOpenMenu}>
-          <Ionicons name="menu" size={48} color="#BC96E6" />
+      <Pressable onPress={handleOpenMenu} style={appStyles.menuButtonWrapper}>
+        <Ionicons name="menu" size={48} color="#BC96E6" />
+      </Pressable>
+      {true && ( // viewType !== 'events'
+        <Pressable
+          onPress={handleCreate}
+          style={appStyles.addTaskButtonWrapper}
+        >
+          <Ionicons
+            name="ios-add-circle"
+            size={48}
+            color="#BC96E6"
+            style={{ marginLeft: 3 }}
+          />
         </Pressable>
-      </View>
-      {viewType !== 'events' && (
-        <View style={appStyles.addTaskButtonWrapper}>
-          <Pressable onPress={handleCreate}>
-            <Ionicons name="ios-add-circle" size={48} color="#BC96E6" />
-          </Pressable>
-        </View>
       )}
     </>
   );

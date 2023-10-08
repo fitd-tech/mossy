@@ -1,3 +1,4 @@
+import { useContext } from 'react';
 import {
   StyleSheet,
   Text,
@@ -13,22 +14,46 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { size, map, truncate } from 'lodash';
+import { useFocusEffect } from '@react-navigation/native';
 
 import appStyles from '../appStyles';
 import eventsListStyles from './eventsListStyles';
+import { DataContext, StaticContext } from '../appContext';
 
 export default function EventsList({
-  events,
+  /* events,
   fetchingEvents,
   fetchEvents,
   highlightButton,
-  onPress,
+  onPress, */
+  navigation,
 }) {
+  console.log('navigation', navigation);
+  const { events, fetchingEvents, highlightButton } = useContext(DataContext);
+  const {
+    fetchEvents,
+    onPressEventCard: onPress,
+    setViewType,
+  } = useContext(StaticContext);
+
+  useFocusEffect(() => {
+    setViewType('events');
+  });
+
   return (
     <ScrollView
       refreshControl={
-        <RefreshControl refreshing={fetchingEvents} onRefresh={fetchEvents} />
+        <RefreshControl
+          refreshing={fetchingEvents}
+          onRefresh={fetchEvents}
+          style={{
+            backgroundColor: 'white',
+          }}
+        />
       }
+      style={{
+        backgroundColor: 'white',
+      }}
     >
       <View style={appStyles.container}>
         <View style={eventsListStyles.eventCardContainer}>

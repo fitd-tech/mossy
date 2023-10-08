@@ -1,3 +1,4 @@
+import { useContext } from 'react';
 import {
   StyleSheet,
   Text,
@@ -13,23 +14,47 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { size, map } from 'lodash';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { pluralize } from '../utilities/formatStrings';
 import appStyles from '../appStyles';
 import tasksListStyles from './tasksListStyles';
+import { DataContext, StaticContext } from '../appContext';
 
-export default function TasksList({
-  tasks,
+export default function TasksList(
+  {
+    /* tasks,
   fetchingTasks,
   fetchTasks,
   highlightButton,
-  onPress,
-}) {
+  onPress, */
+  },
+) {
+  const { tasks, fetchingTasks, highlightButton } = useContext(DataContext);
+  const {
+    fetchTasks,
+    onPressTaskCard: onPress,
+    setViewType,
+  } = useContext(StaticContext);
+
+  useFocusEffect(() => {
+    setViewType('tasks');
+  });
+
   return (
     <ScrollView
       refreshControl={
-        <RefreshControl refreshing={fetchingTasks} onRefresh={fetchTasks} />
+        <RefreshControl
+          refreshing={fetchingTasks}
+          onRefresh={fetchTasks}
+          style={{
+            backgroundColor: 'white',
+          }}
+        />
       }
+      style={{
+        backgroundColor: 'white',
+      }}
     >
       <View style={appStyles.container}>
         <View style={tasksListStyles.taskCardContainer}>

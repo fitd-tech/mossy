@@ -7,9 +7,10 @@ const { color1, color2, color3, color4 } = colors;
 const appStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'white',
     alignItems: 'center',
     justifyContent: 'center',
+    height: '100%',
     marginTop: 10,
   },
   tagCard: {
@@ -37,14 +38,6 @@ const appStyles = StyleSheet.create({
   },
   tagCardText: {
     color: 'white',
-  },
-  taskTitle: {
-    fontWeight: 700,
-  },
-  taskDetailsText: {
-    fontSize: 15,
-    color: 'darkgrey',
-    fontWeight: 600,
   },
   modalOverlay: {
     position: 'absolute',
@@ -162,11 +155,15 @@ const appStyles = StyleSheet.create({
     position: 'absolute',
     bottom: 30,
     left: 30,
+    backgroundColor: 'white',
+    borderRadius: 5,
   },
   addTaskButtonWrapper: {
     position: 'absolute',
     bottom: 30,
     right: 30,
+    backgroundColor: 'white',
+    borderRadius: 5,
   },
 });
 

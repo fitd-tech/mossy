@@ -31,6 +31,17 @@ const taskListStyles = StyleSheet.create({
     padding: 10,
     borderWidth: 2,
     borderRadius: 5,
+    borderColor: color4,
+    backgroundColor: color4,
+  },
+  taskTitle: {
+    fontWeight: 700,
+    color: 'white',
+  },
+  taskDetailsText: {
+    fontSize: 15,
+    color: 'darkgrey',
+    fontWeight: 600,
   },
   taskCardHighlighted: {
     display: 'flex',
@@ -123,6 +134,7 @@ const taskListStyles = StyleSheet.create({
   },
   badgeUom: {
     fontSize: 8,
+    marginTop: -10,
   },
 });
 
