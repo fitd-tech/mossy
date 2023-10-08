@@ -141,6 +141,11 @@ const appStyles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 25,
   },
+  taskStatusWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'start',
+  },
   appTitle: {},
   appTitleWrapper: {
     display: 'flex',
@@ -164,6 +169,47 @@ const appStyles = StyleSheet.create({
     right: 30,
     backgroundColor: 'white',
     borderRadius: 5,
+  },
+  taskStatusRow: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'start',
+    alignItems: 'center',
+  },
+  taskCardBadge: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    minWidth: 48,
+    maxWidth: 48,
+    height: 48,
+    maxHeight: 48,
+    minHeight: 48,
+    borderRadius: 5,
+    marginTop: 2,
+    marginBottom: 2,
+    marginLeft: 3,
+    marginRight: 3,
+  },
+  taskCardBadgeNeverCompletedColor: {
+    backgroundColor: color2,
+  },
+  taskCardBadgeOverdueColor: {
+    backgroundColor: color1,
+  },
+  taskCardBadgeCurrentColor: {
+    backgroundColor: color4,
+  },
+  badgeTitle: {
+    fontSize: 24,
+    // fontWeight: 600,
+    color: 'white',
+  },
+  badgeUom: {
+    fontSize: 8,
+    marginTop: -10,
+    color: 'white',
   },
 });
 

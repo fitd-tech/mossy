@@ -32,6 +32,7 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 import FadeTransitionOverlay from './components/FadeTransitionOverlay';
 import { pluralize } from './utilities/formatStrings';
 import appStyles from './appStyles.js';
+import tasksListStyles from './components/tasksListStyles';
 import TagsList from './components/TagsList';
 import TagsSelectList from './components/TagsSelectList';
 import TasksList from './components/TasksList';
@@ -710,17 +711,62 @@ export default function App() {
           daysOverdue,
         )} overdue`;
       }
+      let badgeStyles;
+      if (!task?.moss) {
+        badgeStyles = [
+          appStyles.taskCardBadge,
+          appStyles.taskCardBadgeNeverCompletedColor,
+        ];
+      } else if (task?.moss > 0) {
+        badgeStyles = [
+          appStyles.taskCardBadge,
+          appStyles.taskCardBadgeOverdueColor,
+        ];
+      } else {
+        badgeStyles = [
+          appStyles.taskCardBadge,
+          appStyles.taskCardBadgeCurrentColor,
+        ];
+      }
       return (
         <>
           <View style={appStyles.taskDetailsWrapper}>
             <Text style={appStyles.modalTitle}>Task Details</Text>
-            <Text style={appStyles.taskDetailsText}>{`Every ${
-              task?.frequency
-            } ${pluralize('day', task?.frequency)}`}</Text>
-            <Text style={appStyles.taskDetailsText}>{daysSinceStatus}</Text>
-            {overdueStatus && (
-              <Text style={appStyles.taskDetailsText}>{overdueStatus}</Text>
-            )}
+            <View style={appStyles.taskStatusWrapper}>
+              <View style={appStyles.taskStatusRow}>
+                <View style={badgeStyles}>
+                  <Text style={appStyles.badgeTitle}>{task.frequency}</Text>
+                  <Text style={appStyles.badgeUom}>
+                    {pluralize('day', task.frequency, {
+                      capitalize: true,
+                    })}
+                  </Text>
+                </View>
+                <Text>frequency</Text>
+              </View>
+              <View style={appStyles.taskStatusRow}>
+                <View style={badgeStyles}>
+                  <Text style={appStyles.badgeTitle}>{daysSinceLastEvent}</Text>
+                  <Text style={appStyles.badgeUom}>
+                    {pluralize('day', daysSinceLastEvent, {
+                      capitalize: true,
+                    })}
+                  </Text>
+                </View>
+                <Text>since last completed</Text>
+              </View>
+              <View style={appStyles.taskStatusRow}>
+                <View style={badgeStyles}>
+                  <Text style={appStyles.badgeTitle}>{daysOverdue}</Text>
+                  <Text style={appStyles.badgeUom}>
+                    {pluralize('day', daysOverdue, {
+                      capitalize: true,
+                    })}
+                  </Text>
+                </View>
+                <Text>overdue</Text>
+              </View>
+            </View>
           </View>
           <Pressable
             style={[appStyles.button, appStyles.primaryButtonColor]}
