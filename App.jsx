@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, createContext, useMemo } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import {
   StyleSheet,
@@ -26,14 +26,21 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
+import { NavigationContainer } from '@react-navigation/native';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 
 import FadeTransitionOverlay from './components/FadeTransitionOverlay';
 import { pluralize } from './utilities/formatStrings';
 import appStyles from './appStyles.js';
 import TagsList from './components/TagsList';
 import TagsSelectList from './components/TagsSelectList';
+import TasksList from './components/TasksList';
+import EventsList from './components/EventsList';
+import { StaticContext, DataContext } from './appContext';
 
 const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
+
+const Tab = createMaterialTopTabNavigator();
 
 export default function App() {
   const [highlightButton, setHighlightButton] = useState(null);
@@ -53,11 +60,6 @@ export default function App() {
   const [fetchingTags, setFetchingTags] = useState(false);
   const [loading, setLoading] = useState(false);
   const [viewType, setViewType] = useState('tasks');
-  console.log('viewType', viewType);
-  console.log('events', events);
-  console.log('loading', loading);
-  console.log('parentTag', parentTag);
-  console.log('selectedTags', selectedTags);
 
   async function fetchTasks() {
     setFetchingTasks(true);
@@ -138,19 +140,14 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (viewType === 'tasks') {
-      fetchTasks();
-    } else if (viewType === 'events') {
-      fetchEvents();
-    } else if (viewType === 'tags') {
-      fetchTags();
-    }
-  }, [viewType]);
+    fetchTasks();
+    fetchEvents();
+    fetchTags();
+  }, []);
 
   useEffect(() => {
     if (highlightButton && viewType === 'tasks') {
       const task = find(tasks, ['_id.$oid', highlightButton]);
-      console.log('task', task);
       setName(task.name);
       setFrequency(String(task.frequency));
       setSelectedTags(map(task.tags || [], (tag) => tag.$oid));
@@ -184,7 +181,6 @@ export default function App() {
   }
 
   function handleTagSelectCardPress(id) {
-    console.log('id from handleTagSelectCardPress', id);
     setSelectedTags((selectedTagsPrevious) => {
       let newSelectedTags;
       if (includes(selectedTagsPrevious, id)) {
@@ -345,7 +341,6 @@ export default function App() {
         frequency: frequency ? Number(frequency) : 0,
         tags: selectedTags,
       };
-      console.log('task from saveTask', task);
       const config = {
         method: 'PATCH',
         headers: {
@@ -748,9 +743,7 @@ export default function App() {
       );
     }
     if (formType === 'editEvent') {
-      console.log('highlightButton', highlightButton);
       const event = find(events, ['_id.$oid', highlightButton]);
-      console.log('event', event);
       const dateTimePickerStyles = generateDateTimePickerStyles(completionDate);
       return (
         <>
@@ -788,7 +781,6 @@ export default function App() {
       );
     }
     if (formType === 'editTag') {
-      console.log('highlightButton', highlightButton);
       const tagChoices = [
         {
           _id: {
@@ -850,189 +842,71 @@ export default function App() {
     }
   }
 
-  function renderView() {
-    if (viewType === 'tasks') {
-      return (
-        <ScrollView
-          refreshControl={
-            <RefreshControl refreshing={fetchingTasks} onRefresh={fetchTasks} />
-          }
-        >
-          <View style={appStyles.container}>
-            <View style={appStyles.taskCardContainer}>
-              {size(tasks) ? (
-                <>
-                  {map(tasks, (task) => {
-                    const taskSelected = highlightButton === task._id.$oid;
-                    const daysSinceLastEvent =
-                      task.daysSince > 0 ? task.daysSince : 0;
-                    const daysOverdue = task.moss > 0 ? task.moss : 0;
-                    const isOverdue = task.moss > 0;
-                    const neverCompleted = task.moss === null;
-                    let taskCardStyle;
-                    if (taskSelected) {
-                      taskCardStyle = appStyles.taskCardHighlighted;
-                    } else if (isOverdue) {
-                      taskCardStyle = appStyles.taskCardOverdue;
-                    } else if (neverCompleted) {
-                      taskCardStyle = appStyles.taskCardNeverCompleted;
-                    } else {
-                      taskCardStyle = appStyles.taskCard;
-                    }
-                    let taskTitleStyle;
-                    if (taskSelected) {
-                      taskTitleStyle = appStyles.taskTitleHighlighted;
-                    } else if (isOverdue) {
-                      taskTitleStyle = appStyles.taskTitleOverdue;
-                    } else if (neverCompleted) {
-                      taskTitleStyle = appStyles.taskTitleNeverCompleted;
-                    } else {
-                      taskTitleStyle = appStyles.taskTitle;
-                    }
-                    const titleLength = size(task.name);
-                    let titleFontSize;
-                    if (titleLength < 15) {
-                      titleFontSize = appStyles.taskTitleFontSizeLarge;
-                    } else if (titleLength >= 15 && titleLength < 25) {
-                      titleFontSize = appStyles.taskTitleFontSizeMedium;
-                    } else {
-                      titleFontSize = appStyles.taskTitleFontSizeSmall;
-                    }
-                    return (
-                      <Pressable
-                        onPress={() => handleTaskCardPress(task._id.$oid)}
-                        key={task._id.$oid}
-                      >
-                        <View style={taskCardStyle}>
-                          <Text style={[taskTitleStyle, titleFontSize]}>
-                            {task.name}
-                          </Text>
-                          <View style={appStyles.badgeWrapper}>
-                            <View style={appStyles.taskCardBadge}>
-                              <Text style={appStyles.badgeTitle}>
-                                {task.frequency}
-                              </Text>
-                              <Text style={appStyles.badgeUom}>
-                                {pluralize('day', task.frequency, {
-                                  capitalize: true,
-                                })}
-                              </Text>
-                            </View>
-                            <View style={appStyles.taskCardBadge}>
-                              <Text style={appStyles.badgeTitle}>
-                                {daysSinceLastEvent}
-                              </Text>
-                              <Text style={appStyles.badgeUom}>
-                                {pluralize('day', daysSinceLastEvent, {
-                                  capitalize: true,
-                                })}
-                              </Text>
-                            </View>
-                            <View style={appStyles.taskCardBadge}>
-                              <Text style={appStyles.badgeTitle}>
-                                {daysOverdue}
-                              </Text>
-                              <Text style={appStyles.badgeUom}>
-                                {pluralize('day', daysOverdue, {
-                                  capitalize: true,
-                                })}
-                              </Text>
-                            </View>
-                          </View>
-                        </View>
-                      </Pressable>
-                    );
-                  })}
-                </>
-              ) : (
-                <View style={appStyles.placeholder}>
-                  <Text style={appStyles.placeholderText}>
-                    Create some tasks!
-                  </Text>
-                </View>
-              )}
-            </View>
-            <StatusBar style="auto" />
-          </View>
-        </ScrollView>
-      );
-    }
-    if (viewType === 'events') {
-      return (
-        <ScrollView
-          refreshControl={
-            <RefreshControl
-              refreshing={fetchingEvents}
-              onRefresh={fetchEvents}
-            />
-          }
-        >
-          <View style={appStyles.container}>
-            <View style={appStyles.eventCardContainer}>
-              {size(events) ? (
-                <>
-                  {map(events, (event) => {
-                    console.log('event.task', event.task);
-                    let cardStyles;
-                    if (event._id.$oid === highlightButton) {
-                      cardStyles = [
-                        appStyles.eventCard,
-                        appStyles.eventCardHighlightedColor,
-                      ];
-                    } else {
-                      cardStyles = [
-                        appStyles.eventCard,
-                        appStyles.eventCardStandardColor,
-                      ];
-                    }
-                    return (
-                      <Pressable
-                        key={event._id.$oid}
-                        style={cardStyles}
-                        onPress={() => handleEventCardPress(event._id.$oid)}
-                      >
-                        <Text style={appStyles.eventCardTitle}>
-                          {truncate(event.task, { length: 40 })}
-                        </Text>
-                        <Text style={appStyles.eventCardText}>
-                          {new Date(event.date).toLocaleDateString()}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </>
-              ) : (
-                <View style={appStyles.placeholder}>
-                  <Text style={appStyles.placeholderText}>
-                    Create some events!
-                  </Text>
-                </View>
-              )}
-            </View>
-            <StatusBar style="auto" />
-          </View>
-        </ScrollView>
-      );
-    }
-    if (viewType === 'tags') {
-      return (
-        <TagsList
-          tags={tags}
-          highlightButton={highlightButton}
-          onPress={handleTagCardPress}
-          fetchingTags={fetchingTags}
-          fetchTags={fetchTags}
-        />
-      );
-    }
-  }
+  const dataContext = useMemo(
+    () => ({
+      tasks,
+      events,
+      tags,
+      fetchingTasks,
+      fetchingEvents,
+      fetchingTags,
+      highlightButton,
+    }),
+    [
+      tasks,
+      events,
+      tags,
+      fetchingTasks,
+      fetchingEvents,
+      fetchingTags,
+      highlightButton,
+    ],
+  );
+
+  const staticContext = useMemo(
+    () => ({
+      fetchTasks,
+      fetchEvents,
+      fetchTags,
+      onPressTaskCard: handleTaskCardPress,
+      onPressEventCard: handleEventCardPress,
+      onPressTagCard: handleTagCardPress,
+      setViewType,
+    }),
+    [
+      fetchTasks,
+      fetchEvents,
+      fetchTags,
+      handleTaskCardPress,
+      handleEventCardPress,
+      handleTagCardPress,
+      setViewType,
+    ],
+  );
 
   return (
     <>
       <View style={appStyles.appTitleWrapper}>
         <Text style={appStyles.appTitle}>mossy</Text>
       </View>
-      {renderView()}
+      <NavigationContainer>
+        <StaticContext.Provider value={staticContext}>
+          <DataContext.Provider value={dataContext}>
+            {/* renderView() */}
+            <Tab.Navigator
+              screenOptions={{
+                tabBarStyle: {
+                  height: 0,
+                },
+              }}
+            >
+              <Tab.Screen name="tasks" component={TasksList} />
+              <Tab.Screen name="events" component={EventsList} />
+              <Tab.Screen name="tags" component={TagsList} />
+            </Tab.Navigator>
+          </DataContext.Provider>
+        </StaticContext.Provider>
+      </NavigationContainer>
       <FadeTransitionOverlay isVisible={isModalVisible} />
       <Modal animationType="slide" transparent visible={isModalVisible}>
         <Pressable
@@ -1054,17 +928,21 @@ export default function App() {
           </View>
         </Pressable>
       </Modal>
-      <View style={appStyles.menuButtonWrapper}>
-        <Pressable onPress={handleOpenMenu}>
-          <Ionicons name="menu" size={48} color="#BC96E6" />
+      <Pressable onPress={handleOpenMenu} style={appStyles.menuButtonWrapper}>
+        <Ionicons name="menu" size={48} color="#BC96E6" />
+      </Pressable>
+      {true && ( // viewType !== 'events'
+        <Pressable
+          onPress={handleCreate}
+          style={appStyles.addTaskButtonWrapper}
+        >
+          <Ionicons
+            name="ios-add-circle"
+            size={48}
+            color="#BC96E6"
+            style={{ marginLeft: 3 }}
+          />
         </Pressable>
-      </View>
-      {viewType !== 'events' && (
-        <View style={appStyles.addTaskButtonWrapper}>
-          <Pressable onPress={handleCreate}>
-            <Ionicons name="ios-add-circle" size={48} color="#BC96E6" />
-          </Pressable>
-        </View>
       )}
     </>
   );

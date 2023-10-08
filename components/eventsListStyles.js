@@ -4,40 +4,40 @@ import { colors } from '../constants';
 
 const { color1, color2, color3, color4 } = colors;
 
-const styles = StyleSheet.create({
-  tagCardContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+const eventsListStyles = StyleSheet.create({
+  eventCardContainer: {
+    flex: 0.8,
+    flexDirection: 'column',
     width: '90%',
     alignItems: 'center',
-    minHeight: '100%',
   },
-  tagCard: {
+  eventCard: {
     display: 'flex',
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    margin: 3,
+    width: '100%',
+    height: 50,
+    margin: 5,
     padding: 10,
     borderWidth: 2,
     borderRadius: 5,
   },
-  tagCardStandardColor: {
-    borderColor: color2,
-    backgroundColor: color2,
+  eventCardStandardColor: {
+    borderColor: color1,
+    backgroundColor: color1,
   },
-  tagCardHighlightedColor: {
+  eventCardHighlightedColor: {
     borderColor: color3,
     backgroundColor: color3,
   },
-  tagCardTitle: {
+  eventCardTitle: {
     color: 'white',
     fontWeight: 'bold',
   },
-  tagCardText: {
+  eventCardText: {
     color: 'white',
   },
 });
 
-export default styles;
+export default eventsListStyles;
