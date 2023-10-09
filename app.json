@@ -13,8 +13,12 @@
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
+    "plugins": ["expo-apple-authentication"],
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -30,5 +34,8 @@
       }
     },
     "owner": "aecook"
+  },
+  "ios": {
+    "usesAppleSignIn": true
   }
 }

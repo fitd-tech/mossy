@@ -28,6 +28,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import { NavigationContainer } from '@react-navigation/native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import * as SecureStore from 'expo-secure-store';
 
 import FadeTransitionOverlay from './components/FadeTransitionOverlay';
 import { pluralize } from './utilities/formatStrings';
@@ -37,8 +39,9 @@ import TagsList from './components/TagsList';
 import TagsSelectList from './components/TagsSelectList';
 import TasksList from './components/TasksList';
 import EventsList from './components/EventsList';
-import { StaticContext, DataContext } from './appContext';
+import { StaticContext, DataContext, UserContext } from './appContext';
 import { navigationRef, navigate } from './RootNavigation';
+import LogIn from './components/LogIn';
 
 const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -62,6 +65,8 @@ export default function App() {
   const [fetchingTags, setFetchingTags] = useState(false);
   const [loading, setLoading] = useState(false);
   const [viewType, setViewType] = useState('tasks');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [storedAppleUserId, setStoredAppleUserId] = useState(null);
 
   async function fetchTasks() {
     setFetchingTasks(true);
@@ -546,9 +551,29 @@ export default function App() {
     setFormType('settings');
   }
 
+  function handleLogOut() {
+    setFormType('logOut');
+  }
+
+  function handleConfirmLogOut() {
+    async function logOut() {
+      try {
+        const response = await AppleAuthentication.signOutAsync({
+          user: storedAppleUserId,
+        });
+      } catch (err) {
+        // The log in prompt automatically opens again - log the user out if they cancel it
+        // Removing this value from storage is temporary - Apple doesn't allow the user to sign out except through settings
+        // https://github.com/invertase/react-native-apple-authentication/issues/10
+        SecureStore.setItemAsync('mossyAppleUserId', '');
+        setIsModalVisible(false);
+        setIsAuthenticated(false);
+      }
+    }
+    logOut();
+  }
+
   function generateDateTimePickerStyles(date) {
-    console.log('date', date);
-    console.log('date.getMonth()', date.getMonth());
     let dateTimePickerStyles;
     if (date.getDate() < 10 && date.getMonth() < 10) {
       dateTimePickerStyles = [
@@ -603,6 +628,16 @@ export default function App() {
             onPress={handleViewSettings}
           >
             <Text style={appStyles.buttonText}>Settings</Text>
+          </Pressable>
+          <Pressable
+            style={[
+              appStyles.button,
+              appStyles.secondaryButtonColor,
+              { marginBottom: 30 },
+            ]}
+            onPress={handleLogOut}
+          >
+            <Text style={appStyles.buttonText}>Log Out</Text>
           </Pressable>
         </>
       );
@@ -693,6 +728,23 @@ export default function App() {
               <ActivityIndicator size="small" />
             ) : (
               <Text style={appStyles.buttonText}>Delete</Text>
+            )}
+          </Pressable>
+        </>
+      );
+    }
+    if (formType === 'logOut') {
+      return (
+        <>
+          <Text style={appStyles.modalTitle}>Confirm Log Out</Text>
+          <Pressable
+            style={[appStyles.button, appStyles.primaryButtonColor]}
+            onPress={handleConfirmLogOut}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" />
+            ) : (
+              <Text style={appStyles.buttonText}>Log Out</Text>
             )}
           </Pressable>
         </>
@@ -898,6 +950,21 @@ export default function App() {
     }
   }
 
+  const userContext = useMemo(
+    () => ({
+      isAuthenticated,
+      setIsAuthenticated,
+      storedAppleUserId,
+      setStoredAppleUserId,
+    }),
+    [
+      isAuthenticated,
+      setIsAuthenticated,
+      storedAppleUserId,
+      setStoredAppleUserId,
+    ],
+  );
+
   const dataContext = useMemo(
     () => ({
       tasks,
@@ -942,65 +1009,94 @@ export default function App() {
 
   return (
     <>
-      <View style={appStyles.appTitleWrapper}>
-        <Text style={appStyles.appTitle}>mossy</Text>
-      </View>
       <NavigationContainer ref={navigationRef}>
-        <StaticContext.Provider value={staticContext}>
-          <DataContext.Provider value={dataContext}>
-            {/* renderView() */}
-            <Tab.Navigator
-              initialRouteName="tasks"
-              screenOptions={{
-                tabBarStyle: {
-                  height: 0,
-                },
-              }}
-            >
-              <Tab.Screen name="tasks" component={TasksList} />
-              <Tab.Screen name="events" component={EventsList} />
-              <Tab.Screen name="tags" component={TagsList} />
-            </Tab.Navigator>
-          </DataContext.Provider>
-        </StaticContext.Provider>
-      </NavigationContainer>
-      <FadeTransitionOverlay isVisible={isModalVisible} />
-      <Modal animationType="slide" transparent visible={isModalVisible}>
-        <Pressable
-          onPress={() => handleCloseModal()}
-          style={appStyles.modalPressOut}
-        >
-          <View style={appStyles.centeredView}>
-            <View style={appStyles.modalView}>
-              <Pressable onPress={noop} style={appStyles.modalPressReset}>
-                {renderForm()}
-                <Pressable
-                  style={[appStyles.button, appStyles.secondaryButtonColor]}
-                  onPress={handleCloseModal}
+        <View style={appStyles.appTitleWrapper}>
+          <Text style={appStyles.appTitle}>mossy</Text>
+        </View>
+        <UserContext.Provider value={userContext}>
+          <StaticContext.Provider value={staticContext}>
+            <DataContext.Provider value={dataContext}>
+              {isAuthenticated ? (
+                <>
+                  <Tab.Navigator
+                    initialRouteName="tasks"
+                    screenOptions={{
+                      tabBarStyle: {
+                        height: 0,
+                      },
+                    }}
+                  >
+                    <Tab.Screen name="tasks" component={TasksList} />
+                    <Tab.Screen name="events" component={EventsList} />
+                    <Tab.Screen name="tags" component={TagsList} />
+                  </Tab.Navigator>
+                  <FadeTransitionOverlay isVisible={isModalVisible} />
+                  <Modal
+                    animationType="slide"
+                    transparent
+                    visible={isModalVisible}
+                  >
+                    <Pressable
+                      onPress={() => handleCloseModal()}
+                      style={appStyles.modalPressOut}
+                    >
+                      <View style={appStyles.centeredView}>
+                        <View style={appStyles.modalView}>
+                          <Pressable
+                            onPress={noop}
+                            style={appStyles.modalPressReset}
+                          >
+                            {renderForm()}
+                            <Pressable
+                              style={[
+                                appStyles.button,
+                                appStyles.secondaryButtonColor,
+                              ]}
+                              onPress={handleCloseModal}
+                            >
+                              <Text style={appStyles.buttonText}>Cancel</Text>
+                            </Pressable>
+                          </Pressable>
+                        </View>
+                      </View>
+                    </Pressable>
+                  </Modal>
+                  <Pressable
+                    onPress={handleOpenMenu}
+                    style={appStyles.menuButtonWrapper}
+                  >
+                    <Ionicons name="menu" size={48} color="#BC96E6" />
+                  </Pressable>
+                  {viewType !== 'events' && (
+                    <Pressable
+                      onPress={handleCreate}
+                      style={appStyles.addTaskButtonWrapper}
+                    >
+                      <Ionicons
+                        name="ios-add-circle"
+                        size={48}
+                        color="#BC96E6"
+                        style={{ marginLeft: 3 }}
+                      />
+                    </Pressable>
+                  )}
+                </>
+              ) : (
+                <Tab.Navigator
+                  initialRouteName="log-in"
+                  screenOptions={{
+                    tabBarStyle: {
+                      height: 0,
+                    },
+                  }}
                 >
-                  <Text style={appStyles.buttonText}>Cancel</Text>
-                </Pressable>
-              </Pressable>
-            </View>
-          </View>
-        </Pressable>
-      </Modal>
-      <Pressable onPress={handleOpenMenu} style={appStyles.menuButtonWrapper}>
-        <Ionicons name="menu" size={48} color="#BC96E6" />
-      </Pressable>
-      {true && ( // viewType !== 'events'
-        <Pressable
-          onPress={handleCreate}
-          style={appStyles.addTaskButtonWrapper}
-        >
-          <Ionicons
-            name="ios-add-circle"
-            size={48}
-            color="#BC96E6"
-            style={{ marginLeft: 3 }}
-          />
-        </Pressable>
-      )}
+                  <Tab.Screen name="log-in" component={LogIn} />
+                </Tab.Navigator>
+              )}
+            </DataContext.Provider>
+          </StaticContext.Provider>
+        </UserContext.Provider>
+      </NavigationContainer>
     </>
   );
 }
