@@ -20,6 +20,8 @@ export default function LogIn() {
     setIsAuthenticated,
     storedAppleUserId,
     setStoredAppleUserId,
+    userProfile,
+    setUserProfile,
   } = useContext(UserContext);
 
   useEffect(() => {
@@ -43,6 +45,8 @@ export default function LogIn() {
           };
           const user = await fetch(`${mossyBackendDevUrl}api/user`, config);
           const serializedUser = await user.json();
+          console.log('serializedUser', serializedUser);
+          setUserProfile(serializedUser);
         }
       } catch (err) {
         console.log('availability error', err);

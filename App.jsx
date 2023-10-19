@@ -67,6 +67,7 @@ export default function App() {
   const [viewType, setViewType] = useState('tasks');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [storedAppleUserId, setStoredAppleUserId] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
 
   async function fetchTasks() {
     setFetchingTasks(true);
@@ -647,6 +648,7 @@ export default function App() {
         <>
           <View style={appStyles.taskDetailsWrapper}>
             <Text style={appStyles.modalTitle}>Settings</Text>
+            {userProfile?.email && <Text>{userProfile?.email}</Text>}
           </View>
         </>
       );
@@ -956,12 +958,16 @@ export default function App() {
       setIsAuthenticated,
       storedAppleUserId,
       setStoredAppleUserId,
+      userProfile,
+      setUserProfile,
     }),
     [
       isAuthenticated,
       setIsAuthenticated,
       storedAppleUserId,
       setStoredAppleUserId,
+      userProfile,
+      setUserProfile,
     ],
   );
 
