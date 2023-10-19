@@ -164,14 +164,14 @@ const appStyles = StyleSheet.create({
     position: 'absolute',
     bottom: 30,
     left: 30,
-    backgroundColor: 'white',
+    backgroundColor: '#BC96E6',
     borderRadius: 5,
   },
   addTaskButtonWrapper: {
     position: 'absolute',
     bottom: 30,
     right: 30,
-    backgroundColor: 'white',
+    backgroundColor: '#BC96E6',
     borderRadius: 5,
   },
   taskStatusRow: {

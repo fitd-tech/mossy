@@ -1071,7 +1071,7 @@ export default function App() {
                     onPress={handleOpenMenu}
                     style={appStyles.menuButtonWrapper}
                   >
-                    <Ionicons name="menu" size={48} color="#BC96E6" />
+                    <Ionicons name="menu" size={48} color="white" />
                   </Pressable>
                   {viewType !== 'events' && (
                     <Pressable
@@ -1081,7 +1081,7 @@ export default function App() {
                       <Ionicons
                         name="ios-add-circle"
                         size={48}
-                        color="#BC96E6"
+                        color="white"
                         style={{ marginLeft: 3 }}
                       />
                     </Pressable>
