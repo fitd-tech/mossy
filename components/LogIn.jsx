@@ -4,6 +4,7 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import { randomUUID } from 'expo-crypto';
 import { keys } from 'lodash';
 import * as SecureStore from 'expo-secure-store';
+import { Buffer } from 'buffer';
 
 import { UserContext } from '../appContext';
 
@@ -22,34 +23,16 @@ export default function LogIn() {
     setStoredAppleUserId,
     userProfile,
     setUserProfile,
+    setStoredToken,
   } = useContext(UserContext);
 
   useEffect(() => {
     async function checkAvailability() {
-      const mossyAppleUserId =
-        await SecureStore.getItemAsync('mossyAppleUserId');
-      setStoredAppleUserId(mossyAppleUserId);
       try {
         const availability = await AppleAuthentication.isAvailableAsync();
         setAppleAuthAvailable(true);
-        if (mossyAppleUserId) {
-          const data = {
-            apple_user_id: mossyAppleUserId,
-          };
-          const config = {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-          };
-          const user = await fetch(`${mossyBackendDevUrl}api/user`, config);
-          const serializedUser = await user.json();
-          console.log('serializedUser', serializedUser);
-          setUserProfile(serializedUser);
-        }
       } catch (err) {
-        console.log('availability error', err);
+        console.log('AppleAuthentication availability error', err);
       }
     }
     checkAvailability();
@@ -86,11 +69,16 @@ export default function LogIn() {
       const response = await fetch(`${mossyBackendDevUrl}api/log-in`, config);
       if (response.ok) {
         const serializedResponse = await response.json();
-        SecureStore.setItemAsync('mossyAppleUserId', serializedResponse.sub);
+        SecureStore.setItemAsync(
+          'mossyAppleUserId',
+          serializedResponse.apple_user_id,
+        );
+        SecureStore.setItemAsync('mossyToken', serializedResponse.token);
+        setUserProfile(serializedResponse);
         setIsAuthenticated(true);
       } else {
         const error = await response.text();
-        console.log('error', error);
+        console.log('Login error', error);
       }
     }
     // We can verify state here without decoding the JWT
@@ -122,7 +110,7 @@ export default function LogIn() {
               setCredential(credential);
               // signed in
             } catch (e) {
-              console.log('e', e);
+              console.log('AppleAuthentication sign in error', e);
               if (e.code === 'ERR_REQUEST_CANCELED') {
                 // handle that the user canceled the sign-in flow
               } else {

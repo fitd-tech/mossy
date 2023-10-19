@@ -68,6 +68,7 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [storedAppleUserId, setStoredAppleUserId] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
+  const [storedToken, setStoredToken] = useState(null);
 
   async function fetchTasks() {
     setFetchingTasks(true);
@@ -75,6 +76,7 @@ export default function App() {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${storedToken}`,
       },
     };
     let result;
@@ -108,6 +110,7 @@ export default function App() {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${storedToken}`,
       },
     };
     let result;
@@ -132,6 +135,7 @@ export default function App() {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${storedToken}`,
       },
     };
     let result;
@@ -148,10 +152,48 @@ export default function App() {
   }
 
   useEffect(() => {
-    fetchTasks();
-    fetchEvents();
-    fetchTags();
+    async function loadUser() {
+      const token = await SecureStore.getItemAsync('mossyToken');
+      setStoredToken(token);
+      const mossyAppleUserId =
+        await SecureStore.getItemAsync('mossyAppleUserId');
+      setStoredAppleUserId(mossyAppleUserId);
+    }
+    loadUser();
   }, []);
+
+  useEffect(() => {
+    async function loadInitial() {
+      if (storedAppleUserId) {
+        const data = {
+          apple_user_id: storedAppleUserId,
+        };
+        const config = {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${storedToken}`,
+          },
+          body: JSON.stringify(data),
+        };
+        const user = await fetch(`${mossyBackendDevUrl}api/user`, config);
+        const serializedUser = await user.json();
+        setUserProfile(serializedUser);
+      }
+    }
+    loadInitial();
+  }, [storedAppleUserId]);
+
+  useEffect(() => {
+    async function loadData() {
+      if (storedToken) {
+        fetchTasks();
+        fetchEvents();
+        fetchTags();
+      }
+    }
+    loadData();
+  }, [storedToken]);
 
   useEffect(() => {
     if (highlightButton && viewType === 'tasks') {
@@ -218,6 +260,7 @@ export default function App() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`,
         },
         body: JSON.stringify(taskData),
       };
@@ -247,6 +290,7 @@ export default function App() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`,
         },
         body: JSON.stringify(tagData),
       };
@@ -272,6 +316,7 @@ export default function App() {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`,
         },
         body: JSON.stringify([highlightButton]),
       };
@@ -297,6 +342,7 @@ export default function App() {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`,
         },
         body: JSON.stringify([highlightButton]),
       };
@@ -306,6 +352,7 @@ export default function App() {
         const serializedDeleteEventsResponse = await response.json();
         result = serializedDeleteEventsResponse;
         await fetchEvents();
+        fetchTasks();
         handleCloseModal();
       } catch (err) {
         result = err.message;
@@ -322,6 +369,7 @@ export default function App() {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`,
         },
         body: JSON.stringify([highlightButton]),
       };
@@ -353,6 +401,7 @@ export default function App() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`,
         },
         body: JSON.stringify(task),
       };
@@ -382,6 +431,7 @@ export default function App() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`,
         },
         body: JSON.stringify(event),
       };
@@ -391,6 +441,7 @@ export default function App() {
         const serializedCreateEventResponse = await response.json();
         result = serializedCreateEventResponse;
         fetchTasks();
+        fetchEvents();
         handleCloseModal();
       } catch (err) {
         result = err.message;
@@ -413,6 +464,7 @@ export default function App() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`,
         },
         body: JSON.stringify(updatedEvent),
       };
@@ -422,6 +474,7 @@ export default function App() {
         const serializedUpdateEventResponse = await response.json();
         result = serializedUpdateEventResponse;
         fetchEvents();
+        fetchTasks();
         handleCloseModal();
       } catch (err) {
         result = err.message;
@@ -443,6 +496,7 @@ export default function App() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`,
         },
         body: JSON.stringify(tag),
       };
@@ -467,6 +521,7 @@ export default function App() {
       setName('');
       setFrequency('');
       setFormType('editTask');
+      setSelectedTags([]);
     } else if (viewType === 'tags') {
       setName('');
       setParentTag(null);
@@ -567,6 +622,9 @@ export default function App() {
         // Removing this value from storage is temporary - Apple doesn't allow the user to sign out except through settings
         // https://github.com/invertase/react-native-apple-authentication/issues/10
         SecureStore.setItemAsync('mossyAppleUserId', '');
+        SecureStore.setItemAsync('mossyToken', '');
+        setStoredAppleUserId(null);
+        setStoredToken(null);
         setIsModalVisible(false);
         setIsAuthenticated(false);
       }
@@ -960,6 +1018,7 @@ export default function App() {
       setStoredAppleUserId,
       userProfile,
       setUserProfile,
+      setStoredToken,
     }),
     [
       isAuthenticated,
@@ -968,6 +1027,7 @@ export default function App() {
       setStoredAppleUserId,
       userProfile,
       setUserProfile,
+      setStoredToken,
     ],
   );
 
