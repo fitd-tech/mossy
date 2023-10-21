@@ -22,6 +22,7 @@ import {
   truncate,
   includes,
   reject,
+  filter,
 } from 'lodash';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
@@ -42,8 +43,10 @@ import EventsList from './components/EventsList';
 import { StaticContext, DataContext, UserContext } from './appContext';
 import { navigationRef, navigate } from './RootNavigation';
 import LogIn from './components/LogIn';
+import getDaysFromMilliseconds from './utilities/time';
 
 const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
+const adminAppleUserId = process.env.EXPO_PUBLIC_ADMIN_APPLE_USER_ID;
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -69,10 +72,21 @@ export default function App() {
   const [storedAppleUserId, setStoredAppleUserId] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [storedToken, setStoredToken] = useState(null);
-  console.log('storedAppleUserId', storedAppleUserId);
-  console.log('storedToken', storedToken);
+  const [tasksPage, setTasksPage] = useState(1);
+  const [eventsPage, setEventsPage] = useState(1);
+  const [tagsPage, setTagsPage] = useState(1);
 
-  async function fetchTasks() {
+  async function fetchTasks(options) {
+    let searchParams;
+    if (options) {
+      searchParams = new URLSearchParams(options);
+    } else {
+      setTasksPage(1);
+      searchParams = new URLSearchParams({
+        limit: 50,
+      });
+    }
+    const querystring = searchParams ? `?${searchParams.toString()}` : '';
     setFetchingTasks(true);
     const config = {
       method: 'GET',
@@ -83,21 +97,18 @@ export default function App() {
     };
     let result;
     try {
-      const response = await fetch(`${mossyBackendDevUrl}api/tasks`, config);
+      const response = await fetch(
+        `${mossyBackendDevUrl}api/tasks${querystring}`,
+        config,
+      );
       const serializedTasksResponse = await response.json();
-      const tasksWithMoss = map(serializedTasksResponse, (task) => {
-        const dateDifference = new Date() - new Date(task.latest_event_date);
-        const daysDifference = Math.round(
-          dateDifference / (1000 * 60 * 60 * 24),
-        );
-        return {
-          ...task,
-          daysSince: task.latest_event_date ? daysDifference : null,
-          moss: task.latest_event_date ? daysDifference - task.frequency : null,
-        };
+      setTasks((tasksPrevious) => {
+        if (options?.offset) {
+          const newTasks = [...tasksPrevious, ...serializedTasksResponse];
+          return newTasks;
+        }
+        return serializedTasksResponse;
       });
-      const sortedTasksWithMoss = orderBy(tasksWithMoss, 'moss', 'desc');
-      setTasks(sortedTasksWithMoss);
       result = serializedTasksResponse;
     } catch (err) {
       result = err.message;
@@ -106,7 +117,17 @@ export default function App() {
     return result;
   }
 
-  async function fetchEvents() {
+  async function fetchEvents(options) {
+    let searchParams;
+    if (options) {
+      searchParams = new URLSearchParams(options);
+    } else {
+      setEventsPage(1);
+      searchParams = new URLSearchParams({
+        limit: 50,
+      });
+    }
+    const querystring = searchParams ? `?${searchParams.toString()}` : '';
     setFetchingEvents(true);
     const config = {
       method: 'GET',
@@ -118,11 +139,17 @@ export default function App() {
     let result;
     try {
       const response = await fetch(
-        `${mossyBackendDevUrl}api/events-string`,
+        `${mossyBackendDevUrl}api/events-string${querystring}`,
         config,
       );
       const serializedEventsResponse = await response.json();
-      setEvents(serializedEventsResponse);
+      setEvents((eventsPrevious) => {
+        if (options?.offset) {
+          const newEvents = [...eventsPrevious, ...serializedEventsResponse];
+          return newEvents;
+        }
+        return serializedEventsResponse;
+      });
       result = serializedEventsResponse;
     } catch (err) {
       result = err.message;
@@ -131,7 +158,17 @@ export default function App() {
     return result;
   }
 
-  async function fetchTags() {
+  async function fetchTags(options) {
+    let searchParams;
+    if (options) {
+      searchParams = new URLSearchParams(options);
+    } else {
+      setTagsPage(1);
+      searchParams = new URLSearchParams({
+        limit: 200,
+      });
+    }
+    const querystring = searchParams ? `?${searchParams.toString()}` : '';
     setFetchingTags(true);
     const config = {
       method: 'GET',
@@ -142,9 +179,18 @@ export default function App() {
     };
     let result;
     try {
-      const response = await fetch(`${mossyBackendDevUrl}api/tags`, config);
+      const response = await fetch(
+        `${mossyBackendDevUrl}api/tags${querystring}`,
+        config,
+      );
       const serializedTagsResponse = await response.json();
-      setTags(serializedTagsResponse);
+      setTags((tagsPrevious) => {
+        if (options?.offset) {
+          const newTags = [...tagsPrevious, ...serializedTagsResponse];
+          return newTags;
+        }
+        return serializedTagsResponse;
+      });
       result = serializedTagsResponse;
     } catch (err) {
       result = err.message;
@@ -189,11 +235,9 @@ export default function App() {
         };
         const response = await fetch(`${mossyBackendDevUrl}api/user`, config);
         if (response.ok) {
-          console.log('response ok');
           const serializedUser = await response.json();
           setUserProfile(serializedUser);
         } else {
-          console.log('response error');
           clearUserData();
         }
       }
@@ -220,7 +264,7 @@ export default function App() {
       setSelectedTags(map(task.tags || [], (tag) => tag.$oid));
     } else if (highlightButton && viewType === 'events') {
       const event = find(events, ['_id.$oid', highlightButton]);
-      setCompletionDate(new Date(event.date));
+      setCompletionDate(new Date(Number(event.date.$date.$numberLong)));
     } else if (highlightButton && viewType === 'tags') {
       const tag = find(tags, ['_id.$oid', highlightButton]);
       setName(tag.name);
@@ -532,6 +576,184 @@ export default function App() {
     updateTag();
   }
 
+  function debugAddAdminTasks() {
+    async function postTasks() {
+      setLoading(true);
+      const taskData = {
+        quantity: 50,
+      };
+      const config = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`,
+        },
+        body: JSON.stringify(taskData),
+      };
+      let result;
+      try {
+        const response = await fetch(
+          `${mossyBackendDevUrl}api/debug/tasks`,
+          config,
+        );
+        const serializedCreateTaskResponse = await response.json();
+        result = serializedCreateTaskResponse;
+        await fetchTasks();
+        handleCloseModal();
+      } catch (err) {
+        result = err.message;
+      }
+      setLoading(false);
+    }
+    postTasks();
+  }
+
+  function debugDeleteAllAdminTasks() {
+    async function _deleteTasks() {
+      setLoading(true);
+      const config = {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`,
+        },
+      };
+      let result;
+      try {
+        const response = await fetch(
+          `${mossyBackendDevUrl}api/debug/tasks`,
+          config,
+        );
+        const serializedDeleteTasksResponse = await response.json();
+        result = serializedDeleteTasksResponse;
+        await fetchTasks();
+        handleCloseModal();
+      } catch (err) {
+        result = err.message;
+      }
+      setLoading(false);
+    }
+    _deleteTasks();
+  }
+
+  function debugAddAdminEvents() {
+    async function postTasks() {
+      setLoading(true);
+      const config = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`,
+        },
+      };
+      let result;
+      try {
+        const response = await fetch(
+          `${mossyBackendDevUrl}api/debug/events`,
+          config,
+        );
+        const serializedCreateEventsResponse = await response.json();
+        result = serializedCreateEventsResponse;
+        await fetchTasks();
+        await fetchEvents();
+        handleCloseModal();
+      } catch (err) {
+        result = err.message;
+      }
+      setLoading(false);
+    }
+    postTasks();
+  }
+
+  function debugDeleteAllAdminEvents() {
+    async function deleteEvents() {
+      setLoading(true);
+      const config = {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`,
+        },
+      };
+      let result;
+      try {
+        const response = await fetch(
+          `${mossyBackendDevUrl}api/debug/events`,
+          config,
+        );
+        const serializedDeleteEventsResponse = await response.json();
+        result = serializedDeleteEventsResponse;
+        await fetchTasks();
+        await fetchEvents();
+        handleCloseModal();
+      } catch (err) {
+        result = err.message;
+      }
+      setLoading(false);
+    }
+    deleteEvents();
+  }
+
+  function debugAddAdminTags() {
+    async function postTags() {
+      setLoading(true);
+      const tagsData = {
+        quantity: 50,
+      };
+      const config = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`,
+        },
+        body: JSON.stringify(tagsData),
+      };
+      let result;
+      try {
+        const response = await fetch(
+          `${mossyBackendDevUrl}api/debug/tags`,
+          config,
+        );
+        const serializedCreateTagsResponse = await response.json();
+        result = serializedCreateTagsResponse;
+        await fetchTags();
+        handleCloseModal();
+      } catch (err) {
+        result = err.message;
+      }
+      setLoading(false);
+    }
+    postTags();
+  }
+
+  function debugDeleteAllAdminTags() {
+    async function deleteTags() {
+      setLoading(true);
+      const config = {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`,
+        },
+      };
+      let result;
+      try {
+        const response = await fetch(
+          `${mossyBackendDevUrl}api/debug/tags`,
+          config,
+        );
+        const serializedDeleteTagsResponse = await response.json();
+        result = serializedDeleteTagsResponse;
+        await fetchTags();
+        handleCloseModal();
+      } catch (err) {
+        result = err.message;
+      }
+      setLoading(false);
+    }
+    deleteTags();
+  }
+
   function handleCreate() {
     if (viewType === 'tasks') {
       fetchTags();
@@ -720,6 +942,47 @@ export default function App() {
             <Text style={appStyles.modalTitle}>Settings</Text>
             {userProfile?.email && <Text>{userProfile?.email}</Text>}
           </View>
+          {storedAppleUserId === adminAppleUserId && (
+            <>
+              <Text style={appStyles.modalTitle}>Debug Options</Text>
+              <Pressable
+                style={[appStyles.button, appStyles.primaryButtonColor]}
+                onPress={debugAddAdminTasks}
+              >
+                <Text style={appStyles.buttonText}>Add 50 Tasks</Text>
+              </Pressable>
+              <Pressable
+                style={[appStyles.button, appStyles.primaryButtonColor]}
+                onPress={debugDeleteAllAdminTasks}
+              >
+                <Text style={appStyles.buttonText}>Delete All Tasks</Text>
+              </Pressable>
+              <Pressable
+                style={[appStyles.button, appStyles.primaryButtonColor]}
+                onPress={debugAddAdminEvents}
+              >
+                <Text style={appStyles.buttonText}>Complete All Tasks</Text>
+              </Pressable>
+              <Pressable
+                style={[appStyles.button, appStyles.primaryButtonColor]}
+                onPress={debugDeleteAllAdminEvents}
+              >
+                <Text style={appStyles.buttonText}>Delete All Events</Text>
+              </Pressable>
+              <Pressable
+                style={[appStyles.button, appStyles.primaryButtonColor]}
+                onPress={debugAddAdminTags}
+              >
+                <Text style={appStyles.buttonText}>Add 50 Tags</Text>
+              </Pressable>
+              <Pressable
+                style={[appStyles.button, appStyles.primaryButtonColor]}
+                onPress={debugDeleteAllAdminTags}
+              >
+                <Text style={appStyles.buttonText}>Delete All Tags</Text>
+              </Pressable>
+            </>
+          )}
         </>
       );
     }
@@ -826,13 +1089,15 @@ export default function App() {
       const task = find(tasks, (task) => {
         return task._id.$oid === highlightButton;
       });
-      const daysSinceLastEvent = task?.daysSince > 0 ? task?.daysSince : 0;
-      const daysOverdue = task?.moss > 0 ? task?.moss : 0;
-      const daysSinceStatus = task?.moss
+      const daysSince = getDaysFromMilliseconds(task?.time_since_latest_event);
+      const daysSinceLastEvent = daysSince > 0 ? daysSince : 0;
+      const mossDays = getDaysFromMilliseconds(task?.moss);
+      const daysOverdue = mossDays > 0 ? mossDays : 0;
+      const daysSinceStatus = task?.latest_event_date
         ? `${daysSinceLastEvent} ${pluralize('day', daysSinceLastEvent)} since`
         : 'Never completed!';
       let overdueStatus;
-      if (!task?.moss) {
+      if (!task?.latest_event_date) {
         overdueStatus = '';
       } else if (daysOverdue <= 0) {
         overdueStatus = '';
@@ -843,12 +1108,12 @@ export default function App() {
         )} overdue`;
       }
       let badgeStyles;
-      if (!task?.moss) {
+      if (!task?.latest_event_date) {
         badgeStyles = [
           appStyles.taskCardBadge,
           appStyles.taskCardBadgeNeverCompletedColor,
         ];
-      } else if (task?.moss > 0) {
+      } else if (mossDays > 0) {
         badgeStyles = [
           appStyles.taskCardBadge,
           appStyles.taskCardBadgeOverdueColor,
@@ -1052,6 +1317,9 @@ export default function App() {
       fetchingEvents,
       fetchingTags,
       highlightButton,
+      tasksPage,
+      eventsPage,
+      tagsPage,
     }),
     [
       tasks,
@@ -1061,6 +1329,9 @@ export default function App() {
       fetchingEvents,
       fetchingTags,
       highlightButton,
+      tasksPage,
+      eventsPage,
+      tagsPage,
     ],
   );
 
@@ -1073,6 +1344,9 @@ export default function App() {
       onPressEventCard: handleEventCardPress,
       onPressTagCard: handleTagCardPress,
       setViewType,
+      setTasksPage,
+      setEventsPage,
+      setTagsPage,
     }),
     [
       fetchTasks,
@@ -1082,6 +1356,9 @@ export default function App() {
       handleEventCardPress,
       handleTagCardPress,
       setViewType,
+      setTasksPage,
+      setEventsPage,
+      setTagsPage,
     ],
   );
 

@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -20,14 +20,27 @@ import { pluralize } from '../utilities/formatStrings';
 import appStyles from '../appStyles';
 import tasksListStyles from './tasksListStyles';
 import { DataContext, StaticContext } from '../appContext';
+import getDaysFromMilliseconds from '../utilities/time';
+import fetchMore from '../utilities/fetchMore';
 
 export default function TasksList() {
-  const { tasks, fetchingTasks, highlightButton } = useContext(DataContext);
+  const [lastContentHeight, setLastContentHeight] = useState(0);
+
+  const { tasks, fetchingTasks, highlightButton, tasksPage } =
+    useContext(DataContext);
   const {
     fetchTasks,
+    fetchMoreTasks,
     onPressTaskCard: onPress,
     setViewType,
+    setTasksPage,
   } = useContext(StaticContext);
+
+  useEffect(() => {
+    if (tasksPage === 1) {
+      setLastContentHeight(0);
+    }
+  }, [tasksPage]);
 
   useFocusEffect(() => {
     setViewType('tasks');
@@ -47,6 +60,17 @@ export default function TasksList() {
       style={{
         backgroundColor: 'white',
       }}
+      scrollEventThrottle={200}
+      onScroll={(e) =>
+        fetchMore(e, {
+          pageSize: 50,
+          page: tasksPage,
+          setPage: setTasksPage,
+          lastContentHeight,
+          setLastContentHeight,
+          fetchFunc: fetchTasks,
+        })
+      }
     >
       <View style={appStyles.container}>
         <View style={tasksListStyles.taskCardContainer}>
@@ -54,11 +78,14 @@ export default function TasksList() {
             <>
               {map(tasks, (task) => {
                 const taskSelected = highlightButton === task._id.$oid;
-                const daysSinceLastEvent =
-                  task.daysSince > 0 ? task.daysSince : 0;
-                const daysOverdue = task.moss > 0 ? task.moss : 0;
-                const isOverdue = task.moss > 0;
-                const neverCompleted = task.moss === null;
+                const daysSince = getDaysFromMilliseconds(
+                  task.time_since_latest_event,
+                );
+                const daysSinceLastEvent = daysSince > 0 ? daysSince : 0;
+                const mossDays = getDaysFromMilliseconds(task.moss);
+                const daysOverdue = mossDays > 0 ? mossDays : 0;
+                const isOverdue = mossDays > 0;
+                const neverCompleted = !task.latest_event_date;
                 let taskCardStyle;
                 if (taskSelected) {
                   taskCardStyle = tasksListStyles.taskCardHighlighted;

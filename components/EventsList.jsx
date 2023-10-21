@@ -19,9 +19,12 @@ import { useFocusEffect } from '@react-navigation/native';
 import appStyles from '../appStyles';
 import eventsListStyles from './eventsListStyles';
 import { DataContext, StaticContext } from '../appContext';
+import fetchMore from '../utilities/fetchMore';
 
 export default function EventsList() {
-  // Attemp to prevent registering event card touch when quicklyswiping during navigation
+  const [lastContentHeight, setLastContentHeight] = useState(0);
+
+  // Attemp to prevent registering event card touch when quickly swiping during navigation
   const [settled, setSettled] = useState(false);
 
   useEffect(() => {
@@ -30,13 +33,21 @@ export default function EventsList() {
     });
   }, [500]);
 
-  const { events, fetchingEvents, highlightButton } = useContext(DataContext);
+  const { events, fetchingEvents, highlightButton, eventsPage } =
+    useContext(DataContext);
 
   const {
     fetchEvents,
     onPressEventCard: onPress,
     setViewType,
+    setEventsPage,
   } = useContext(StaticContext);
+
+  useEffect(() => {
+    if (eventsPage === 1) {
+      setLastContentHeight(0);
+    }
+  }, [eventsPage]);
 
   useFocusEffect(() => {
     setViewType('events');
@@ -56,6 +67,17 @@ export default function EventsList() {
       style={{
         backgroundColor: 'white',
       }}
+      scrollEventThrottle={200}
+      onScroll={(e) =>
+        fetchMore(e, {
+          pageSize: 50,
+          page: eventsPage,
+          setPage: setEventsPage,
+          lastContentHeight,
+          setLastContentHeight,
+          fetchFunc: fetchEvents,
+        })
+      }
     >
       <View style={appStyles.container}>
         <View style={eventsListStyles.eventCardContainer}>
@@ -84,7 +106,9 @@ export default function EventsList() {
                       {truncate(event.task, { length: 40 })}
                     </Text>
                     <Text style={eventsListStyles.eventCardText}>
-                      {new Date(event.date).toLocaleDateString()}
+                      {new Date(
+                        Number(event.date.$date.$numberLong),
+                      ).toLocaleDateString()}
                     </Text>
                   </Pressable>
                 );
