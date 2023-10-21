@@ -93,6 +93,10 @@ const appStyles = StyleSheet.create({
     marginBottom: 15,
   },
   placeholder: {
+    display: 'flex',
+    justifyContent: 'center',
+    width: '100%',
+    alignItems: 'center',
     marginTop: 100,
     marginBottom: 100,
   },
@@ -194,7 +198,7 @@ const appStyles = StyleSheet.create({
     marginTop: 2,
     marginBottom: 2,
     marginLeft: 3,
-    marginRight: 3,
+    marginRight: 5,
   },
   taskCardBadgeNeverCompletedColor: {
     backgroundColor: color2,
