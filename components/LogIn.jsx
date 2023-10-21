@@ -74,6 +74,8 @@ export default function LogIn() {
           serializedResponse.apple_user_id,
         );
         SecureStore.setItemAsync('mossyToken', serializedResponse.token);
+        setStoredAppleUserId(serializedResponse.apple_user_id);
+        setStoredToken(serializedResponse.token);
         setUserProfile(serializedResponse);
         setIsAuthenticated(true);
       } else {

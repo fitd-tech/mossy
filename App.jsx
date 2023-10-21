@@ -69,6 +69,8 @@ export default function App() {
   const [storedAppleUserId, setStoredAppleUserId] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [storedToken, setStoredToken] = useState(null);
+  console.log('storedAppleUserId', storedAppleUserId);
+  console.log('storedToken', storedToken);
 
   async function fetchTasks() {
     setFetchingTasks(true);
@@ -151,6 +153,15 @@ export default function App() {
     return result;
   }
 
+  function clearUserData() {
+    SecureStore.setItemAsync('mossyAppleUserId', '');
+    SecureStore.setItemAsync('mossyToken', '');
+    setStoredAppleUserId(null);
+    setStoredToken(null);
+    setIsModalVisible(false);
+    setIsAuthenticated(false);
+  }
+
   useEffect(() => {
     async function loadUser() {
       const token = await SecureStore.getItemAsync('mossyToken');
@@ -164,7 +175,7 @@ export default function App() {
 
   useEffect(() => {
     async function loadInitial() {
-      if (storedAppleUserId) {
+      if (storedAppleUserId && storedToken && !userProfile) {
         const data = {
           apple_user_id: storedAppleUserId,
         };
@@ -176,13 +187,19 @@ export default function App() {
           },
           body: JSON.stringify(data),
         };
-        const user = await fetch(`${mossyBackendDevUrl}api/user`, config);
-        const serializedUser = await user.json();
-        setUserProfile(serializedUser);
+        const response = await fetch(`${mossyBackendDevUrl}api/user`, config);
+        if (response.ok) {
+          console.log('response ok');
+          const serializedUser = await response.json();
+          setUserProfile(serializedUser);
+        } else {
+          console.log('response error');
+          clearUserData();
+        }
       }
     }
     loadInitial();
-  }, [storedAppleUserId]);
+  }, [storedAppleUserId, storedToken, userProfile]);
 
   useEffect(() => {
     async function loadData() {
@@ -621,12 +638,7 @@ export default function App() {
         // The log in prompt automatically opens again - log the user out if they cancel it
         // Removing this value from storage is temporary - Apple doesn't allow the user to sign out except through settings
         // https://github.com/invertase/react-native-apple-authentication/issues/10
-        SecureStore.setItemAsync('mossyAppleUserId', '');
-        SecureStore.setItemAsync('mossyToken', '');
-        setStoredAppleUserId(null);
-        setStoredToken(null);
-        setIsModalVisible(false);
-        setIsAuthenticated(false);
+        clearUserData();
       }
     }
     logOut();
