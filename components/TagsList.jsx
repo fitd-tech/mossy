@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -19,14 +19,25 @@ import { useFocusEffect } from '@react-navigation/native';
 import appStyles from '../appStyles.js';
 import tagsListStyles from './tagsListStyles.js';
 import { DataContext, StaticContext } from '../appContext';
+import fetchMore from '../utilities/fetchMore.js';
 
 export default function TagsList() {
-  const { tags, fetchingTags, highlightButton } = useContext(DataContext);
+  const [lastContentHeight, setLastContentHeight] = useState(0);
+
+  const { tags, fetchingTags, highlightButton, tagsPage } =
+    useContext(DataContext);
   const {
     fetchTags,
     onPressTagCard: onPress,
     setViewType,
+    setTagsPage,
   } = useContext(StaticContext);
+
+  useEffect(() => {
+    if (tagsPage === 1) {
+      setLastContentHeight(0);
+    }
+  }, [tagsPage]);
 
   useFocusEffect(() => {
     setViewType('tags');
@@ -47,6 +58,17 @@ export default function TagsList() {
         style={{
           backgroundColor: 'white',
         }}
+        scrollEventThrottle={200}
+        onScroll={(e) =>
+          fetchMore(e, {
+            pageSize: 200,
+            page: tagsPage,
+            setPage: setTagsPage,
+            lastContentHeight,
+            setLastContentHeight,
+            fetchFunc: fetchTags,
+          })
+        }
       >
         <View style={appStyles.container}>
           <View style={tagsListStyles.tagCardContainer}>
