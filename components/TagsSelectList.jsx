@@ -1,3 +1,4 @@
+import { useContext } from 'react';
 import {
   StyleSheet,
   Text,
@@ -16,11 +17,24 @@ import { size, map, includes } from 'lodash';
 
 import appStyles from '../appStyles.js';
 import tagsSelectListStyles from './tagsSelectListStyles.js';
+import { ThemeContext } from '../appContext.js';
 
 export default function TagsSelectList({ tags, selectedTags, onPress }) {
+  const { darkMode, backgroundColor, textColor, theme } =
+    useContext(ThemeContext);
+
+  const tagCardStandardColor = {
+    borderColor: theme.color2,
+    backgroundColor: theme.color2,
+  };
+  const tagCardHighlightedColor = {
+    borderColor: theme.color1,
+    backgroundColor: theme.color1,
+  };
+
   return (
     <ScrollView>
-      <View style={appStyles.container}>
+      <View style={{ ...appStyles.container, ...backgroundColor }}>
         <View style={tagsSelectListStyles.tagCardContainer}>
           {size(tags) ? (
             <>
@@ -29,12 +43,12 @@ export default function TagsSelectList({ tags, selectedTags, onPress }) {
                 if (includes(selectedTags, tag._id.$oid)) {
                   cardStyles = [
                     tagsSelectListStyles.tagCard,
-                    tagsSelectListStyles.tagCardHighlightedColor,
+                    tagCardHighlightedColor,
                   ];
                 } else {
                   cardStyles = [
                     tagsSelectListStyles.tagCard,
-                    tagsSelectListStyles.tagCardStandardColor,
+                    tagCardStandardColor,
                   ];
                 }
                 return (
