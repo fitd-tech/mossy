@@ -2,16 +2,31 @@ import { StyleSheet } from 'react-native';
 
 import { colors } from './constants';
 
-const { color1, color2, color3, color4 } = colors;
+const { dark1, dark2, color1, color2, color3, color4 } = colors;
 
 const appStyles = StyleSheet.create({
+  lightModeBackgroundColor: {
+    backgroundColor: 'white',
+  },
+  lightModeTextColor: {
+    color: 'black',
+  },
+  darkModeBackgroundColor: {
+    backgroundColor: dark1,
+  },
+  darkModeLighterBackgroundColor: {
+    backgroundColor: dark2,
+  },
+  darkModeTextColor: {
+    color: 'white',
+  },
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    // backgroundColor: 'white',
     alignItems: 'center',
     justifyContent: 'center',
     height: '100%',
-    marginTop: 10,
+    paddingTop: 10,
   },
   tagCard: {
     display: 'flex',
@@ -24,14 +39,14 @@ const appStyles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 5,
   },
-  tagCardStandardColor: {
+  /* tagCardStandardColor: {
     borderColor: color2,
     backgroundColor: color2,
   },
   tagCardHighlightedColor: {
     borderColor: color3,
     backgroundColor: color3,
-  },
+  }, */
   tagCardTitle: {
     color: 'white',
     fontWeight: 'bold',
@@ -62,7 +77,7 @@ const appStyles = StyleSheet.create({
   },
   modalView: {
     margin: 20,
-    backgroundColor: 'white',
+    // backgroundColor: 'white',
     borderRadius: 20,
     padding: 35,
     alignItems: 'center',
@@ -117,12 +132,12 @@ const appStyles = StyleSheet.create({
     borderRadius: 2,
     marginBottom: 15,
   },
-  primaryButtonColor: {
+  /* primaryButtonColor: {
     backgroundColor: color1,
   },
   secondaryButtonColor: {
     backgroundColor: color2,
-  },
+  }, */
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
@@ -159,7 +174,7 @@ const appStyles = StyleSheet.create({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 50,
+    paddingTop: 50,
     paddingBottom: 5,
     width: '100%',
     borderBottomWidth: 1,
@@ -168,14 +183,14 @@ const appStyles = StyleSheet.create({
     position: 'absolute',
     bottom: 30,
     left: 30,
-    backgroundColor: '#BC96E6',
+    // backgroundColor: '#BC96E6',
     borderRadius: 5,
   },
   addTaskButtonWrapper: {
     position: 'absolute',
     bottom: 30,
     right: 30,
-    backgroundColor: '#BC96E6',
+    // backgroundColor: '#BC96E6',
     borderRadius: 5,
   },
   taskStatusRow: {
@@ -200,7 +215,7 @@ const appStyles = StyleSheet.create({
     marginLeft: 3,
     marginRight: 5,
   },
-  taskCardBadgeNeverCompletedColor: {
+  /* taskCardBadgeNeverCompletedColor: {
     backgroundColor: color2,
   },
   taskCardBadgeOverdueColor: {
@@ -208,7 +223,7 @@ const appStyles = StyleSheet.create({
   },
   taskCardBadgeCurrentColor: {
     backgroundColor: color4,
-  },
+  }, */
   badgeTitle: {
     fontSize: 24,
     color: 'white',
@@ -217,6 +232,34 @@ const appStyles = StyleSheet.create({
     fontSize: 8,
     marginTop: -10,
     color: 'white',
+  },
+  switchAndLabelWrapper: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    width: '100%',
+  },
+  switchLabel: {
+    marginLeft: 10,
+  },
+  themeSettingsHeading: {
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  colorThemeWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  colorThemeRow: {
+    display: 'flex',
+    flexDirection: 'row',
+    marginBottom: 10,
+    padding: 3,
+  },
+  colorThemeColor: {
+    width: 50,
+    height: 50,
   },
 });
 

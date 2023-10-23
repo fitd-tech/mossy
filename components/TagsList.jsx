@@ -18,12 +18,14 @@ import { useFocusEffect } from '@react-navigation/native';
 
 import appStyles from '../appStyles.js';
 import tagsListStyles from './tagsListStyles.js';
-import { DataContext, StaticContext } from '../appContext';
+import { DataContext, StaticContext, ThemeContext } from '../appContext';
 import fetchMore from '../utilities/fetchMore.js';
 
 export default function TagsList() {
   const [lastContentHeight, setLastContentHeight] = useState(0);
 
+  const { darkMode, backgroundColor, textColor, theme } =
+    useContext(ThemeContext);
   const { tags, fetchingTags, highlightButton, tagsPage } =
     useContext(DataContext);
   const {
@@ -32,6 +34,16 @@ export default function TagsList() {
     setViewType,
     setTagsPage,
   } = useContext(StaticContext);
+
+  const tagCardStandardColor = {
+    borderColor: theme.color2,
+    backgroundColor: theme.color2,
+  };
+
+  const tagCardHighlightedColor = {
+    borderColor: theme.color3,
+    backgroundColor: theme.color3,
+  };
 
   useEffect(() => {
     if (tagsPage === 1) {
@@ -50,14 +62,10 @@ export default function TagsList() {
           <RefreshControl
             refreshing={fetchingTags}
             onRefresh={fetchTags}
-            style={{
-              backgroundColor: 'white',
-            }}
+            style={backgroundColor}
           />
         }
-        style={{
-          backgroundColor: 'white',
-        }}
+        style={backgroundColor}
         scrollEventThrottle={200}
         onScroll={(e) =>
           fetchMore(e, {
@@ -70,7 +78,7 @@ export default function TagsList() {
           })
         }
       >
-        <View style={appStyles.container}>
+        <View style={{ ...appStyles.container, ...backgroundColor }}>
           <View style={tagsListStyles.tagCardContainer}>
             {size(tags) ? (
               <>
@@ -79,13 +87,10 @@ export default function TagsList() {
                   if (tag._id.$oid === highlightButton) {
                     cardStyles = [
                       tagsListStyles.tagCard,
-                      tagsListStyles.tagCardHighlightedColor,
+                      tagCardHighlightedColor,
                     ];
                   } else {
-                    cardStyles = [
-                      tagsListStyles.tagCard,
-                      tagsListStyles.tagCardStandardColor,
-                    ];
+                    cardStyles = [tagsListStyles.tagCard, tagCardStandardColor];
                   }
                   return (
                     <Pressable

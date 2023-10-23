@@ -31,8 +31,8 @@ const taskListStyles = StyleSheet.create({
     padding: 10,
     borderWidth: 2,
     borderRadius: 5,
-    borderColor: color4,
-    backgroundColor: color4,
+    // borderColor: color4,
+    // backgroundColor: color4,
   },
   taskTitle: {
     fontWeight: 700,
@@ -53,8 +53,8 @@ const taskListStyles = StyleSheet.create({
     padding: 10,
     borderWidth: 2,
     borderRadius: 5,
-    borderColor: color3,
-    backgroundColor: color3,
+    // borderColor: color3,
+    // backgroundColor: color3,
   },
   taskTitleHighlighted: {
     fontWeight: 700,
@@ -75,8 +75,8 @@ const taskListStyles = StyleSheet.create({
     padding: 10,
     borderWidth: 2,
     borderRadius: 5,
-    borderColor: color1,
-    backgroundColor: color1,
+    // borderColor: color1,
+    // backgroundColor: color1,
   },
   taskTitleOverdue: {
     fontWeight: 700,
@@ -97,8 +97,8 @@ const taskListStyles = StyleSheet.create({
     padding: 10,
     borderWidth: 2,
     borderRadius: 5,
-    borderColor: color2,
-    backgroundColor: color2,
+    // borderColor: color2,
+    // backgroundColor: color2,
   },
   taskTitleNeverCompleted: {
     fontWeight: 700,
@@ -126,7 +126,7 @@ const taskListStyles = StyleSheet.create({
     maxHeight: '100%',
     minHeight: '100%',
     borderRadius: 5,
-    backgroundColor: 'white',
+    // backgroundColor: 'white',
   },
   badgeTitle: {
     fontSize: 24,

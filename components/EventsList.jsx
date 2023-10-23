@@ -18,7 +18,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 import appStyles from '../appStyles';
 import eventsListStyles from './eventsListStyles';
-import { DataContext, StaticContext } from '../appContext';
+import { DataContext, StaticContext, ThemeContext } from '../appContext';
 import fetchMore from '../utilities/fetchMore';
 
 export default function EventsList() {
@@ -33,6 +33,9 @@ export default function EventsList() {
     });
   }, [500]);
 
+  const { darkMode, backgroundColor, textColor, theme } =
+    useContext(ThemeContext);
+
   const { events, fetchingEvents, highlightButton, eventsPage } =
     useContext(DataContext);
 
@@ -42,6 +45,16 @@ export default function EventsList() {
     setViewType,
     setEventsPage,
   } = useContext(StaticContext);
+
+  const eventCardStandardColor = {
+    borderColor: theme.color1,
+    backgroundColor: theme.color1,
+  };
+
+  const eventCardHighlightedColor = {
+    borderColor: theme.color3,
+    backgroundColor: theme.color3,
+  };
 
   useEffect(() => {
     if (eventsPage === 1) {
@@ -59,14 +72,10 @@ export default function EventsList() {
         <RefreshControl
           refreshing={fetchingEvents}
           onRefresh={fetchEvents}
-          style={{
-            backgroundColor: 'white',
-          }}
+          style={backgroundColor}
         />
       }
-      style={{
-        backgroundColor: 'white',
-      }}
+      style={backgroundColor}
       scrollEventThrottle={200}
       onScroll={(e) =>
         fetchMore(e, {
@@ -79,7 +88,7 @@ export default function EventsList() {
         })
       }
     >
-      <View style={appStyles.container}>
+      <View style={{ ...appStyles.container, ...backgroundColor }}>
         <View style={eventsListStyles.eventCardContainer}>
           {size(events) ? (
             <>
@@ -88,12 +97,12 @@ export default function EventsList() {
                 if (event._id.$oid === highlightButton) {
                   cardStyles = [
                     eventsListStyles.eventCard,
-                    eventsListStyles.eventCardHighlightedColor,
+                    eventCardHighlightedColor,
                   ];
                 } else {
                   cardStyles = [
                     eventsListStyles.eventCard,
-                    eventsListStyles.eventCardStandardColor,
+                    eventCardStandardColor,
                   ];
                 }
                 return (

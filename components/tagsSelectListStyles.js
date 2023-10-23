@@ -25,14 +25,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 5,
   },
-  tagCardStandardColor: {
-    borderColor: color2,
-    backgroundColor: color2,
-  },
-  tagCardHighlightedColor: {
-    borderColor: color1,
-    backgroundColor: color1,
-  },
   tagCardTitle: {
     color: 'white',
     fontWeight: 'bold',

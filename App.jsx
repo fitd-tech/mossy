@@ -12,6 +12,8 @@ import {
   Animated,
   ActivityIndicator,
   RefreshControl,
+  Switch,
+  useColorScheme,
 } from 'react-native';
 import {
   map,
@@ -40,10 +42,21 @@ import TagsList from './components/TagsList';
 import TagsSelectList from './components/TagsSelectList';
 import TasksList from './components/TasksList';
 import EventsList from './components/EventsList';
-import { StaticContext, DataContext, UserContext } from './appContext';
+import {
+  StaticContext,
+  DataContext,
+  UserContext,
+  ThemeContext,
+} from './appContext';
 import { navigationRef, navigate } from './RootNavigation';
 import LogIn from './components/LogIn';
 import getDaysFromMilliseconds from './utilities/time';
+import { colors } from './constants';
+import { themes } from './theme/colors';
+
+const { dark1 } = colors;
+
+const defaultTheme = 'mossy';
 
 const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
 const adminAppleUserId = process.env.EXPO_PUBLIC_ADMIN_APPLE_USER_ID;
@@ -51,6 +64,9 @@ const adminAppleUserId = process.env.EXPO_PUBLIC_ADMIN_APPLE_USER_ID;
 const Tab = createMaterialTopTabNavigator();
 
 export default function App() {
+  // System light/dark mode
+  const colorScheme = useColorScheme();
+
   const [highlightButton, setHighlightButton] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [tasks, setTasks] = useState([]);
@@ -75,6 +91,104 @@ export default function App() {
   const [tasksPage, setTasksPage] = useState(1);
   const [eventsPage, setEventsPage] = useState(1);
   const [tagsPage, setTagsPage] = useState(1);
+  const [useSystemDarkMode, setUseSystemDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
+  const [theme, setTheme] = useState(find(themes, { name: defaultTheme }));
+  const [savingUserTheme, setSavingUserTheme] = useState(false);
+
+  const textColor = darkMode
+    ? appStyles.darkModeTextColor
+    : appStyles.lightModeTextColor;
+  const backgroundColor = darkMode
+    ? appStyles.darkModeBackgroundColor
+    : appStyles.lightModeBackgroundColor;
+  const secondaryBackgroundColor = darkMode
+    ? appStyles.darkModeLighterBackgroundColor
+    : appStyles.lightModeBackgroundColor;
+  const primaryButtonColor = {
+    backgroundColor: theme.color1,
+  };
+  const secondaryButtonColor = {
+    backgroundColor: theme.color2,
+  };
+
+  const taskCardBadgeOverdueColor = {
+    backgroundColor: theme.color1,
+  };
+  const taskCardBadgeNeverCompletedColor = {
+    backgroundColor: theme.color2,
+  };
+  const taskCardBadgeCurrentColor = {
+    backgroundColor: theme.color4,
+  };
+
+  async function fetchUser() {
+    const data = {
+      apple_user_id: storedAppleUserId,
+    };
+    const config = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${storedToken}`,
+      },
+      body: JSON.stringify(data),
+    };
+    const response = await fetch(`${mossyBackendDevUrl}api/user`, config);
+    if (response.ok) {
+      const serializedUser = await response.json();
+      setUserProfile(serializedUser);
+      setUseSystemDarkMode(serializedUser.should_color_scheme_use_system);
+      setDarkMode(serializedUser.is_color_scheme_dark_mode);
+      setTheme(find(themes, { id: serializedUser.color_theme }));
+    } else {
+      clearUserData();
+    }
+  }
+
+  function saveUserTheme(data) {
+    async function updateUserTheme() {
+      setSavingUserTheme(true);
+      const userTheme = {
+        apple_user_id: data.storedAppleUserId,
+        should_color_scheme_use_system: data.useSystemDarkMode,
+        is_color_scheme_dark_mode: data.darkMode,
+        color_theme: data.theme,
+      };
+      const config = {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`,
+        },
+        body: JSON.stringify(userTheme),
+      };
+      let result;
+      try {
+        const response = await fetch(
+          `${mossyBackendDevUrl}api/user/theme`,
+          config,
+        );
+        const serializedUpdateUserThemeResponse = await response.json();
+        result = serializedUpdateUserThemeResponse;
+        handleCloseModal();
+      } catch (err) {
+        result = err.message;
+      }
+      setSavingUserTheme(false);
+    }
+    updateUserTheme();
+  }
+
+  useEffect(() => {
+    if (useSystemDarkMode) {
+      if (colorScheme === 'dark') {
+        setDarkMode(true);
+      } else {
+        setDarkMode(false);
+      }
+    }
+  }, [colorScheme, useSystemDarkMode]);
 
   async function fetchTasks(options) {
     let searchParams;
@@ -220,29 +334,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    async function loadInitial() {
-      if (storedAppleUserId && storedToken && !userProfile) {
-        const data = {
-          apple_user_id: storedAppleUserId,
-        };
-        const config = {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${storedToken}`,
-          },
-          body: JSON.stringify(data),
-        };
-        const response = await fetch(`${mossyBackendDevUrl}api/user`, config);
-        if (response.ok) {
-          const serializedUser = await response.json();
-          setUserProfile(serializedUser);
-        } else {
-          clearUserData();
-        }
-      }
+    if (storedAppleUserId && storedToken && !userProfile) {
+      fetchUser();
     }
-    loadInitial();
   }, [storedAppleUserId, storedToken, userProfile]);
 
   useEffect(() => {
@@ -846,6 +940,10 @@ export default function App() {
     setFormType('settings');
   }
 
+  function handleViewThemeSettings() {
+    setFormType('theme');
+  }
+
   function handleLogOut() {
     setFormType('logOut');
   }
@@ -888,15 +986,15 @@ export default function App() {
     if (formType === 'menu') {
       function generateButtonStyles(buttonView) {
         if (buttonView === viewType) {
-          return [appStyles.button, appStyles.secondaryButtonColor];
+          return [appStyles.button, secondaryButtonColor];
         } else {
-          return [appStyles.button, appStyles.primaryButtonColor];
+          return [appStyles.button, primaryButtonColor];
         }
       }
       return (
         <>
-          <View style={appStyles.taskDetailsWrapper}>
-            <Text style={appStyles.modalTitle}>Menu</Text>
+          <View style={{ ...appStyles.taskDetailsWrapper, ...backgroundColor }}>
+            <Text style={{ ...appStyles.modalTitle, ...textColor }}>Menu</Text>
           </View>
           <Pressable
             style={generateButtonStyles('tasks')}
@@ -917,7 +1015,7 @@ export default function App() {
             <Text style={appStyles.buttonText}>Tags</Text>
           </Pressable>
           <Pressable
-            style={[appStyles.button, appStyles.primaryButtonColor]}
+            style={[appStyles.button, primaryButtonColor]}
             onPress={handleViewSettings}
           >
             <Text style={appStyles.buttonText}>Settings</Text>
@@ -925,7 +1023,7 @@ export default function App() {
           <Pressable
             style={[
               appStyles.button,
-              appStyles.secondaryButtonColor,
+              secondaryButtonColor,
               { marginBottom: 30 },
             ]}
             onPress={handleLogOut}
@@ -938,45 +1036,61 @@ export default function App() {
     if (formType === 'settings') {
       return (
         <>
-          <View style={appStyles.taskDetailsWrapper}>
-            <Text style={appStyles.modalTitle}>Settings</Text>
-            {userProfile?.email && <Text>{userProfile?.email}</Text>}
+          <View style={{ ...appStyles.taskDetailsWrapper, ...backgroundColor }}>
+            <Text style={{ ...appStyles.modalTitle, ...textColor }}>
+              Settings
+            </Text>
+            {userProfile?.email && (
+              <Text style={textColor}>{userProfile?.email}</Text>
+            )}
+            <Pressable
+              style={[
+                appStyles.button,
+                primaryButtonColor,
+                { marginTop: 25, marginBottom: 0 },
+              ]}
+              onPress={handleViewThemeSettings}
+            >
+              <Text style={appStyles.buttonText}>Theme</Text>
+            </Pressable>
           </View>
           {storedAppleUserId === adminAppleUserId && (
             <>
-              <Text style={appStyles.modalTitle}>Debug Options</Text>
+              <Text style={{ ...appStyles.modalTitle, ...textColor }}>
+                Debug Options
+              </Text>
               <Pressable
-                style={[appStyles.button, appStyles.primaryButtonColor]}
+                style={[appStyles.button, primaryButtonColor]}
                 onPress={debugAddAdminTasks}
               >
                 <Text style={appStyles.buttonText}>Add 50 Tasks</Text>
               </Pressable>
               <Pressable
-                style={[appStyles.button, appStyles.primaryButtonColor]}
+                style={[appStyles.button, primaryButtonColor]}
                 onPress={debugDeleteAllAdminTasks}
               >
                 <Text style={appStyles.buttonText}>Delete All Tasks</Text>
               </Pressable>
               <Pressable
-                style={[appStyles.button, appStyles.primaryButtonColor]}
+                style={[appStyles.button, primaryButtonColor]}
                 onPress={debugAddAdminEvents}
               >
                 <Text style={appStyles.buttonText}>Complete All Tasks</Text>
               </Pressable>
               <Pressable
-                style={[appStyles.button, appStyles.primaryButtonColor]}
+                style={[appStyles.button, primaryButtonColor]}
                 onPress={debugDeleteAllAdminEvents}
               >
                 <Text style={appStyles.buttonText}>Delete All Events</Text>
               </Pressable>
               <Pressable
-                style={[appStyles.button, appStyles.primaryButtonColor]}
+                style={[appStyles.button, primaryButtonColor]}
                 onPress={debugAddAdminTags}
               >
                 <Text style={appStyles.buttonText}>Add 50 Tags</Text>
               </Pressable>
               <Pressable
-                style={[appStyles.button, appStyles.primaryButtonColor]}
+                style={[appStyles.button, primaryButtonColor]}
                 onPress={debugDeleteAllAdminTags}
               >
                 <Text style={appStyles.buttonText}>Delete All Tags</Text>
@@ -986,24 +1100,155 @@ export default function App() {
         </>
       );
     }
+    if (formType === 'theme') {
+      return (
+        <>
+          <View style={{ ...appStyles.taskDetailsWrapper, ...backgroundColor }}>
+            <Text style={{ ...appStyles.modalTitle, ...textColor }}>Theme</Text>
+            <Text style={{ ...appStyles.themeSettingsHeading, ...textColor }}>
+              Dark Mode
+            </Text>
+            <View style={appStyles.switchAndLabelWrapper}>
+              <Switch
+                trackColor={{ false: '#767577', true: '#81b0ff' }}
+                thumbColor={useSystemDarkMode ? '#f5dd4b' : '#f4f3f4'}
+                ios_backgroundColor="#3e3e3e"
+                onValueChange={(e) => {
+                  const isSystemDarkMode = colorScheme === 'dark';
+                  const data = {
+                    storedAppleUserId,
+                    useSystemDarkMode: e,
+                    darkMode: e ? isSystemDarkMode : darkMode,
+                    theme: theme.id,
+                  };
+                  saveUserTheme(data);
+                  setUseSystemDarkMode(e);
+                }}
+                value={useSystemDarkMode}
+                disabled={savingUserTheme}
+              />
+              <Text style={{ ...appStyles.switchLabel, ...textColor }}>
+                Use system setting
+              </Text>
+            </View>
+            <View style={appStyles.switchAndLabelWrapper}>
+              <Switch
+                trackColor={{ false: '#767577', true: '#81b0ff' }}
+                thumbColor={darkMode ? '#f5dd4b' : '#f4f3f4'}
+                ios_backgroundColor="#3e3e3e"
+                onValueChange={(e) => {
+                  const data = {
+                    storedAppleUserId,
+                    useSystemDarkMode,
+                    darkMode: e,
+                    theme: theme.id,
+                  };
+                  saveUserTheme(data);
+                  setDarkMode(e);
+                }}
+                value={darkMode}
+                disabled={useSystemDarkMode || savingUserTheme}
+              />
+              <Text style={{ ...appStyles.switchLabel, ...textColor }}>
+                Dark Mode
+              </Text>
+            </View>
+            <Text style={{ ...appStyles.themeSettingsHeading, ...textColor }}>
+              Color Theme
+            </Text>
+            <View style={appStyles.colorThemeWrapper}>
+              {map(themes, (themeChoice) => {
+                const selectedItemBorder = {
+                  borderWidth: 2,
+                  borderRadius: 5,
+                  borderColor: textColor,
+                };
+                let rowStyles;
+                if (theme.id === themeChoice.id) {
+                  rowStyles = {
+                    ...appStyles.colorThemeRow,
+                    ...selectedItemBorder,
+                  };
+                } else {
+                  rowStyles = appStyles.colorThemeRow;
+                }
+                return (
+                  <Pressable
+                    key={themeChoice.id}
+                    style={rowStyles}
+                    onPress={
+                      savingUserTheme
+                        ? noop
+                        : () => {
+                            const data = {
+                              storedAppleUserId,
+                              useSystemDarkMode,
+                              darkMode,
+                              theme: themeChoice.id,
+                            };
+                            saveUserTheme(data);
+                            setTheme(themeChoice);
+                          }
+                    }
+                  >
+                    <View
+                      style={{
+                        ...appStyles.colorThemeColor,
+                        backgroundColor: themeChoice.color1,
+                      }}
+                    />
+                    <View
+                      style={{
+                        ...appStyles.colorThemeColor,
+                        backgroundColor: themeChoice.color2,
+                      }}
+                    />
+                    <View
+                      style={{
+                        ...appStyles.colorThemeColor,
+                        backgroundColor: themeChoice.color3,
+                      }}
+                    />
+                    <View
+                      style={{
+                        ...appStyles.colorThemeColor,
+                        backgroundColor: themeChoice.color4,
+                      }}
+                    />
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        </>
+      );
+    }
     if (formType === 'editTask') {
       return (
         <>
-          <Text style={appStyles.modalTitle}>
+          <Text style={{ ...appStyles.modalTitle, ...textColor }}>
             {highlightButton ? 'Edit Task' : 'Create Task'}
           </Text>
           <TextInput
             value={name}
             onChangeText={(value) => handleChangeField(value, setName)}
             placeholder="Name"
-            style={appStyles.textInput}
+            style={{
+              ...appStyles.textInput,
+              ...textColor,
+              ...secondaryBackgroundColor,
+            }}
           />
           <TextInput
             value={frequency}
             onChangeText={(value) => handleChangeField(value, setFrequency)}
             placeholder="Frequency"
             inputMode="numeric"
-            style={appStyles.textInput}
+            style={{
+              ...appStyles.textInput,
+              ...textColor,
+              ...secondaryBackgroundColor,
+            }}
           />
           <TagsSelectList
             tags={tags}
@@ -1011,7 +1256,7 @@ export default function App() {
             onPress={handleTagSelectCardPress}
           />
           <Pressable
-            style={[appStyles.button, appStyles.primaryButtonColor]}
+            style={[appStyles.button, primaryButtonColor]}
             onPress={handleSaveTask}
           >
             {loading ? (
@@ -1027,7 +1272,9 @@ export default function App() {
       const dateTimePickerStyles = generateDateTimePickerStyles(completionDate);
       return (
         <>
-          <Text style={appStyles.modalTitle}>Complete Task</Text>
+          <Text style={{ ...appStyles.modalTitle, ...textColor }}>
+            Complete Task
+          </Text>
           <View style={appStyles.dateWrapper}>
             <DateTimePicker
               mode="date"
@@ -1039,7 +1286,7 @@ export default function App() {
             />
           </View>
           <Pressable
-            style={[appStyles.button, appStyles.primaryButtonColor]}
+            style={[appStyles.button, primaryButtonColor]}
             onPress={handleSaveComplete}
           >
             {loading ? (
@@ -1054,9 +1301,11 @@ export default function App() {
     if (formType === 'delete') {
       return (
         <>
-          <Text style={appStyles.modalTitle}>Confirm Delete</Text>
+          <Text style={{ ...appStyles.modalTitle, ...textColor }}>
+            Confirm Delete
+          </Text>
           <Pressable
-            style={[appStyles.button, appStyles.primaryButtonColor]}
+            style={[appStyles.button, primaryButtonColor]}
             onPress={handleDelete}
           >
             {loading ? (
@@ -1071,9 +1320,11 @@ export default function App() {
     if (formType === 'logOut') {
       return (
         <>
-          <Text style={appStyles.modalTitle}>Confirm Log Out</Text>
+          <Text style={{ ...appStyles.modalTitle, ...textColor }}>
+            Confirm Log Out
+          </Text>
           <Pressable
-            style={[appStyles.button, appStyles.primaryButtonColor]}
+            style={[appStyles.button, primaryButtonColor]}
             onPress={handleConfirmLogOut}
           >
             {loading ? (
@@ -1111,23 +1362,19 @@ export default function App() {
       if (!task?.latest_event_date) {
         badgeStyles = [
           appStyles.taskCardBadge,
-          appStyles.taskCardBadgeNeverCompletedColor,
+          taskCardBadgeNeverCompletedColor,
         ];
       } else if (mossDays > 0) {
-        badgeStyles = [
-          appStyles.taskCardBadge,
-          appStyles.taskCardBadgeOverdueColor,
-        ];
+        badgeStyles = [appStyles.taskCardBadge, taskCardBadgeOverdueColor];
       } else {
-        badgeStyles = [
-          appStyles.taskCardBadge,
-          appStyles.taskCardBadgeCurrentColor,
-        ];
+        badgeStyles = [appStyles.taskCardBadge, taskCardBadgeCurrentColor];
       }
       return (
         <>
-          <View style={appStyles.taskDetailsWrapper}>
-            <Text style={appStyles.modalTitle}>Task Details</Text>
+          <View style={{ ...appStyles.taskDetailsWrapper, ...backgroundColor }}>
+            <Text style={{ ...appStyles.modalTitle, ...textColor }}>
+              Task Details
+            </Text>
             <View style={appStyles.taskStatusWrapper}>
               <View style={appStyles.taskStatusRow}>
                 <View style={badgeStyles}>
@@ -1138,7 +1385,7 @@ export default function App() {
                     })}
                   </Text>
                 </View>
-                <Text>frequency</Text>
+                <Text style={textColor}>frequency</Text>
               </View>
               <View style={appStyles.taskStatusRow}>
                 <View style={badgeStyles}>
@@ -1149,7 +1396,7 @@ export default function App() {
                     })}
                   </Text>
                 </View>
-                <Text>
+                <Text style={textColor}>
                   {!task?.moss ? 'never completed!' : 'since last completed'}
                 </Text>
               </View>
@@ -1162,24 +1409,24 @@ export default function App() {
                     })}
                   </Text>
                 </View>
-                <Text>overdue</Text>
+                <Text style={textColor}>overdue</Text>
               </View>
             </View>
           </View>
           <Pressable
-            style={[appStyles.button, appStyles.primaryButtonColor]}
+            style={[appStyles.button, primaryButtonColor]}
             onPress={handleEdit}
           >
             <Text style={appStyles.buttonText}>Edit</Text>
           </Pressable>
           <Pressable
-            style={[appStyles.button, appStyles.primaryButtonColor]}
+            style={[appStyles.button, primaryButtonColor]}
             onPress={handleComplete}
           >
             <Text style={appStyles.buttonText}>Complete</Text>
           </Pressable>
           <Pressable
-            style={[appStyles.button, appStyles.primaryButtonColor]}
+            style={[appStyles.button, primaryButtonColor]}
             onPress={confirmDelete}
           >
             <Text style={appStyles.buttonText}>Delete</Text>
@@ -1192,9 +1439,11 @@ export default function App() {
       const dateTimePickerStyles = generateDateTimePickerStyles(completionDate);
       return (
         <>
-          <Text style={appStyles.modalTitle}>Edit Event</Text>
+          <Text style={{ ...appStyles.modalTitle, ...textColor }}>
+            Edit Event
+          </Text>
           <View style={appStyles.modalTextWrapper}>
-            <Text>{event?.task}</Text>
+            <Text style={textColor}>{event?.task}</Text>
           </View>
           <View style={appStyles.dateWrapper}>
             <DateTimePicker
@@ -1207,7 +1456,7 @@ export default function App() {
             />
           </View>
           <Pressable
-            style={[appStyles.button, appStyles.primaryButtonColor]}
+            style={[appStyles.button, primaryButtonColor]}
             onPress={saveEvent}
           >
             {loading ? (
@@ -1217,7 +1466,7 @@ export default function App() {
             )}
           </Pressable>
           <Pressable
-            style={[appStyles.button, appStyles.primaryButtonColor]}
+            style={[appStyles.button, primaryButtonColor]}
             onPress={confirmDelete}
           >
             <Text style={appStyles.buttonText}>Delete</Text>
@@ -1237,20 +1486,28 @@ export default function App() {
       ];
       return (
         <>
-          <Text style={appStyles.modalTitle}>
+          <Text style={{ ...appStyles.modalTitle, ...textColor }}>
             {highlightButton ? 'Edit Tag' : 'Create Tag'}
           </Text>
           <TextInput
             value={name}
             onChangeText={(value) => handleChangeField(value, setName)}
             placeholder="Name"
-            style={appStyles.textInput}
+            style={{
+              ...appStyles.textInput,
+              ...textColor,
+              ...secondaryBackgroundColor,
+            }}
           />
           <TextInput
             value={description}
             onChangeText={(value) => handleChangeField(value, setDescription)}
             placeholder="Description"
-            style={appStyles.textInput}
+            style={{
+              ...appStyles.textInput,
+              ...textColor,
+              ...secondaryBackgroundColor,
+            }}
           />
           <Picker
             selectedValue={parentTag}
@@ -1265,7 +1522,7 @@ export default function App() {
             ))}
           </Picker>
           <Pressable
-            style={[appStyles.button, appStyles.primaryButtonColor]}
+            style={[appStyles.button, primaryButtonColor]}
             onPress={handleSaveTag}
           >
             {loading ? (
@@ -1276,7 +1533,7 @@ export default function App() {
           </Pressable>
           {highlightButton && (
             <Pressable
-              style={[appStyles.button, appStyles.primaryButtonColor]}
+              style={[appStyles.button, primaryButtonColor]}
               onPress={confirmDelete}
             >
               <Text style={appStyles.buttonText}>Delete</Text>
@@ -1362,95 +1619,119 @@ export default function App() {
     ],
   );
 
+  const themeContext = useMemo(
+    () => ({
+      darkMode,
+      backgroundColor,
+      textColor,
+      theme,
+    }),
+    [darkMode, backgroundColor, textColor, theme],
+  );
+
   return (
     <>
       <NavigationContainer ref={navigationRef}>
-        <View style={appStyles.appTitleWrapper}>
-          <Text style={appStyles.appTitle}>mossy</Text>
+        <View style={{ ...appStyles.appTitleWrapper, ...backgroundColor }}>
+          <Text style={{ ...appStyles.appTitle, ...textColor }}>mossy</Text>
         </View>
-        <UserContext.Provider value={userContext}>
-          <StaticContext.Provider value={staticContext}>
-            <DataContext.Provider value={dataContext}>
-              {isAuthenticated ? (
-                <>
+        <ThemeContext.Provider value={themeContext}>
+          <UserContext.Provider value={userContext}>
+            <StaticContext.Provider value={staticContext}>
+              <DataContext.Provider value={dataContext}>
+                {isAuthenticated ? (
+                  <>
+                    <Tab.Navigator
+                      initialRouteName="tasks"
+                      screenOptions={{
+                        tabBarStyle: {
+                          height: 0,
+                        },
+                      }}
+                    >
+                      <Tab.Screen name="tasks" component={TasksList} />
+                      <Tab.Screen name="events" component={EventsList} />
+                      <Tab.Screen name="tags" component={TagsList} />
+                    </Tab.Navigator>
+                    <FadeTransitionOverlay isVisible={isModalVisible} />
+                    <Modal
+                      animationType="slide"
+                      transparent
+                      visible={isModalVisible}
+                    >
+                      <Pressable
+                        onPress={() => handleCloseModal()}
+                        style={appStyles.modalPressOut}
+                      >
+                        <View style={appStyles.centeredView}>
+                          <View
+                            style={{
+                              ...appStyles.modalView,
+                              ...backgroundColor,
+                            }}
+                          >
+                            <Pressable
+                              onPress={noop}
+                              style={appStyles.modalPressReset}
+                            >
+                              {renderForm()}
+                              <Pressable
+                                style={[appStyles.button, secondaryButtonColor]}
+                                onPress={handleCloseModal}
+                              >
+                                <Text style={appStyles.buttonText}>Close</Text>
+                              </Pressable>
+                            </Pressable>
+                          </View>
+                        </View>
+                      </Pressable>
+                    </Modal>
+                    <Pressable
+                      onPress={handleOpenMenu}
+                      style={{
+                        ...appStyles.menuButtonWrapper,
+                        ...secondaryButtonColor,
+                      }}
+                    >
+                      <Ionicons
+                        name="menu"
+                        size={48}
+                        color={darkMode ? dark1 : 'white'}
+                      />
+                    </Pressable>
+                    {viewType !== 'events' && (
+                      <Pressable
+                        onPress={handleCreate}
+                        style={{
+                          ...appStyles.addTaskButtonWrapper,
+                          ...secondaryButtonColor,
+                        }}
+                      >
+                        <Ionicons
+                          name="ios-add-circle"
+                          size={48}
+                          color={darkMode ? dark1 : 'white'}
+                          style={{ marginLeft: 3 }}
+                        />
+                      </Pressable>
+                    )}
+                  </>
+                ) : (
                   <Tab.Navigator
-                    initialRouteName="tasks"
+                    initialRouteName="log-in"
                     screenOptions={{
                       tabBarStyle: {
                         height: 0,
                       },
                     }}
                   >
-                    <Tab.Screen name="tasks" component={TasksList} />
-                    <Tab.Screen name="events" component={EventsList} />
-                    <Tab.Screen name="tags" component={TagsList} />
+                    <Tab.Screen name="log-in" component={LogIn} />
                   </Tab.Navigator>
-                  <FadeTransitionOverlay isVisible={isModalVisible} />
-                  <Modal
-                    animationType="slide"
-                    transparent
-                    visible={isModalVisible}
-                  >
-                    <Pressable
-                      onPress={() => handleCloseModal()}
-                      style={appStyles.modalPressOut}
-                    >
-                      <View style={appStyles.centeredView}>
-                        <View style={appStyles.modalView}>
-                          <Pressable
-                            onPress={noop}
-                            style={appStyles.modalPressReset}
-                          >
-                            {renderForm()}
-                            <Pressable
-                              style={[
-                                appStyles.button,
-                                appStyles.secondaryButtonColor,
-                              ]}
-                              onPress={handleCloseModal}
-                            >
-                              <Text style={appStyles.buttonText}>Cancel</Text>
-                            </Pressable>
-                          </Pressable>
-                        </View>
-                      </View>
-                    </Pressable>
-                  </Modal>
-                  <Pressable
-                    onPress={handleOpenMenu}
-                    style={appStyles.menuButtonWrapper}
-                  >
-                    <Ionicons name="menu" size={48} color="white" />
-                  </Pressable>
-                  {viewType !== 'events' && (
-                    <Pressable
-                      onPress={handleCreate}
-                      style={appStyles.addTaskButtonWrapper}
-                    >
-                      <Ionicons
-                        name="ios-add-circle"
-                        size={48}
-                        color="white"
-                        style={{ marginLeft: 3 }}
-                      />
-                    </Pressable>
-                  )}
-                </>
-              ) : (
-                <Tab.Navigator
-                  initialRouteName="log-in"
-                  screenOptions={{
-                    tabBarStyle: {
-                      height: 0,
-                    },
-                  }}
-                >
-                  <Tab.Screen name="log-in" component={LogIn} />
-                </Tab.Navigator>
-              )}
-            </DataContext.Provider>
-          </StaticContext.Provider>
-        </UserContext.Provider>
+                )}
+              </DataContext.Provider>
+            </StaticContext.Provider>
+          </UserContext.Provider>
+        </ThemeContext.Provider>
       </NavigationContainer>
     </>
   );

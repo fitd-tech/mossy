@@ -23,14 +23,6 @@ const eventsListStyles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 5,
   },
-  eventCardStandardColor: {
-    borderColor: color1,
-    backgroundColor: color1,
-  },
-  eventCardHighlightedColor: {
-    borderColor: color3,
-    backgroundColor: color3,
-  },
   eventCardTitle: {
     color: 'white',
     fontWeight: 'bold',
