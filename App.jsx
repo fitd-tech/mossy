@@ -171,7 +171,6 @@ export default function App() {
         );
         const serializedUpdateUserThemeResponse = await response.json();
         result = serializedUpdateUserThemeResponse;
-        handleCloseModal();
       } catch (err) {
         result = err.message;
       }

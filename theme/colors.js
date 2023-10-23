@@ -10,10 +10,10 @@ export const themes = [
   {
     id: 2,
     name: 'mossy 9',
-    color1: '#907ad6',
-    color2: '#4f518c',
-    color3: '#7fdeff',
-    color4: '#2c2a4a',
+    color1: '#4f518c',
+    color2: '#7fdeff',
+    color3: '#2c2a4a',
+    color4: '#907ad6',
   },
   {
     id: 3,
