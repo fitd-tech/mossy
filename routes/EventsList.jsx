@@ -124,8 +124,10 @@ export default function EventsList() {
               })}
             </>
           ) : (
-            <View style={appStyles.placeholder}>
-              <Text style={appStyles.placeholderText}>Create some events!</Text>
+            <View style={{ ...appStyles.placeholder, ...backgroundColor }}>
+              <Text style={{ ...appStyles.placeholderText, ...textColor }}>
+                Create some events!
+              </Text>
             </View>
           )}
         </View>

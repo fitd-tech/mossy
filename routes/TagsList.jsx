@@ -18,7 +18,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 import appStyles from '../appStyles.js';
 import tagsListStyles from './tagsListStyles.js';
-import { DataContext, StaticContext, ThemeContext } from '../appContext';
+import { DataContext, StaticContext, ThemeContext } from '../appContext.js';
 import fetchMore from '../utilities/fetchMore.js';
 
 export default function TagsList() {
@@ -106,8 +106,10 @@ export default function TagsList() {
                 })}
               </>
             ) : (
-              <View style={appStyles.placeholder}>
-                <Text style={appStyles.placeholderText}>Create some tags!</Text>
+              <View style={{ ...appStyles.placeholder, backgroundColor }}>
+                <Text style={{ ...appStyles.placeholderText, ...textColor }}>
+                  Create some tags!
+                </Text>
               </View>
             )}
           </View>
