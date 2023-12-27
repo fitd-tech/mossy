@@ -36,8 +36,12 @@ export default function EventsList() {
   const { darkMode, backgroundColor, textColor, theme } =
     useContext(ThemeContext);
 
-  const { events, fetchingEvents, selectedId: selectedEventId, eventsPage } =
-    useContext(DataContext);
+  const {
+    events,
+    fetchingEvents,
+    selectedId: selectedEventId,
+    eventsPage,
+  } = useContext(DataContext);
 
   const {
     getEvents,

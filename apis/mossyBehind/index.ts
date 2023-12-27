@@ -1,4 +1,4 @@
-import { ApiConfigs } from "types/types.ts";
+import { ApiConfigs } from 'types/types.ts';
 
 const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -9,17 +9,15 @@ const endpoints = {
   eventsString: `${mossyBackendDevUrl}api/events-string`,
   tags: `${mossyBackendDevUrl}api/tags`,
   events: `${mossyBackendDevUrl}api/events`,
-}
+};
 
 const apiConfigs: ApiConfigs = {
   readUser: {
     endpoint: endpoints.user,
-    payloadBuilder: ({
-      appleUserId,
-    }) => ({
+    payloadBuilder: ({ appleUserId }) => ({
       apple_user_id: appleUserId,
     }),
-    configBuilder: ({token, payload}) => ({
+    configBuilder: ({ token, payload }) => ({
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -41,7 +39,7 @@ const apiConfigs: ApiConfigs = {
       is_color_scheme_dark_mode: isColorSchemeDarkMode,
       color_theme: colorTheme,
     }),
-    configBuilder: ({token, payload}) => ({
+    configBuilder: ({ token, payload }) => ({
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -52,7 +50,7 @@ const apiConfigs: ApiConfigs = {
   },
   readTasks: {
     endpoint: endpoints.tasks,
-    configBuilder: ({token}) => ({
+    configBuilder: ({ token }) => ({
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -62,7 +60,7 @@ const apiConfigs: ApiConfigs = {
   },
   readEvents: {
     endpoint: endpoints.eventsString,
-    configBuilder: ({token}) => ({
+    configBuilder: ({ token }) => ({
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -72,7 +70,7 @@ const apiConfigs: ApiConfigs = {
   },
   readTags: {
     endpoint: endpoints.tags,
-    configBuilder: ({token}) => ({
+    configBuilder: ({ token }) => ({
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -82,16 +80,12 @@ const apiConfigs: ApiConfigs = {
   },
   createTask: {
     endpoint: endpoints.tasks,
-    payloadBuilder: ({
-      name,
-      frequency,
-      tags,
-    }) => ({
+    payloadBuilder: ({ name, frequency, tags }) => ({
       name,
       frequency,
       tags,
     }),
-    configBuilder: ({token, payload}) => ({
+    configBuilder: ({ token, payload }) => ({
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -102,14 +96,11 @@ const apiConfigs: ApiConfigs = {
   },
   createTag: {
     endpoint: endpoints.tags,
-    payloadBuilder: ({
-      name,
-      parentTagId,
-    }) => ({
+    payloadBuilder: ({ name, parentTagId }) => ({
       name,
       parent_tag: parentTagId,
     }),
-    configBuilder: ({token, payload}) => ({
+    configBuilder: ({ token, payload }) => ({
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -120,10 +111,8 @@ const apiConfigs: ApiConfigs = {
   },
   deleteTasks: {
     endpoint: endpoints.tasks,
-    payloadBuilder: ({
-      taskIds,
-    }) => taskIds,
-    configBuilder: ({token, payload}) => ({
+    payloadBuilder: ({ taskIds }) => taskIds,
+    configBuilder: ({ token, payload }) => ({
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -134,10 +123,8 @@ const apiConfigs: ApiConfigs = {
   },
   deleteEvents: {
     endpoint: endpoints.events,
-    payloadBuilder: ({
-      eventIds,
-    }) => eventIds,
-    configBuilder: ({token, payload}) => ({
+    payloadBuilder: ({ eventIds }) => eventIds,
+    configBuilder: ({ token, payload }) => ({
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -148,10 +135,8 @@ const apiConfigs: ApiConfigs = {
   },
   deleteTags: {
     endpoint: endpoints.tags,
-    payloadBuilder: ({
-      tagIds,
-    }) => tagIds,
-    configBuilder: ({token, payload}) => ({
+    payloadBuilder: ({ tagIds }) => tagIds,
+    configBuilder: ({ token, payload }) => ({
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -162,18 +147,13 @@ const apiConfigs: ApiConfigs = {
   },
   updateTask: {
     endpoint: endpoints.tasks,
-    payloadBuilder: ({
-      id,
-      name,
-      frequency,
-      tags,
-    }) => ({
+    payloadBuilder: ({ id, name, frequency, tags }) => ({
       _id: id,
       name,
       frequency,
       tags,
     }),
-    configBuilder: ({token, payload}) => ({
+    configBuilder: ({ token, payload }) => ({
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -184,14 +164,11 @@ const apiConfigs: ApiConfigs = {
   },
   completeTask: {
     endpoint: endpoints.events,
-    payloadBuilder: ({
-      taskId,
-      completionDate,
-    }) => ({
+    payloadBuilder: ({ taskId, completionDate }) => ({
       task: taskId,
-      date: completionDate
+      date: completionDate,
     }),
-    configBuilder: ({token, payload}) => ({
+    configBuilder: ({ token, payload }) => ({
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -202,16 +179,12 @@ const apiConfigs: ApiConfigs = {
   },
   updateEvent: {
     endpoint: endpoints.events,
-    payloadBuilder: ({
-      eventId,
-      taskId,
-      completionDate,
-    }) => ({
+    payloadBuilder: ({ eventId, taskId, completionDate }) => ({
       _id: eventId,
       task: taskId,
-      date: completionDate
+      date: completionDate,
     }),
-    configBuilder: ({token, payload}) => ({
+    configBuilder: ({ token, payload }) => ({
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -222,16 +195,12 @@ const apiConfigs: ApiConfigs = {
   },
   updateTag: {
     endpoint: endpoints.tags,
-    payloadBuilder: ({
-      tagId,
-      name,
-      parentTag,
-    }) => ({
+    payloadBuilder: ({ tagId, name, parentTag }) => ({
       _id: tagId,
       name,
       parent_tag: parentTag,
     }),
-    configBuilder: ({token, payload}) => ({
+    configBuilder: ({ token, payload }) => ({
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -240,6 +209,6 @@ const apiConfigs: ApiConfigs = {
       body: JSON.stringify(payload),
     }),
   },
-}
+};
 
-export default apiConfigs
+export default apiConfigs;

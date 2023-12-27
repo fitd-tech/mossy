@@ -1,6 +1,4 @@
-interface Tag {
-
-}
+interface Tag {}
 
 interface RequestConfig {
   method: string;
@@ -8,7 +6,7 @@ interface RequestConfig {
     'Content-Type': string;
     Authorization: string;
   };
-  body?: string
+  body?: string;
 }
 
 export interface ReadUserPayloadBuilderParams {
@@ -17,12 +15,11 @@ export interface ReadUserPayloadBuilderParams {
 
 interface ReadUserPayload {
   apple_user_id: string;
-
 }
 
 interface ReadUserConfigBuilderParams {
   token: string;
-  payload: ReadUserPayload
+  payload: ReadUserPayload;
 }
 
 export interface UpdateUserThemePayloadBuilderParams {
@@ -41,7 +38,7 @@ interface UpdateUserThemePayload {
 
 interface UpdateUserThemeConfigBuilderParams {
   token: string;
-  payload: UpdateUserThemePayload
+  payload: UpdateUserThemePayload;
 }
 
 interface ReadTasksConfigBuilderParams {
@@ -57,136 +54,136 @@ interface ReadTagsConfigBuilderParams {
 }
 
 export interface CreateTaskPayloadBuilderParams {
-  name: string
-  frequency: number
-  tags: Tag[]
+  name: string;
+  frequency: number;
+  tags: Tag[];
 }
 
 interface CreateTaskPayload {
-  name: string
-  frequency: number
-  tags: Tag[]
+  name: string;
+  frequency: number;
+  tags: Tag[];
 }
 
 interface CreateTaskConfigBuilderParams {
   token: string;
-  payload: CreateTaskPayload
+  payload: CreateTaskPayload;
 }
 
 export interface CreateTagPayloadBuilderParams {
-  name: string
-  parentTagId: string
+  name: string;
+  parentTagId: string;
 }
 
 interface CreateTagPayload {
-  name: string
-  parent_tag: string
+  name: string;
+  parent_tag: string;
 }
 
 interface CreateTagConfigBuilderParams {
   token: string;
-  payload: CreateTagPayload
+  payload: CreateTagPayload;
 }
 
 export interface DeleteTasksPayloadBuilderParams {
-  taskIds: number[]
+  taskIds: number[];
 }
 
-type DeleteTasksPayload = number[]
+type DeleteTasksPayload = number[];
 
 interface DeleteTasksConfigBuilderParams {
   token: string;
-  payload: DeleteTasksPayload
+  payload: DeleteTasksPayload;
 }
 
 export interface DeleteEventsPayloadBuilderParams {
-  eventIds: number[]
+  eventIds: number[];
 }
 
-type DeleteEventsPayload = number[]
+type DeleteEventsPayload = number[];
 
 interface DeleteEventsConfigBuilderParams {
   token: string;
-  payload: DeleteEventsPayload
+  payload: DeleteEventsPayload;
 }
 
 export interface DeleteTagsPayloadBuilderParams {
-  tagIds: number[]
+  tagIds: number[];
 }
 
-type DeleteTagsPayload = number[]
+type DeleteTagsPayload = number[];
 
 interface DeleteTagsConfigBuilderParams {
   token: string;
-  payload: DeleteTagsPayload
+  payload: DeleteTagsPayload;
 }
 
 export interface UpdateTaskPayloadBuilderParams {
-  id: string
-  name: string
-  frequency: number
-  tags: Tag[]
+  id: string;
+  name: string;
+  frequency: number;
+  tags: Tag[];
 }
 
 interface UpdateTaskPayload {
-  _id: string
-  name: string
-  frequency: number
-  tags: Tag[]
+  _id: string;
+  name: string;
+  frequency: number;
+  tags: Tag[];
 }
 
 interface UpdateTaskConfigBuilderParams {
   token: string;
-  payload: UpdateTaskPayload
+  payload: UpdateTaskPayload;
 }
 
 export interface CompleteTaskPayloadBuilderParams {
-  taskId: string
-  completionDate: string
+  taskId: string;
+  completionDate: string;
 }
 
 interface CompleteTaskPayload {
-  task: string
-  date: string
+  task: string;
+  date: string;
 }
 
 interface CompleteTaskConfigBuilderParams {
   token: string;
-  payload: CompleteTaskPayload
+  payload: CompleteTaskPayload;
 }
 
 export interface UpdateEventPayloadBuilderParams {
-  eventId: string
-  taskId: string
-  completionDate: string
+  eventId: string;
+  taskId: string;
+  completionDate: string;
 }
 
 interface UpdateEventPayload {
-  _id: string
-  task: string
-  date: string
+  _id: string;
+  task: string;
+  date: string;
 }
 
 interface UpdateEventConfigBuilderParams {
   token: string;
-  payload: UpdateEventPayload
+  payload: UpdateEventPayload;
 }
 
 export interface UpdateTagPayloadBuilderParams {
-  tagId: string
-  name: string
-  parentTag: string
+  tagId: string;
+  name: string;
+  parentTag: string;
 }
 
 interface UpdateTagPayload {
-  _id: string
-  name: string
-  parent_tag: string
+  _id: string;
+  name: string;
+  parent_tag: string;
 }
 
 interface UpdateTagConfigBuilderParams {
   token: string;
-  payload: UpdateTagPayload
+  payload: UpdateTagPayload;
 }
 
 export interface ReadUserApiConfig {
@@ -197,25 +194,27 @@ export interface ReadUserApiConfig {
 
 export interface UpdateUserThemeApiConfig {
   endpoint: string;
-  payloadBuilder: (params: UpdateUserThemePayloadBuilderParams) => UpdateUserThemePayload;
+  payloadBuilder: (
+    params: UpdateUserThemePayloadBuilderParams,
+  ) => UpdateUserThemePayload;
   configBuilder: (params: UpdateUserThemeConfigBuilderParams) => RequestConfig;
 }
 
 export interface ReadTasksApiConfig {
   endpoint: string;
-  payloadBuilder?: never
+  payloadBuilder?: never;
   configBuilder: (params: ReadTasksConfigBuilderParams) => RequestConfig;
 }
 
 export interface ReadEventsApiConfig {
   endpoint: string;
-  payloadBuilder?: never
+  payloadBuilder?: never;
   configBuilder: (params: ReadEventsConfigBuilderParams) => RequestConfig;
 }
 
 export interface ReadTagsApiConfig {
   endpoint: string;
-  payloadBuilder?: never
+  payloadBuilder?: never;
   configBuilder: (params: ReadTagsConfigBuilderParams) => RequestConfig;
 }
 
@@ -233,13 +232,17 @@ export interface CreateTagApiConfig {
 
 export interface DeleteTasksApiConfig {
   endpoint: string;
-  payloadBuilder: (params: DeleteTasksPayloadBuilderParams) => DeleteTasksPayload;
+  payloadBuilder: (
+    params: DeleteTasksPayloadBuilderParams,
+  ) => DeleteTasksPayload;
   configBuilder: (params: DeleteTasksConfigBuilderParams) => RequestConfig;
 }
 
 export interface DeleteEventsApiConfig {
   endpoint: string;
-  payloadBuilder: (params: DeleteEventsPayloadBuilderParams) => DeleteEventsPayload;
+  payloadBuilder: (
+    params: DeleteEventsPayloadBuilderParams,
+  ) => DeleteEventsPayload;
   configBuilder: (params: DeleteEventsConfigBuilderParams) => RequestConfig;
 }
 
@@ -257,13 +260,17 @@ export interface UpdateTaskApiConfig {
 
 export interface CompleteTaskApiConfig {
   endpoint: string;
-  payloadBuilder: (params: CompleteTaskPayloadBuilderParams) => CompleteTaskPayload;
+  payloadBuilder: (
+    params: CompleteTaskPayloadBuilderParams,
+  ) => CompleteTaskPayload;
   configBuilder: (params: CompleteTaskConfigBuilderParams) => RequestConfig;
 }
 
 export interface UpdateEventApiConfig {
   endpoint: string;
-  payloadBuilder: (params: UpdateEventPayloadBuilderParams) => UpdateEventPayload;
+  payloadBuilder: (
+    params: UpdateEventPayloadBuilderParams,
+  ) => UpdateEventPayload;
   configBuilder: (params: UpdateEventConfigBuilderParams) => RequestConfig;
 }
 
@@ -274,23 +281,23 @@ export interface UpdateTagApiConfig {
 }
 
 export interface ApiConfigs {
-  readUser: ReadUserApiConfig
-  updateUserTheme: UpdateUserThemeApiConfig
-  readTasks: ReadTasksApiConfig
-  readEvents: ReadEventsApiConfig
-  readTags: ReadTagsApiConfig
-  createTask: CreateTaskApiConfig
-  createTag: CreateTagApiConfig
-  deleteTasks: DeleteTasksApiConfig
-  deleteEvents: DeleteEventsApiConfig
-  deleteTags: DeleteTagsApiConfig
-  updateTask: UpdateTaskApiConfig
-  completeTask: CompleteTaskApiConfig
-  updateEvent: UpdateEventApiConfig
-  updateTag: UpdateTagApiConfig
+  readUser: ReadUserApiConfig;
+  updateUserTheme: UpdateUserThemeApiConfig;
+  readTasks: ReadTasksApiConfig;
+  readEvents: ReadEventsApiConfig;
+  readTags: ReadTagsApiConfig;
+  createTask: CreateTaskApiConfig;
+  createTag: CreateTagApiConfig;
+  deleteTasks: DeleteTasksApiConfig;
+  deleteEvents: DeleteEventsApiConfig;
+  deleteTags: DeleteTagsApiConfig;
+  updateTask: UpdateTaskApiConfig;
+  completeTask: CompleteTaskApiConfig;
+  updateEvent: UpdateEventApiConfig;
+  updateTag: UpdateTagApiConfig;
 }
 
 export interface SearchParams {
-  limit?: string
-  offset?: string
+  limit?: string;
+  offset?: string;
 }

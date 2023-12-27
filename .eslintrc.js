@@ -17,29 +17,27 @@ module.exports = {
       env: {
         node: true,
       },
-      files: [
-        '.eslintrc.{js,cjs}',
-      ],
+      files: ['.eslintrc.{js,cjs}'],
       parserOptions: {
         sourceType: 'script',
       },
-    }
+    },
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
   },
-  plugins: [
-    '@typescript-eslint',
-    'react'
-  ],
+  plugins: ['@typescript-eslint', 'react'],
   rules: {
     'react-hooks/exhaustive-deps': 'error',
     // Forbid relative imports
-    'no-restricted-imports': ['error', {
+    'no-restricted-imports': [
+      'error',
+      {
         patterns: ['.*'],
-      }],
+      },
+    ],
     'import/extensions': ['error', 'always'],
   },
   settings: {

@@ -26,7 +26,7 @@ function getMore(e, options) {
       limit: pageSize,
       offset: page * pageSize,
     };
-    fetchFunc({params});
+    fetchFunc({ params });
     setPage((pagePrevious) => pagePrevious + 1);
   }
 }

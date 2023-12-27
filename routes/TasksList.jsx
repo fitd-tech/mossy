@@ -28,8 +28,12 @@ export default function TasksList() {
 
   const { darkMode, backgroundColor, textColor, theme } =
     useContext(ThemeContext);
-  const { tasks, fetchingTasks, selectedId: selectedTaskId, tasksPage } =
-    useContext(DataContext);
+  const {
+    tasks,
+    fetchingTasks,
+    selectedId: selectedTaskId,
+    tasksPage,
+  } = useContext(DataContext);
   const {
     getTasks,
     onPressTaskCard: onPress,

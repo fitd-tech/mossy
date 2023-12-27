@@ -25,33 +25,31 @@ function ThemeMenu({
   setTheme,
   token,
 }) {
-  const saveUserTheme = useCallback(async ({
-    data,
-  }) => {
+  const saveUserTheme = useCallback(
+    async ({ data }) => {
       setSavingUserTheme(true);
       const params: UpdateUserThemePayloadBuilderParams = {
         appleUserId: data.appleUserId,
         shouldColorSchemeUseSystem: data.useSystemDarkMode,
         isColorSchemeDarkMode: data.darkMode,
         colorTheme: data.theme,
-      }
+      };
       try {
-        const {
-          status,
-          error,
-        } = await requestBuilder({
+        const { status, error } = await requestBuilder({
           apiConfig: apiConfigs.updateUserTheme,
           params,
           token,
         });
         if (status === responseStatus.ERROR) {
-          Toast.show(error)
+          Toast.show(error);
         }
       } catch (err) {
-        Toast.show(err.message)
+        Toast.show(err.message);
       }
       setSavingUserTheme(false);
-  }, [setSavingUserTheme, token])
+    },
+    [setSavingUserTheme, token],
+  );
 
   return (
     <>
@@ -138,7 +136,7 @@ function ThemeMenu({
                           darkMode,
                           theme: themeChoice.id,
                         };
-                        saveUserTheme({data});
+                        saveUserTheme({ data });
                         setTheme(themeChoice);
                       }
                 }

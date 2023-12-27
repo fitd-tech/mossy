@@ -26,8 +26,12 @@ export default function TagsList() {
 
   const { darkMode, backgroundColor, textColor, theme } =
     useContext(ThemeContext);
-  const { tags, fetchingTags, selectedId: selectedTagId, tagsPage } =
-    useContext(DataContext);
+  const {
+    tags,
+    fetchingTags,
+    selectedId: selectedTagId,
+    tagsPage,
+  } = useContext(DataContext);
   const {
     getTags,
     onPressTagCard: onPress,

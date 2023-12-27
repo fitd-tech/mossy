@@ -1,4 +1,10 @@
-import React, { useState, useEffect, createContext, useMemo, useCallback } from 'react';
+import React, {
+  useState,
+  useEffect,
+  createContext,
+  useMemo,
+  useCallback,
+} from 'react';
 import { StatusBar } from 'expo-status-bar';
 import {
   StyleSheet,
@@ -67,8 +73,13 @@ import EditEventForm from 'routes/EditEventForm.tsx';
 import EditTagForm from 'routes/EditTagForm.tsx';
 import { fetchUser } from 'apis/mossyBehind/auth.js';
 import requestBuilder from 'apis/requestBuilder.js';
-import apiConfigs from 'apis/mossyBehind/index'
-import { CreateTaskPayloadBuilderParams, ReadUserPayloadBuilderParams, SearchParams, UserApiConfig } from 'types/types.ts';
+import apiConfigs from 'apis/mossyBehind/index';
+import {
+  CreateTaskPayloadBuilderParams,
+  ReadUserPayloadBuilderParams,
+  SearchParams,
+  UserApiConfig,
+} from 'types/types.ts';
 
 const { dark1 } = colors;
 
@@ -142,7 +153,7 @@ export default function App() {
   const getUserDetails = useCallback(async () => {
     const params: ReadUserPayloadBuilderParams = {
       appleUserId,
-    }
+    };
     try {
       const {
         status,
@@ -158,17 +169,17 @@ export default function App() {
         setUseSystemDarkMode(_userProfile.should_color_scheme_use_system);
         setDarkMode(_userProfile.is_color_scheme_dark_mode);
         setTheme(find(themes, { id: _userProfile.color_theme }));
-        return _userProfile
+        return _userProfile;
       } else {
-        Toast.show(error)
+        Toast.show(error);
         clearUserData();
-        return null
+        return null;
       }
     } catch (err) {
-      Toast.show(err.message)
-      return null
+      Toast.show(err.message);
+      return null;
     }
-  }, [appleUserId, token])
+  }, [appleUserId, token]);
 
   useEffect(() => {
     if (useSystemDarkMode) {
@@ -180,119 +191,122 @@ export default function App() {
     }
   }, [colorScheme, useSystemDarkMode]);
 
-  const getTasks = useCallback(async ({
-    searchParams,
-  }: { searchParams?: SearchParams } = {}) => {
-    setLoadingTasks(true);
-    if (!searchParams) {
-      setTasksPage(1);
-    }
-    try {
-      const {
-        status,
-        data: _tasks,
-        error,
-      } = await requestBuilder({
-        apiConfig: apiConfigs.readTasks,
-        token,
-      })
-      if (status === responseStatus.OK) {
-        setTasks((tasksPrevious) => {
-          if (searchParams?.offset) {
-            const newTasks = [...tasksPrevious, ..._tasks];
-            return newTasks;
-          }
+  const getTasks = useCallback(
+    async ({ searchParams }: { searchParams?: SearchParams } = {}) => {
+      setLoadingTasks(true);
+      if (!searchParams) {
+        setTasksPage(1);
+      }
+      try {
+        const {
+          status,
+          data: _tasks,
+          error,
+        } = await requestBuilder({
+          apiConfig: apiConfigs.readTasks,
+          token,
+        });
+        if (status === responseStatus.OK) {
+          setTasks((tasksPrevious) => {
+            if (searchParams?.offset) {
+              const newTasks = [...tasksPrevious, ..._tasks];
+              return newTasks;
+            }
+            return _tasks;
+          });
+          setLoadingTasks(false);
           return _tasks;
-        });
+        } else {
+          Toast.show(error);
+          setLoadingTasks(false);
+          return null;
+        }
+      } catch (err) {
+        Toast.show(err.message);
         setLoadingTasks(false);
-        return _tasks
-      } else {
-        Toast.show(error)
-        setLoadingTasks(false);
-        return null
+        return null;
       }
-    } catch (err) {
-      Toast.show(err.message)
-      setLoadingTasks(false);
-      return null
-    }
-  }, [token])
+    },
+    [token],
+  );
 
-  const getEvents = useCallback(async ({
-    searchParams,
-  }: { searchParams?: SearchParams } = {}) => {
-    setLoadingEvents(true);
-    if (!searchParams) {
-      setEventsPage(1);
-    }
-    try {
-      const {
-        status,
-        data: _events,
-        error,
-      } = await requestBuilder({
-        apiConfig: apiConfigs.readEvents,
-        token,
-      })
-      if (status === responseStatus.OK) {
-        setEvents((eventsPrevious) => {
-          if (searchParams?.offset) {
-            const newEvents = [...eventsPrevious, ..._events];
-            return newEvents;
-          }
+  const getEvents = useCallback(
+    async ({ searchParams }: { searchParams?: SearchParams } = {}) => {
+      setLoadingEvents(true);
+      if (!searchParams) {
+        setEventsPage(1);
+      }
+      try {
+        const {
+          status,
+          data: _events,
+          error,
+        } = await requestBuilder({
+          apiConfig: apiConfigs.readEvents,
+          token,
+        });
+        if (status === responseStatus.OK) {
+          setEvents((eventsPrevious) => {
+            if (searchParams?.offset) {
+              const newEvents = [...eventsPrevious, ..._events];
+              return newEvents;
+            }
+            return _events;
+          });
+          setLoadingEvents(false);
           return _events;
-        });
+        } else {
+          Toast.show(error);
+          setLoadingEvents(false);
+          return null;
+        }
+      } catch (err) {
+        Toast.show(err.message);
         setLoadingEvents(false);
-        return _events
-      } else {
-        Toast.show(error)
-        setLoadingEvents(false);
-        return null
+        return null;
       }
-    } catch (err) {
-      Toast.show(err.message)
-      setLoadingEvents(false);
-      return null
-    }
-  }, [token])
+    },
+    [token],
+  );
 
-  const getTags = useCallback(async ({
-    searchParams,
-  }: { searchParams?: SearchParams } = {}) => {
-    setLoadingTags(true);
-    if (!searchParams) {
-      setTagsPage(1);
-    }
-    try {
-      const {
-        status,
-        data: _tags,
-        error,
-      } = await requestBuilder({
-        apiConfig: apiConfigs.readTags,
-        token,
-      })
-      if (status === responseStatus.OK) {
-        setTags((tagsPrevious) => {
-          if (searchParams?.offset) {
-            const newTags = [...tagsPrevious, ..._tags];
-            return newTags;
-          }
-          return _tags;
-        });
-        setLoadingTags(false);
-        return _tags
-      } else {
-        Toast.show(error)
-        setLoadingTags(false);
-        return null
+  const getTags = useCallback(
+    async ({ searchParams }: { searchParams?: SearchParams } = {}) => {
+      setLoadingTags(true);
+      if (!searchParams) {
+        setTagsPage(1);
       }
-    } catch (err) {
-      Toast.show(err.message)
-      setLoadingTags(false);
-      return null
-    }
-  }, [token])
+      try {
+        const {
+          status,
+          data: _tags,
+          error,
+        } = await requestBuilder({
+          apiConfig: apiConfigs.readTags,
+          token,
+        });
+        if (status === responseStatus.OK) {
+          setTags((tagsPrevious) => {
+            if (searchParams?.offset) {
+              const newTags = [...tagsPrevious, ..._tags];
+              return newTags;
+            }
+            return _tags;
+          });
+          setLoadingTags(false);
+          return _tags;
+        } else {
+          Toast.show(error);
+          setLoadingTags(false);
+          return null;
+        }
+      } catch (err) {
+        Toast.show(err.message);
+        setLoadingTags(false);
+        return null;
+      }
+    },
+    [token],
+  );
 
   useEffect(() => {
     async function loadUser() {
@@ -307,9 +321,9 @@ export default function App() {
 
   // TEST linter
   useEffect(() => {
-    console.log('tasks', tasks)
-    Toast.show('mmm toasty')
-  }, [tasks])
+    console.log('tasks', tasks);
+    Toast.show('mmm toasty');
+  }, [tasks]);
 
   useEffect(() => {
     if (appleUserId && token && !userProfile) {
@@ -328,33 +342,42 @@ export default function App() {
     loadData();
   }, [getEvents, getTags, getTasks, token]);
 
-  const handleTaskCardPress = useCallback((id) => {
-    getTags();
-    setSelectedId(id)
-    const task = find(tasks, ['_id.$oid', id]);
-    setName(task.name);
-    setFrequency(String(task.frequency));
-    setSelectedTags(map(task.tags || [], (tag) => tag.$oid));
-    setFormType('taskDetails');
-    setIsModalVisible(true);
-  }, [getTags, tasks])
+  const handleTaskCardPress = useCallback(
+    (id) => {
+      getTags();
+      setSelectedId(id);
+      const task = find(tasks, ['_id.$oid', id]);
+      setName(task.name);
+      setFrequency(String(task.frequency));
+      setSelectedTags(map(task.tags || [], (tag) => tag.$oid));
+      setFormType('taskDetails');
+      setIsModalVisible(true);
+    },
+    [getTags, tasks],
+  );
 
-  const handleEventCardPress = useCallback((id) => {
-    setSelectedId(id)
-    const event = find(events, ['_id.$oid', id]);
-    setCompletionDate(new Date(Number(event.date.$date.$numberLong)));
-    setFormType('editEvent');
-    setIsModalVisible(true);
-  }, [events])
+  const handleEventCardPress = useCallback(
+    (id) => {
+      setSelectedId(id);
+      const event = find(events, ['_id.$oid', id]);
+      setCompletionDate(new Date(Number(event.date.$date.$numberLong)));
+      setFormType('editEvent');
+      setIsModalVisible(true);
+    },
+    [events],
+  );
 
-  const handleTagCardPress = useCallback((id) => {
-    setSelectedId(id)
-    const tag = find(tags, ['_id.$oid', id]);
-    setName(tag.name);
-    setParentTag(tag.parent_tag?.$oid);
-    setFormType('editTag');
-    setIsModalVisible(true);
-  }, [tags])
+  const handleTagCardPress = useCallback(
+    (id) => {
+      setSelectedId(id);
+      const tag = find(tags, ['_id.$oid', id]);
+      setName(tag.name);
+      setParentTag(tag.parent_tag?.$oid);
+      setFormType('editTag');
+      setIsModalVisible(true);
+    },
+    [tags],
+  );
 
   function handleTagSelectCardPress(id) {
     setSelectedTags((selectedTagsPrevious) => {
@@ -375,303 +398,294 @@ export default function App() {
   }
 
   async function createTask() {
-      setLoading(true);
-      const params: CreateTaskPayloadBuilderParams = {
-        name,
-        frequency: frequency ? Number(frequency) : 0,
-        tags: selectedTags,
-      };
-      try {
-        const {
-          status,
-          data: _task,
-          error,
-        } = await requestBuilder({
-          apiConfig: apiConfigs.createTask,
-          params,
-          token,
-        });
-        if (status === responseStatus.OK) {
-          await getTasks();
-          handleCloseModal();
-          setLoading(false)
-          return _task
-        } else {
-          Toast.show(error)
-          setLoading(false)
-          return null
-        }
-      } catch (err) {
-        Toast.show(err.message)
-        setLoading(false)
-        return null
+    setLoading(true);
+    const params: CreateTaskPayloadBuilderParams = {
+      name,
+      frequency: frequency ? Number(frequency) : 0,
+      tags: selectedTags,
+    };
+    try {
+      const {
+        status,
+        data: _task,
+        error,
+      } = await requestBuilder({
+        apiConfig: apiConfigs.createTask,
+        params,
+        token,
+      });
+      if (status === responseStatus.OK) {
+        await getTasks();
+        handleCloseModal();
+        setLoading(false);
+        return _task;
+      } else {
+        Toast.show(error);
+        setLoading(false);
+        return null;
       }
+    } catch (err) {
+      Toast.show(err.message);
+      setLoading(false);
+      return null;
+    }
   }
 
   async function createTag() {
-      setLoading(true);
-      const params = {
-        name,
-        parent_tag: parentTag === 'placeholder' ? null : parentTag,
-      };
-      try {
-        const {
-          status,
-          data: _tag,
-          error,
-        } = await requestBuilder({
-          apiConfig: apiConfigs.createTag,
-          params,
-          token,
-        });
-        if (status === responseStatus.OK) {
-          await getTags();
-          handleCloseModal();
-          setLoading(false)
-          return _tag
-        } else {
-          Toast.show(error)
-          setLoading(false)
-          return null
-        }
-      } catch (err) {
-        Toast.show(err.message)
-        setLoading(false)
-        return null
+    setLoading(true);
+    const params = {
+      name,
+      parent_tag: parentTag === 'placeholder' ? null : parentTag,
+    };
+    try {
+      const {
+        status,
+        data: _tag,
+        error,
+      } = await requestBuilder({
+        apiConfig: apiConfigs.createTag,
+        params,
+        token,
+      });
+      if (status === responseStatus.OK) {
+        await getTags();
+        handleCloseModal();
+        setLoading(false);
+        return _tag;
+      } else {
+        Toast.show(error);
+        setLoading(false);
+        return null;
       }
+    } catch (err) {
+      Toast.show(err.message);
+      setLoading(false);
+      return null;
+    }
   }
 
-  async function deleteTasks({taskIds}) {
-      setLoading(true);
-      const params = {
-        taskIds,
+  async function deleteTasks({ taskIds }) {
+    setLoading(true);
+    const params = {
+      taskIds,
+    };
+    try {
+      const { status, error } = await requestBuilder({
+        apiConfig: apiConfigs.deleteTasks,
+        params,
+        token,
+      });
+      if (status === responseStatus.OK) {
+        await getTasks();
+        handleCloseModal();
+        setLoading(false);
+        return 0;
+      } else {
+        Toast.show(error);
+        setLoading(false);
+        return null;
       }
-      try {
-        const {
-          status,
-          error,
-        } = await requestBuilder({
-          apiConfig: apiConfigs.deleteTasks,
-          params,
-          token,
-        });
-        if (status === responseStatus.OK) {
-          await getTasks();
-          handleCloseModal();
-          setLoading(false)
-          return 0
-        } else {
-          Toast.show(error)
-          setLoading(false)
-          return null
-        }
-      } catch (err) {
-        Toast.show(err.message)
-        setLoading(false)
-        return null
-      }
+    } catch (err) {
+      Toast.show(err.message);
+      setLoading(false);
+      return null;
+    }
   }
 
-  async function deleteEvents({eventIds}) {
-      setLoading(true);
-      const params = {
-        eventIds,
+  async function deleteEvents({ eventIds }) {
+    setLoading(true);
+    const params = {
+      eventIds,
+    };
+    try {
+      const { status, error } = await requestBuilder({
+        apiConfig: apiConfigs.deleteEvents,
+        params,
+        token,
+      });
+      if (status === responseStatus.OK) {
+        await getEvents();
+        getTasks();
+        handleCloseModal();
+        setLoading(false);
+        return 0;
+      } else {
+        Toast.show(error);
+        setLoading(false);
+        return null;
       }
-      try {
-        const {
-          status,
-          error,
-        } = await requestBuilder({
-          apiConfig: apiConfigs.deleteEvents,
-          params,
-          token,
-        });
-        if (status === responseStatus.OK) {
-          await getEvents();
-          getTasks();
-          handleCloseModal();
-          setLoading(false)
-          return 0
-        } else {
-          Toast.show(error)
-          setLoading(false)
-          return null
-        }
-      } catch (err) {
-        Toast.show(err.message)
-        setLoading(false)
-        return null
-      }
+    } catch (err) {
+      Toast.show(err.message);
+      setLoading(false);
+      return null;
+    }
   }
 
-  async function deleteTags({tagIds}) {
-      setLoading(true);
-      const params = {
-        tagIds,
+  async function deleteTags({ tagIds }) {
+    setLoading(true);
+    const params = {
+      tagIds,
+    };
+    try {
+      const { status, error } = await requestBuilder({
+        apiConfig: apiConfigs.deleteTags,
+        params,
+        token,
+      });
+      if (status === responseStatus.OK) {
+        await getTags();
+        handleCloseModal();
+        setLoading(false);
+        return 0;
+      } else {
+        Toast.show(error);
+        setLoading(false);
+        return null;
       }
-      try {
-        const {
-          status,
-          error,
-        } = await requestBuilder({
-          apiConfig: apiConfigs.deleteTags,
-          params,
-          token,
-        });
-        if (status === responseStatus.OK) {
-          await getTags();
-          handleCloseModal();
-          setLoading(false)
-          return 0
-        } else {
-          Toast.show(error)
-          setLoading(false)
-          return null
-        }
-      } catch (err) {
-        Toast.show(err.message)
-        setLoading(false)
-        return null
-      }
+    } catch (err) {
+      Toast.show(err.message);
+      setLoading(false);
+      return null;
+    }
   }
 
   async function saveTask() {
-      setLoading(true);
-      const params = {
-        id: selectedId,
-        name,
-        frequency: frequency ? Number(frequency) : 0,
-        tags: selectedTags,
-      };
-      try {
-        const {
-          status,
-          data: _task,
-          error,
-        } = await requestBuilder({
-          apiConfig: apiConfigs.updateTask,
-          params,
-          token,
-        });
-        if (status === responseStatus.OK) {
-          await getTasks();
-          handleCloseModal();
-          setLoading(false)
-          return _task
-        } else {
-          Toast.show(error)
-          setLoading(false)
-          return null
-        }
-      } catch (err) {
-        Toast.show(err.message)
-        setLoading(false)
-        return null
+    setLoading(true);
+    const params = {
+      id: selectedId,
+      name,
+      frequency: frequency ? Number(frequency) : 0,
+      tags: selectedTags,
+    };
+    try {
+      const {
+        status,
+        data: _task,
+        error,
+      } = await requestBuilder({
+        apiConfig: apiConfigs.updateTask,
+        params,
+        token,
+      });
+      if (status === responseStatus.OK) {
+        await getTasks();
+        handleCloseModal();
+        setLoading(false);
+        return _task;
+      } else {
+        Toast.show(error);
+        setLoading(false);
+        return null;
       }
+    } catch (err) {
+      Toast.show(err.message);
+      setLoading(false);
+      return null;
+    }
   }
 
   async function completeTask() {
-      setLoading(true);
-      const params = {
-        task: selectedId,
-        date: completionDate,
-      };
-      try {
-        const {
-          status,
-          data: _event,
-          error,
-        } = await requestBuilder({
-          apiConfig: apiConfigs.completeTask,
-          params,
-          token,
-        });
-        if (status === responseStatus.OK) {
-          getTasks();
-          getEvents();
-          handleCloseModal();
-          setLoading(false)
-          return _event
-        } else {
-          Toast.show(error)
-          setLoading(false)
-          return null
-        }
-      } catch (err) {
-        Toast.show(err.message)
-        setLoading(false)
-        return null
+    setLoading(true);
+    const params = {
+      task: selectedId,
+      date: completionDate,
+    };
+    try {
+      const {
+        status,
+        data: _event,
+        error,
+      } = await requestBuilder({
+        apiConfig: apiConfigs.completeTask,
+        params,
+        token,
+      });
+      if (status === responseStatus.OK) {
+        getTasks();
+        getEvents();
+        handleCloseModal();
+        setLoading(false);
+        return _event;
+      } else {
+        Toast.show(error);
+        setLoading(false);
+        return null;
       }
+    } catch (err) {
+      Toast.show(err.message);
+      setLoading(false);
+      return null;
+    }
   }
 
   async function saveEvent() {
-      setLoading(true);
-      const event = find(events, ['_id.$oid', selectedId]);
-      const params = {
-        eventId: event._id,
-        taskId: event.task,
-        completionDate,
-      };
-      try {
-        const {
-          status,
-          data: _event,
-          error,
-        } = await requestBuilder({
-          apiConfig: apiConfigs.updateEvent,
-          params,
-          token,
-        });
-        if (status === responseStatus.OK) {
-          getEvents();
-          getTasks();
-          handleCloseModal();
-          setLoading(false)
-          return _event
-        } else {
-          Toast.show(error)
-          setLoading(false)
-          return null
-        }
-      } catch (err) {
-        Toast.show(err.message)
-        setLoading(false)
-        return null
+    setLoading(true);
+    const event = find(events, ['_id.$oid', selectedId]);
+    const params = {
+      eventId: event._id,
+      taskId: event.task,
+      completionDate,
+    };
+    try {
+      const {
+        status,
+        data: _event,
+        error,
+      } = await requestBuilder({
+        apiConfig: apiConfigs.updateEvent,
+        params,
+        token,
+      });
+      if (status === responseStatus.OK) {
+        getEvents();
+        getTasks();
+        handleCloseModal();
+        setLoading(false);
+        return _event;
+      } else {
+        Toast.show(error);
+        setLoading(false);
+        return null;
       }
+    } catch (err) {
+      Toast.show(err.message);
+      setLoading(false);
+      return null;
+    }
   }
 
   async function saveTag() {
-      setLoading(true);
-      const params = {
-        _id: selectedId,
-        name,
-        parent_tag: parentTag === 'placeholder' ? null : parentTag,
-      };
-      try {
-        const {
-          status,
-          data: _tag,
-          error,
-        } = await requestBuilder({
-          apiConfig: apiConfigs.updateTag,
-          params,
-          token,
-        });
-        if (status === responseStatus.OK) {
-          getTags();
-          handleCloseModal();
-          setLoading(false)
-          return _tag
-        } else {
-          Toast.show(error)
-          setLoading(false)
-          return null
-        }
-      } catch (err) {
-        Toast.show(err.message)
-        setLoading(false)
-        return null
+    setLoading(true);
+    const params = {
+      _id: selectedId,
+      name,
+      parent_tag: parentTag === 'placeholder' ? null : parentTag,
+    };
+    try {
+      const {
+        status,
+        data: _tag,
+        error,
+      } = await requestBuilder({
+        apiConfig: apiConfigs.updateTag,
+        params,
+        token,
+      });
+      if (status === responseStatus.OK) {
+        getTags();
+        handleCloseModal();
+        setLoading(false);
+        return _tag;
+      } else {
+        Toast.show(error);
+        setLoading(false);
+        return null;
       }
+    } catch (err) {
+      Toast.show(err.message);
+      setLoading(false);
+      return null;
+    }
   }
 
   function debugAddAdminTasks() {
@@ -902,11 +916,11 @@ export default function App() {
 
   function handleDelete(_selectedId) {
     if (viewType === 'tasks') {
-      deleteTasks({taskIds: [_selectedId]});
+      deleteTasks({ taskIds: [_selectedId] });
     } else if (viewType === 'events') {
-      deleteEvents({eventIds: [_selectedId]});
+      deleteEvents({ eventIds: [_selectedId] });
     } else if (viewType === 'tags') {
-      deleteTags({tagIds: [_selectedId]});
+      deleteTags({ tagIds: [_selectedId] });
     }
   }
 
@@ -1089,13 +1103,13 @@ export default function App() {
     }
     if (formType === 'logOut') {
       return (
-        <ConfirmLogOut 
+        <ConfirmLogOut
           textColor={textColor}
           primaryButtonColor={primaryButtonColor}
           handleConfirmLogOut={handleConfirmLogOut}
           loading={loading}
         />
-      )
+      );
     }
     if (formType === 'taskDetails') {
       console.log('rendering taskDetails form');
@@ -1289,10 +1303,15 @@ export default function App() {
                               >
                                 {renderForm()}
                                 <Pressable
-                                  style={[appStyles.button, secondaryButtonColor]}
+                                  style={[
+                                    appStyles.button,
+                                    secondaryButtonColor,
+                                  ]}
                                   onPress={handleCloseModal}
                                 >
-                                  <Text style={appStyles.buttonText}>Close</Text>
+                                  <Text style={appStyles.buttonText}>
+                                    Close
+                                  </Text>
                                 </Pressable>
                               </Pressable>
                             </View>

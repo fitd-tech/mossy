@@ -1,4 +1,4 @@
-import { find } from 'lodash'
+import { find } from 'lodash';
 
 const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
 
