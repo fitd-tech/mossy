@@ -1,12 +1,12 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, Text, TextInput } from 'react-native';
 
-import TagsSelectList from '../components/TagsSelectList';
-import appStyles from '../appStyles.js';
+import TagsSelectList from 'components/TagsSelectList.tsx';
+import appStyles from 'appStyles.ts';
 
 function EditTaskForm({
   textColor,
-  highlightButton,
+  selectedTaskId,
   handleChangeField,
   name,
   setName,
@@ -23,7 +23,7 @@ function EditTaskForm({
   return (
     <>
       <Text style={{ ...appStyles.modalTitle, ...textColor }}>
-        {highlightButton ? 'Edit Task' : 'Create Task'}
+        {selectedTaskId ? 'Edit Task' : 'Create Task'}
       </Text>
       <TextInput
         value={name}

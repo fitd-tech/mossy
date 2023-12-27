@@ -3,12 +3,12 @@ import { ActivityIndicator, Pressable, Text, TextInput } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { map } from 'lodash';
 
-import appStyles from '../appStyles.js';
+import appStyles from 'appStyles.ts';
 
 function EditTagForm({
   tags,
   textColor,
-  highlightButton,
+  selectedTagId,
   name,
   handleChangeField,
   setName,
@@ -34,7 +34,7 @@ function EditTagForm({
   return (
     <>
       <Text style={{ ...appStyles.modalTitle, ...textColor }}>
-        {highlightButton ? 'Edit Tag' : 'Create Tag'}
+        {selectedTagId ? 'Edit Tag' : 'Create Tag'}
       </Text>
       <TextInput
         value={name}
@@ -78,7 +78,7 @@ function EditTagForm({
           <Text style={appStyles.buttonText}>Save</Text>
         )}
       </Pressable>
-      {highlightButton && (
+      {selectedTagId && (
         <Pressable
           style={[appStyles.button, primaryButtonColor]}
           onPress={confirmDelete}

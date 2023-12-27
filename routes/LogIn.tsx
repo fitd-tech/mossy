@@ -1,12 +1,11 @@
-import { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, StyleSheet } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { randomUUID } from 'expo-crypto';
 import { keys } from 'lodash';
 import * as SecureStore from 'expo-secure-store';
-import { Buffer } from 'buffer';
 
-import { UserContext } from '../appContext';
+import { UserContext } from 'appContext.ts';
 
 const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
 const authenticationState = 'Apple user sign-in';
@@ -19,11 +18,11 @@ export default function LogIn() {
   const {
     isAuthenticated,
     setIsAuthenticated,
-    storedAppleUserId,
-    setStoredAppleUserId,
+    appleUserId,
+    setAppleUserId,
     userProfile,
     setUserProfile,
-    setStoredToken,
+    setToken,
   } = useContext(UserContext);
 
   useEffect(() => {
@@ -41,15 +40,15 @@ export default function LogIn() {
   useEffect(() => {
     async function getCredentialState() {
       const credentialState =
-        await AppleAuthentication.getCredentialStateAsync(storedAppleUserId);
+        await AppleAuthentication.getCredentialStateAsync(appleUserId);
       if (credentialState === 1) {
         setIsAuthenticated(true);
       }
     }
-    if (storedAppleUserId) {
+    if (appleUserId) {
       getCredentialState();
     }
-  }, [storedAppleUserId]);
+  }, [appleUserId]);
 
   useEffect(() => {
     async function verifyCredential() {
@@ -74,8 +73,8 @@ export default function LogIn() {
           serializedResponse.apple_user_id,
         );
         SecureStore.setItemAsync('mossyToken', serializedResponse.token);
-        setStoredAppleUserId(serializedResponse.apple_user_id);
-        setStoredToken(serializedResponse.token);
+        setAppleUserId(serializedResponse.apple_user_id);
+        setToken(serializedResponse.token);
         setUserProfile(serializedResponse);
         setIsAuthenticated(true);
       } else {

@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import React, { useContext } from 'react';
 import {
   StyleSheet,
   Text,
@@ -15,9 +15,9 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { size, map, includes } from 'lodash';
 
-import appStyles from '../appStyles.js';
-import tagsSelectListStyles from './tagsSelectListStyles.js';
-import { ThemeContext } from '../appContext.js';
+import appStyles from 'appStyles.ts';
+import tagsSelectListStyles from 'components/tagsSelectListStyles.ts';
+import { ThemeContext } from 'appContext.ts';
 
 export default function TagsSelectList({ tags, selectedTags, onPress }) {
   const { darkMode, backgroundColor, textColor, theme } =

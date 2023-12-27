@@ -1,5 +1,5 @@
-// This could probably be a hook
-function fetchMore(e, options) {
+// Could this be a custom hook?
+function getMore(e, options) {
   const {
     pageSize,
     page,
@@ -26,9 +26,9 @@ function fetchMore(e, options) {
       limit: pageSize,
       offset: page * pageSize,
     };
-    fetchFunc(params);
+    fetchFunc({params});
     setPage((pagePrevious) => pagePrevious + 1);
   }
 }
 
-export default fetchMore;
+export default getMore;

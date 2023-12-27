@@ -1,5 +1,4 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-npm test
-npx --no-install lint-staged
+if [ ${NOLINT:-0} == 1 ]; then npm run test && npx prettier --write .; else npm run test && npx --no-install lint-staged; fi

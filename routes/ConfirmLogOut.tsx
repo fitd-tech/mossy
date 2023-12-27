@@ -1,7 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, Text } from 'react-native';
 
-import appStyles from '../appStyles.js';
+import appStyles from 'appStyles.ts';
 
 function ConfirmLogOut({
   textColor,

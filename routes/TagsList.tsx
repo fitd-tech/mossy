@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -16,20 +16,20 @@ import { StatusBar } from 'expo-status-bar';
 import { size, map } from 'lodash';
 import { useFocusEffect } from '@react-navigation/native';
 
-import appStyles from '../appStyles.js';
-import tagsListStyles from './tagsListStyles.js';
-import { DataContext, StaticContext, ThemeContext } from '../appContext.js';
-import fetchMore from '../utilities/fetchMore.js';
+import appStyles from 'appStyles.ts';
+import tagsListStyles from 'routes/tagsListStyles.ts';
+import { DataContext, StaticContext, ThemeContext } from 'appContext.ts';
+import getMore from 'common/utilities/getMore.ts';
 
 export default function TagsList() {
   const [lastContentHeight, setLastContentHeight] = useState(0);
 
   const { darkMode, backgroundColor, textColor, theme } =
     useContext(ThemeContext);
-  const { tags, fetchingTags, highlightButton, tagsPage } =
+  const { tags, fetchingTags, selectedId: selectedTagId, tagsPage } =
     useContext(DataContext);
   const {
-    fetchTags,
+    getTags,
     onPressTagCard: onPress,
     setViewType,
     setTagsPage,
@@ -61,20 +61,20 @@ export default function TagsList() {
         refreshControl={
           <RefreshControl
             refreshing={fetchingTags}
-            onRefresh={fetchTags}
+            onRefresh={getTags}
             style={backgroundColor}
           />
         }
         style={backgroundColor}
         scrollEventThrottle={200}
         onScroll={(e) =>
-          fetchMore(e, {
+          getMore(e, {
             pageSize: 200,
             page: tagsPage,
             setPage: setTagsPage,
             lastContentHeight,
             setLastContentHeight,
-            fetchFunc: fetchTags,
+            fetchFunc: getTags,
           })
         }
       >
@@ -84,7 +84,7 @@ export default function TagsList() {
               <>
                 {map(tags, (tag) => {
                   let cardStyles;
-                  if (tag._id.$oid === highlightButton) {
+                  if (tag._id.$oid === selectedTagId) {
                     cardStyles = [
                       tagsListStyles.tagCard,
                       tagCardHighlightedColor,

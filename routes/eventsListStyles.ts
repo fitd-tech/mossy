@@ -1,37 +1,35 @@
 import { StyleSheet } from 'react-native';
 
-import { colors } from '../constants';
+import { colors } from 'common/constants.ts';
 
 const { color1, color2, color3, color4 } = colors;
 
-const styles = StyleSheet.create({
-  tagCardContainer: {
+const eventsListStyles = StyleSheet.create({
+  eventCardContainer: {
     flex: 0.8,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: 'column',
     width: '90%',
     alignItems: 'center',
-    minHeight: 100,
-    maxHeight: 200,
   },
-  tagCard: {
+  eventCard: {
     display: 'flex',
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    // height: 50,
-    margin: 2,
-    padding: 5,
+    width: '100%',
+    height: 50,
+    margin: 5,
+    padding: 10,
     borderWidth: 2,
     borderRadius: 5,
   },
-  tagCardTitle: {
+  eventCardTitle: {
     color: 'white',
     fontWeight: 'bold',
   },
-  tagCardText: {
+  eventCardText: {
     color: 'white',
   },
 });
 
-export default styles;
+export default eventsListStyles;

@@ -2,6 +2,8 @@ import React, { useRef, useEffect } from 'react';
 import { Animated } from 'react-native';
 
 export default function FadeTransitionOverlay({ isVisible }) {
+  // This should just be a reference and we should access .current within the useEffect hook
+  // But I seem to remember that not working as expected
   const alphaChannel = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {

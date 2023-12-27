@@ -1,24 +1,58 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Pressable, Switch, Text, View } from 'react-native';
 import { map, noop } from 'lodash';
+import Toast from 'react-native-root-toast';
 
-import appStyles from '../appStyles';
+import appStyles from 'appStyles.ts';
+import requestBuilder from 'apis/requestBuilder.ts';
+import apiConfigs from 'apis/mossyBehind/index.ts';
+import { responseStatus } from 'common/constants.ts';
+import { UpdateUserThemePayloadBuilderParams } from 'types/types.ts';
 
 function ThemeMenu({
   backgroundColor,
   textColor,
   useSystemDarkMode,
   colorScheme,
-  storedAppleUserId,
+  appleUserId,
   darkMode,
   theme,
-  saveUserTheme,
   setUseSystemDarkMode,
   savingUserTheme,
+  setSavingUserTheme,
   setDarkMode,
   themes,
   setTheme,
+  token,
 }) {
+  const saveUserTheme = useCallback(async ({
+    data,
+  }) => {
+      setSavingUserTheme(true);
+      const params: UpdateUserThemePayloadBuilderParams = {
+        appleUserId: data.appleUserId,
+        shouldColorSchemeUseSystem: data.useSystemDarkMode,
+        isColorSchemeDarkMode: data.darkMode,
+        colorTheme: data.theme,
+      }
+      try {
+        const {
+          status,
+          error,
+        } = await requestBuilder({
+          apiConfig: apiConfigs.updateUserTheme,
+          params,
+          token,
+        });
+        if (status === responseStatus.ERROR) {
+          Toast.show(error)
+        }
+      } catch (err) {
+        Toast.show(err.message)
+      }
+      setSavingUserTheme(false);
+  }, [setSavingUserTheme, token])
+
   return (
     <>
       <View style={{ ...appStyles.taskDetailsWrapper, ...backgroundColor }}>
@@ -34,7 +68,7 @@ function ThemeMenu({
             onValueChange={(e) => {
               const isSystemDarkMode = colorScheme === 'dark';
               const data = {
-                storedAppleUserId,
+                appleUserId,
                 useSystemDarkMode: e,
                 darkMode: e ? isSystemDarkMode : darkMode,
                 theme: theme.id,
@@ -56,7 +90,7 @@ function ThemeMenu({
             ios_backgroundColor="#3e3e3e"
             onValueChange={(e) => {
               const data = {
-                storedAppleUserId,
+                appleUserId,
                 useSystemDarkMode,
                 darkMode: e,
                 theme: theme.id,
@@ -99,12 +133,12 @@ function ThemeMenu({
                     ? noop
                     : () => {
                         const data = {
-                          storedAppleUserId,
+                          appleUserId,
                           useSystemDarkMode,
                           darkMode,
                           theme: themeChoice.id,
                         };
-                        saveUserTheme(data);
+                        saveUserTheme({data});
                         setTheme(themeChoice);
                       }
                 }

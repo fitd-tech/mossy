@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import appStyles from '../appStyles';
+import appStyles from 'appStyles.ts';
 
 function MainMenu({
   viewType,

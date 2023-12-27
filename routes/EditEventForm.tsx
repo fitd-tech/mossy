@@ -2,7 +2,7 @@ import React from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import appStyles from '../appStyles.js';
+import appStyles from 'appStyles.ts';
 
 function EditEventForm({
   textColor,

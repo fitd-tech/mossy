@@ -1,9 +1,9 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import appStyles from '../appStyles';
-import { pluralize } from '../utilities/formatStrings';
-import getDaysFromMilliseconds from '../utilities/time';
+import appStyles from 'appStyles.ts';
+import { pluralize } from 'common/utilities/formatStrings.ts';
+import getDaysFromMilliseconds from 'common/utilities/time.ts';
 
 function TaskDetailsForm({
   task,

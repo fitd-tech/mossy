@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import appStyles from '../appStyles';
+import appStyles from 'appStyles.ts';
 
 function SettingsMenu({
   backgroundColor,
@@ -9,7 +9,7 @@ function SettingsMenu({
   userProfile,
   primaryButtonColor,
   handleViewThemeSettings,
-  storedAppleUserId,
+  appleUserId,
   adminAppleUserId,
   debugAddAdminTasks,
   debugDeleteAllAdminTasks,
@@ -36,7 +36,7 @@ function SettingsMenu({
           <Text style={appStyles.buttonText}>Theme</Text>
         </Pressable>
       </View>
-      {storedAppleUserId === adminAppleUserId && (
+      {appleUserId === adminAppleUserId && (
         <>
           <Text style={{ ...appStyles.modalTitle, ...textColor }}>
             Debug Options

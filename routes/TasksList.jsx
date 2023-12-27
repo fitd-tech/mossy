@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -16,23 +16,22 @@ import { StatusBar } from 'expo-status-bar';
 import { size, map } from 'lodash';
 import { useFocusEffect } from '@react-navigation/native';
 
-import { pluralize } from '../utilities/formatStrings';
-import appStyles from '../appStyles';
-import tasksListStyles from './tasksListStyles';
-import { DataContext, StaticContext, ThemeContext } from '../appContext';
-import getDaysFromMilliseconds from '../utilities/time';
-import fetchMore from '../utilities/fetchMore';
+import { pluralize } from 'common/utilities/formatStrings.ts';
+import appStyles from 'appStyles.ts';
+import tasksListStyles from 'routes/tasksListStyles.ts';
+import { DataContext, StaticContext, ThemeContext } from 'appContext.ts';
+import getDaysFromMilliseconds from 'common/utilities/time.ts';
+import getMore from 'common/utilities/getMore.ts';
 
 export default function TasksList() {
   const [lastContentHeight, setLastContentHeight] = useState(0);
 
   const { darkMode, backgroundColor, textColor, theme } =
     useContext(ThemeContext);
-  const { tasks, fetchingTasks, highlightButton, tasksPage } =
+  const { tasks, fetchingTasks, selectedId: selectedTaskId, tasksPage } =
     useContext(DataContext);
   const {
-    fetchTasks,
-    fetchMoreTasks,
+    getTasks,
     onPressTaskCard: onPress,
     setViewType,
     setTasksPage,
@@ -73,20 +72,20 @@ export default function TasksList() {
       refreshControl={
         <RefreshControl
           refreshing={fetchingTasks}
-          onRefresh={fetchTasks}
+          onRefresh={getTasks}
           style={backgroundColor}
         />
       }
       style={backgroundColor}
       scrollEventThrottle={200}
       onScroll={(e) =>
-        fetchMore(e, {
+        getMore(e, {
           pageSize: 50,
           page: tasksPage,
           setPage: setTasksPage,
           lastContentHeight,
           setLastContentHeight,
-          fetchFunc: fetchTasks,
+          fetchFunc: getTasks,
         })
       }
     >
@@ -95,7 +94,7 @@ export default function TasksList() {
           {size(tasks) ? (
             <>
               {map(tasks, (task) => {
-                const taskSelected = highlightButton === task._id.$oid;
+                const taskSelected = selectedTaskId === task._id.$oid;
                 const daysSince = getDaysFromMilliseconds(
                   task.time_since_latest_event,
                 );
