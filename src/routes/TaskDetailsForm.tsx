@@ -1,10 +1,10 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import appStyles from 'appStyles.ts';
-import { pluralize } from 'common/utilities/formatStrings.ts';
-import getDaysFromMilliseconds from 'common/utilities/time.ts';
-import { Task, Theme } from 'types/types.ts';
+import appStyles from 'src/appStyles.ts';
+import { pluralize } from 'src/common/utilities/formatStrings.ts';
+import getDaysFromMilliseconds from 'src/common/utilities/time.ts';
+import { Task, Theme } from 'src/types/types.ts';
 
 interface TaskDetailsFormProps {
   task: Task;

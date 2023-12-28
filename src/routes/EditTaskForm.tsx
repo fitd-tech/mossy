@@ -1,13 +1,13 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, Text, TextInput } from 'react-native';
 
-import TagsSelectList from 'components/TagsSelectList.tsx';
-import appStyles from 'appStyles.ts';
+import TagsSelectList from 'src/components/TagsSelectList.tsx';
+import appStyles from 'src/appStyles.ts';
 import {
   HandleChangeField,
   HandleTagSelectCardPress,
   Tag,
-} from 'types/types.ts';
+} from 'src/types/types.ts';
 
 interface EditTaskFormProps {
   textColor: {

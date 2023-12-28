@@ -10,12 +10,12 @@ import { StatusBar } from 'expo-status-bar';
 import { size, map } from 'lodash';
 import { useFocusEffect } from '@react-navigation/native';
 
-import { pluralize } from 'common/utilities/formatStrings.ts';
-import appStyles from 'appStyles.ts';
-import tasksListStyles from 'routes/tasksListStyles.ts';
-import { DataContext, StaticContext, ThemeContext } from 'appContext.ts';
-import getDaysFromMilliseconds from 'common/utilities/time.ts';
-import { getMore } from 'common/utilities/requests.ts';
+import { pluralize } from 'src/common/utilities/formatStrings.ts';
+import appStyles from 'src/appStyles.ts';
+import tasksListStyles from 'src/routes/tasksListStyles.ts';
+import { DataContext, StaticContext, ThemeContext } from 'src/appContext.ts';
+import getDaysFromMilliseconds from 'src/common/utilities/time.ts';
+import { getMore } from 'src/common/utilities/requests.ts';
 
 export default function TasksList() {
   const [lastContentHeight, setLastContentHeight] = useState(0);

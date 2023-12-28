@@ -1,8 +1,8 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import appStyles from 'appStyles.ts';
-import { UserProfile } from 'types/types.ts';
+import appStyles from 'src/appStyles.ts';
+import { UserProfile } from 'src/types/types.ts';
 
 interface SettingsMenuProps {
   backgroundColor: {

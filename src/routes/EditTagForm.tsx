@@ -3,8 +3,8 @@ import { ActivityIndicator, Pressable, Text, TextInput } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { map } from 'lodash';
 
-import appStyles from 'appStyles.ts';
-import { HandleChangeField, Tag } from 'types/types.ts';
+import appStyles from 'src/appStyles.ts';
+import { HandleChangeField, Tag } from 'src/types/types.ts';
 
 interface EditTagFormProps {
   tags: Tag[];

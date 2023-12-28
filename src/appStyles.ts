@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { colors } from 'common/constants.ts';
+import { colors } from 'src/common/constants.ts';
 
 const { dark1, dark2 } = colors;
 

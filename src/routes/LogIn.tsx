@@ -4,7 +4,7 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import { randomUUID } from 'expo-crypto';
 import * as SecureStore from 'expo-secure-store';
 
-import { UserContext } from 'appContext.ts';
+import { UserContext } from 'src/appContext.ts';
 
 const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
 const authenticationState = 'Apple user sign-in';

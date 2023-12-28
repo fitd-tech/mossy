@@ -10,10 +10,10 @@ import { StatusBar } from 'expo-status-bar';
 import { size, map, truncate, noop } from 'lodash';
 import { useFocusEffect } from '@react-navigation/native';
 
-import appStyles from 'appStyles.ts';
-import eventsListStyles from 'routes/eventsListStyles.ts';
-import { DataContext, StaticContext, ThemeContext } from 'appContext.ts';
-import { getMore } from 'common/utilities/requests.ts';
+import appStyles from 'src/appStyles.ts';
+import eventsListStyles from 'src/routes/eventsListStyles.ts';
+import { DataContext, StaticContext, ThemeContext } from 'src/appContext.ts';
+import { getMore } from 'src/common/utilities/requests.ts';
 
 export default function EventsList() {
   const [lastContentHeight, setLastContentHeight] = useState(0);

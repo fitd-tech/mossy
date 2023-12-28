@@ -3,10 +3,10 @@ import { Text, View, Pressable, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { size, map, includes } from 'lodash';
 
-import appStyles from 'appStyles.ts';
-import tagsSelectListStyles from 'components/tagsSelectListStyles.ts';
-import { ThemeContext } from 'appContext.ts';
-import { Tag } from 'types/types.ts';
+import appStyles from 'src/appStyles.ts';
+import tagsSelectListStyles from 'src/components/tagsSelectListStyles.ts';
+import { ThemeContext } from 'src/appContext.ts';
+import { Tag } from 'src/types/types.ts';
 
 interface TagsSelectListProps {
   tags: Tag[];

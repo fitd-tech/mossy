@@ -9,32 +9,32 @@ import * as SecureStore from 'expo-secure-store';
 import { RootSiblingParent } from 'react-native-root-siblings';
 import Toast from 'react-native-root-toast';
 
-import FadeTransitionOverlay from 'components/FadeTransitionOverlay.tsx';
-import appStyles from 'appStyles.ts';
-import TagsList from 'routes/TagsList.tsx';
-import TasksList from 'routes/TasksList.tsx';
-import EventsList from 'routes/EventsList.tsx';
+import FadeTransitionOverlay from 'src/components/FadeTransitionOverlay.tsx';
+import appStyles from 'src/appStyles.ts';
+import TagsList from 'src/routes/TagsList.tsx';
+import TasksList from 'src/routes/TasksList.tsx';
+import EventsList from 'src/routes/EventsList.tsx';
 import {
   StaticContext,
   DataContext,
   UserContext,
   ThemeContext,
-} from 'appContext.ts';
-import { navigationRef, navigate } from 'RootNavigation.ts';
-import LogIn from 'routes/LogIn.tsx';
-import { colors } from 'common/constants.ts';
-import { themes } from 'theme/colors.ts';
-import TaskDetailsForm from 'routes/TaskDetailsForm.tsx';
-import SettingsMenu from 'routes/SettingsMenu.tsx';
-import MainMenu from 'routes/MainMenu.tsx';
-import ThemeMenu from 'routes/ThemeMenu.tsx';
-import EditTaskForm from 'routes/EditTaskForm.tsx';
-import CompleteEventForm from 'routes/CompleteEventForm.tsx';
-import ConfirmDelete from 'routes/ConfirmDelete.tsx';
-import ConfirmLogOut from 'routes/ConfirmLogOut.tsx';
-import EditEventForm from 'routes/EditEventForm.tsx';
-import EditTagForm from 'routes/EditTagForm.tsx';
-import apiConfigs from 'apis/mossyBehind/index.ts';
+} from 'src/appContext.ts';
+import { navigationRef, navigate } from 'src/RootNavigation.ts';
+import LogIn from 'src/routes/LogIn.tsx';
+import { colors } from 'src/common/constants.ts';
+import { themes } from 'src/theme/colors.ts';
+import TaskDetailsForm from 'src/routes/TaskDetailsForm.tsx';
+import SettingsMenu from 'src/routes/SettingsMenu.tsx';
+import MainMenu from 'src/routes/MainMenu.tsx';
+import ThemeMenu from 'src/routes/ThemeMenu.tsx';
+import EditTaskForm from 'src/routes/EditTaskForm.tsx';
+import CompleteEventForm from 'src/routes/CompleteEventForm.tsx';
+import ConfirmDelete from 'src/routes/ConfirmDelete.tsx';
+import ConfirmLogOut from 'src/routes/ConfirmLogOut.tsx';
+import EditEventForm from 'src/routes/EditEventForm.tsx';
+import EditTagForm from 'src/routes/EditTagForm.tsx';
+import apiConfigs from 'src/apis/mossyBehind/index.ts';
 import {
   CompleteTaskPayloadBuilderParams,
   CreateTagPayloadBuilderParams,
@@ -50,8 +50,8 @@ import {
   UpdateEventPayloadBuilderParams,
   UpdateTagPayloadBuilderParams,
   UpdateTaskPayloadBuilderParams,
-} from 'types/types.ts';
-import { handleResponse } from 'common/utilities/requests.ts';
+} from 'src/types/types.ts';
+import { handleResponse } from 'src/common/utilities/requests.ts';
 
 const { dark1 } = colors;
 

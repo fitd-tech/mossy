@@ -3,11 +3,11 @@ import { Pressable, Switch, Text, View } from 'react-native';
 import { map, noop } from 'lodash';
 import Toast from 'react-native-root-toast';
 
-import appStyles from 'appStyles.ts';
-import requestBuilder from 'apis/requestBuilder.ts';
-import apiConfigs from 'apis/mossyBehind/index.ts';
-import { responseStatus } from 'common/constants.ts';
-import { Theme, UpdateUserThemePayloadBuilderParams } from 'types/types.ts';
+import appStyles from 'src/appStyles.ts';
+import requestBuilder from 'src/apis/requestBuilder.ts';
+import apiConfigs from 'src/apis/mossyBehind/index.ts';
+import { responseStatus } from 'src/common/constants.ts';
+import { Theme, UpdateUserThemePayloadBuilderParams } from 'src/types/types.ts';
 
 interface ThemeMenuProps {
   backgroundColor: {

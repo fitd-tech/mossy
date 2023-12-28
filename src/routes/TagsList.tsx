@@ -10,10 +10,10 @@ import { StatusBar } from 'expo-status-bar';
 import { size, map } from 'lodash';
 import { useFocusEffect } from '@react-navigation/native';
 
-import appStyles from 'appStyles.ts';
-import tagsListStyles from 'routes/tagsListStyles.ts';
-import { DataContext, StaticContext, ThemeContext } from 'appContext.ts';
-import { getMore } from 'common/utilities/requests.ts';
+import appStyles from 'src/appStyles.ts';
+import tagsListStyles from 'src/routes/tagsListStyles.ts';
+import { DataContext, StaticContext, ThemeContext } from 'src/appContext.ts';
+import { getMore } from 'src/common/utilities/requests.ts';
 
 export default function TagsList() {
   const [lastContentHeight, setLastContentHeight] = useState(0);

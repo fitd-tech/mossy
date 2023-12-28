@@ -2,8 +2,8 @@ import React, { SetStateAction } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import appStyles from 'appStyles.ts';
-import { HandleChangeDate } from 'types/types.ts';
+import appStyles from 'src/appStyles.ts';
+import { HandleChangeDate } from 'src/types/types.ts';
 
 interface CompleteEventFormProps {
   textColor: {

@@ -1,4 +1,4 @@
-import { ApiConfigs } from 'types/types.ts';
+import { ApiConfigs } from 'src/types/types.ts';
 
 const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
 

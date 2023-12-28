@@ -1,5 +1,6 @@
 import { startCase } from 'lodash';
-import { pluralsMap } from 'common/constants.ts';
+
+import { pluralsMap } from 'src/common/constants.ts';
 
 export function pluralize(word, quantity, options) {
   const { capitalize } = options || {};

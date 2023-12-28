@@ -1,8 +1,8 @@
 import Toast from 'react-native-root-toast';
 
-import requestBuilder from 'apis/requestBuilder.ts';
-import { responseStatus } from 'common/constants.ts';
-import { RequestBuilderParams } from 'types/types.ts';
+import requestBuilder from 'src/apis/requestBuilder.ts';
+import { responseStatus } from 'src/common/constants.ts';
+import { RequestBuilderParams } from 'src/types/types.ts';
 
 type OnSuccessData =
   | Record<string, unknown>

@@ -1,42 +1,42 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, Text } from 'react-native';
 
-import appStyles from 'appStyles.ts';
+import appStyles from 'src/appStyles.ts';
 
-interface ConfirmLogOutProps {
+interface ConfirmDeleteProps {
   textColor: {
     color: string;
   };
   primaryButtonColor: {
     backgroundColor: string;
   };
-  handleConfirmLogOut: () => void;
+  handleDelete: () => void;
   loading: boolean;
 }
 
-function ConfirmLogOut({
+function ConfirmDelete({
   textColor,
   primaryButtonColor,
-  handleConfirmLogOut,
+  handleDelete,
   loading,
-}: ConfirmLogOutProps) {
+}: ConfirmDeleteProps) {
   return (
     <>
       <Text style={{ ...appStyles.modalTitle, ...textColor }}>
-        Confirm Log Out
+        Confirm Delete
       </Text>
       <Pressable
         style={[appStyles.button, primaryButtonColor]}
-        onPress={handleConfirmLogOut}
+        onPress={handleDelete}
       >
         {loading ? (
           <ActivityIndicator size="small" />
         ) : (
-          <Text style={appStyles.buttonText}>Log Out</Text>
+          <Text style={appStyles.buttonText}>Delete</Text>
         )}
       </Pressable>
     </>
   );
 }
 
-export default ConfirmLogOut;
+export default ConfirmDelete;

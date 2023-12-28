@@ -1,5 +1,5 @@
-import { responseStatus } from 'common/constants.ts';
-import { RequestBuilderParams } from 'types/types.ts';
+import { responseStatus } from 'src/common/constants.ts';
+import { RequestBuilderParams } from 'src/types/types.ts';
 
 export default async function requestBuilder({
   apiConfig,

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import appStyles from 'appStyles.ts';
+import appStyles from 'src/appStyles.ts';
 
 interface MainMenuProps {
   viewType: string;
