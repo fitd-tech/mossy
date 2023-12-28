@@ -1,13 +1,11 @@
 import React, { useCallback } from 'react';
 import { Pressable, Switch, Text, View } from 'react-native';
 import { map, noop } from 'lodash';
-import Toast from 'react-native-root-toast';
 
 import appStyles from 'src/appStyles.ts';
-import requestBuilder from 'src/apis/requestBuilder.ts';
 import apiConfigs from 'src/apis/mossyBehind/index.ts';
-import { responseStatus } from 'src/common/constants.ts';
 import { Theme, UpdateUserThemePayloadBuilderParams } from 'src/types/types.ts';
+import { handleResponse } from 'src/common/utilities/requests.ts';
 
 interface ThemeMenuProps {
   backgroundColor: {
@@ -55,19 +53,12 @@ function ThemeMenu({
         isColorSchemeDarkMode: data.darkMode,
         colorTheme: data.theme,
       };
-      try {
-        const { status, error } = await requestBuilder({
-          apiConfig: apiConfigs.updateUserTheme,
-          params,
-          token,
-        });
-        if (status === responseStatus.ERROR) {
-          Toast.show(error);
-        }
-      } catch (err) {
-        Toast.show(err.message);
-      }
-      setSavingUserTheme(false);
+      const requestBuilderOptions = {
+        apiConfig: apiConfigs.updateUserTheme,
+        params,
+        token,
+      };
+      handleResponse({ requestBuilderOptions, setLoading: setSavingUserTheme });
     },
     [setSavingUserTheme, token],
   );
@@ -157,7 +148,7 @@ function ThemeMenu({
                           darkMode,
                           theme: themeChoice.id,
                         };
-                        saveUserTheme({ data });
+                        saveUserTheme(data);
                         setTheme(themeChoice);
                       }
                 }

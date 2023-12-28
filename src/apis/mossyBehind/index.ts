@@ -10,7 +10,7 @@ const endpoints = {
   tags: `${mossyBackendDevUrl}api/tags`,
   events: `${mossyBackendDevUrl}api/events`,
   debugTasks: `${mossyBackendDevUrl}api/debug/tasks`,
-  debugEvents: `${mossyBackendDevUrl}api/debug/ev ents`,
+  debugEvents: `${mossyBackendDevUrl}api/debug/events`,
   debugTags: `${mossyBackendDevUrl}api/debug/tags`,
 };
 
@@ -99,8 +99,9 @@ const apiConfigs: ApiConfigs = {
   },
   createTag: {
     endpoint: endpoints.tags,
-    payloadBuilder: ({ name, parentTagId }) => ({
+    payloadBuilder: ({ name, description, parentTagId }) => ({
       name,
+      description,
       parent_tag: parentTagId,
     }),
     configBuilder: ({ token, payload }) => ({
@@ -182,9 +183,13 @@ const apiConfigs: ApiConfigs = {
   },
   updateEvent: {
     endpoint: endpoints.events,
-    payloadBuilder: ({ eventId, taskId, completionDate }) => ({
+    payloadBuilder: ({
+      eventId,
+      // taskId,
+      completionDate,
+    }) => ({
       _id: eventId,
-      task: taskId,
+      // task: taskId,
       date: completionDate,
     }),
     configBuilder: ({ token, payload }) => ({
@@ -198,9 +203,10 @@ const apiConfigs: ApiConfigs = {
   },
   updateTag: {
     endpoint: endpoints.tags,
-    payloadBuilder: ({ tagId, name, parentTagId }) => ({
+    payloadBuilder: ({ tagId, name, description, parentTagId }) => ({
       _id: tagId,
       name,
+      description,
       parent_tag: parentTagId,
     }),
     configBuilder: ({ token, payload }) => ({

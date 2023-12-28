@@ -104,11 +104,13 @@ interface CreateTaskConfigBuilderParams {
 
 export interface CreateTagPayloadBuilderParams {
   name: string;
+  description: string;
   parentTagId: string;
 }
 
 interface CreateTagPayload {
   name: string;
+  description: string;
   parent_tag: string;
 }
 
@@ -186,13 +188,13 @@ interface CompleteTaskConfigBuilderParams {
 
 export interface UpdateEventPayloadBuilderParams {
   eventId: string;
-  taskId: string;
+  // taskId: string;
   completionDate: Date;
 }
 
 interface UpdateEventPayload {
   _id: string;
-  task: string;
+  // task: string;
   date: Date;
 }
 
@@ -204,12 +206,14 @@ interface UpdateEventConfigBuilderParams {
 export interface UpdateTagPayloadBuilderParams {
   tagId: string;
   name: string;
+  description: string;
   parentTagId: string;
 }
 
 interface UpdateTagPayload {
   _id: string;
   name: string;
+  description: string;
   parent_tag: string;
 }
 

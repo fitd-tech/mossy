@@ -7,7 +7,6 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as SecureStore from 'expo-secure-store';
 import { RootSiblingParent } from 'react-native-root-siblings';
-import Toast from 'react-native-root-toast';
 
 import FadeTransitionOverlay from 'src/components/FadeTransitionOverlay.tsx';
 import appStyles from 'src/appStyles.ts';
@@ -93,8 +92,6 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [theme, setTheme] = useState(find(themes, { name: defaultTheme }));
   const [savingUserTheme, setSavingUserTheme] = useState(false);
-  console.log('isModalVisible', isModalVisible);
-  console.log('formType', formType);
 
   const textColor = darkMode
     ? appStyles.darkModeTextColor
@@ -255,12 +252,6 @@ export default function App() {
     loadUser();
   }, []);
 
-  // TEST: linter and toast
-  useEffect(() => {
-    console.log('tasks', tasks);
-    Toast.show('mmm toasty');
-  }, [tasks]);
-
   useEffect(() => {
     if (appleUserId && token && !userProfile) {
       getUserDetails();
@@ -308,6 +299,7 @@ export default function App() {
       setSelectedId(id);
       const tag = find(tags, ['_id.$oid', id]);
       setName(tag.name);
+      setDescription(tag.description);
       setParentTag(tag.parent_tag?.$oid);
       setFormType('editTag');
       setIsModalVisible(true);
@@ -359,6 +351,7 @@ export default function App() {
     setLoading(true);
     const params: CreateTagPayloadBuilderParams = {
       name,
+      description,
       parentTagId: parentTag === 'placeholder' ? null : parentTag,
     };
     const requestBuilderOptions = {
@@ -490,6 +483,7 @@ export default function App() {
     const params: UpdateTagPayloadBuilderParams = {
       tagId: selectedId,
       name,
+      description,
       parentTagId: parentTag === 'placeholder' ? null : parentTag,
     };
     const requestBuilderOptions = {
@@ -605,6 +599,7 @@ export default function App() {
       setSelectedTagIds([]);
     } else if (viewType === 'tags') {
       setName('');
+      setDescription('');
       setParentTag(null);
       setFormType('editTag');
     }
@@ -842,7 +837,6 @@ export default function App() {
       );
     }
     if (formType === 'taskDetails') {
-      console.log('rendering taskDetails form');
       const task = find(tasks, (task) => {
         return task._id.$oid === selectedId;
       });

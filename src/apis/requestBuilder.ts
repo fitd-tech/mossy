@@ -34,7 +34,7 @@ export default async function requestBuilder({
     data = await response.json();
   } else {
     status = responseStatus.ERROR;
-    error = await response.json();
+    error = `Server Error ${response.status}`;
   }
   return {
     status,
