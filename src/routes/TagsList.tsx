@@ -1,35 +1,32 @@
-import { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import {
-  StyleSheet,
   Text,
   View,
-  Button,
   Pressable,
   ScrollView,
-  Modal,
-  TextInput,
-  Animated,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { size, map } from 'lodash';
 import { useFocusEffect } from '@react-navigation/native';
 
-import appStyles from '../appStyles.js';
-import tagsListStyles from './tagsListStyles.js';
-import { DataContext, StaticContext, ThemeContext } from '../appContext';
-import fetchMore from '../utilities/fetchMore.js';
+import appStyles from 'src/appStyles.ts';
+import tagsListStyles from 'src/routes/tagsListStyles.ts';
+import { DataContext, StaticContext, ThemeContext } from 'src/appContext.ts';
+import { getMore } from 'src/common/utilities/requests.ts';
 
 export default function TagsList() {
   const [lastContentHeight, setLastContentHeight] = useState(0);
 
-  const { darkMode, backgroundColor, textColor, theme } =
-    useContext(ThemeContext);
-  const { tags, fetchingTags, highlightButton, tagsPage } =
-    useContext(DataContext);
+  const { backgroundColor, textColor, theme } = useContext(ThemeContext);
   const {
-    fetchTags,
+    tags,
+    loadingTags,
+    selectedId: selectedTagId,
+    tagsPage,
+  } = useContext(DataContext);
+  const {
+    getTags,
     onPressTagCard: onPress,
     setViewType,
     setTagsPage,
@@ -60,21 +57,21 @@ export default function TagsList() {
       <ScrollView
         refreshControl={
           <RefreshControl
-            refreshing={fetchingTags}
-            onRefresh={fetchTags}
+            refreshing={loadingTags}
+            onRefresh={getTags}
             style={backgroundColor}
           />
         }
         style={backgroundColor}
         scrollEventThrottle={200}
         onScroll={(e) =>
-          fetchMore(e, {
+          getMore(e, {
             pageSize: 200,
             page: tagsPage,
             setPage: setTagsPage,
             lastContentHeight,
             setLastContentHeight,
-            fetchFunc: fetchTags,
+            fetchFunc: getTags,
           })
         }
       >
@@ -84,7 +81,7 @@ export default function TagsList() {
               <>
                 {map(tags, (tag) => {
                   let cardStyles;
-                  if (tag._id.$oid === highlightButton) {
+                  if (tag._id.$oid === selectedTagId) {
                     cardStyles = [
                       tagsListStyles.tagCard,
                       tagCardHighlightedColor,
@@ -106,8 +103,10 @@ export default function TagsList() {
                 })}
               </>
             ) : (
-              <View style={appStyles.placeholder}>
-                <Text style={appStyles.placeholderText}>Create some tags!</Text>
+              <View style={{ ...appStyles.placeholder, backgroundColor }}>
+                <Text style={{ ...appStyles.placeholderText, ...textColor }}>
+                  Create some tags!
+                </Text>
               </View>
             )}
           </View>

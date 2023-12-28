@@ -6,3 +6,12 @@ export const colors = {
   color3: '#210B2C',
   color4: '#D8B4E2',
 };
+
+export enum responseStatus {
+  OK = 0,
+  ERROR = 1,
+}
+
+export const pluralsMap = {
+  foot: 'feet',
+};

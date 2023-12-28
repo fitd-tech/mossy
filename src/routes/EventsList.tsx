@@ -1,25 +1,19 @@
-import { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import {
-  StyleSheet,
   Text,
   View,
-  Button,
   Pressable,
   ScrollView,
-  Modal,
-  TextInput,
-  Animated,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { size, map, truncate, noop } from 'lodash';
 import { useFocusEffect } from '@react-navigation/native';
 
-import appStyles from '../appStyles';
-import eventsListStyles from './eventsListStyles';
-import { DataContext, StaticContext, ThemeContext } from '../appContext';
-import fetchMore from '../utilities/fetchMore';
+import appStyles from 'src/appStyles.ts';
+import eventsListStyles from 'src/routes/eventsListStyles.ts';
+import { DataContext, StaticContext, ThemeContext } from 'src/appContext.ts';
+import { getMore } from 'src/common/utilities/requests.ts';
 
 export default function EventsList() {
   const [lastContentHeight, setLastContentHeight] = useState(0);
@@ -30,17 +24,20 @@ export default function EventsList() {
   useEffect(() => {
     setTimeout(() => {
       setSettled(true);
-    });
-  }, [500]);
+    }, 500);
+  }, []);
 
-  const { darkMode, backgroundColor, textColor, theme } =
-    useContext(ThemeContext);
-
-  const { events, fetchingEvents, highlightButton, eventsPage } =
-    useContext(DataContext);
+  const { backgroundColor, textColor, theme } = useContext(ThemeContext);
 
   const {
-    fetchEvents,
+    events,
+    loadingEvents,
+    selectedId: selectedEventId,
+    eventsPage,
+  } = useContext(DataContext);
+
+  const {
+    getEvents,
     onPressEventCard: onPress,
     setViewType,
     setEventsPage,
@@ -70,21 +67,21 @@ export default function EventsList() {
     <ScrollView
       refreshControl={
         <RefreshControl
-          refreshing={fetchingEvents}
-          onRefresh={fetchEvents}
+          refreshing={loadingEvents}
+          onRefresh={getEvents}
           style={backgroundColor}
         />
       }
       style={backgroundColor}
       scrollEventThrottle={200}
       onScroll={(e) =>
-        fetchMore(e, {
+        getMore(e, {
           pageSize: 50,
           page: eventsPage,
           setPage: setEventsPage,
           lastContentHeight,
           setLastContentHeight,
-          fetchFunc: fetchEvents,
+          fetchFunc: getEvents,
         })
       }
     >
@@ -94,7 +91,7 @@ export default function EventsList() {
             <>
               {map(events, (event) => {
                 let cardStyles;
-                if (event._id.$oid === highlightButton) {
+                if (event._id.$oid === selectedEventId) {
                   cardStyles = [
                     eventsListStyles.eventCard,
                     eventCardHighlightedColor,
@@ -124,8 +121,10 @@ export default function EventsList() {
               })}
             </>
           ) : (
-            <View style={appStyles.placeholder}>
-              <Text style={appStyles.placeholderText}>Create some events!</Text>
+            <View style={{ ...appStyles.placeholder, ...backgroundColor }}>
+              <Text style={{ ...appStyles.placeholderText, ...textColor }}>
+                Create some events!
+              </Text>
             </View>
           )}
         </View>

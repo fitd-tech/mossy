@@ -1,9 +1,5 @@
 import { StyleSheet } from 'react-native';
 
-import { colors } from '../constants';
-
-const { color1, color2, color3, color4 } = colors;
-
 const styles = StyleSheet.create({
   tagCardContainer: {
     flex: 1,
