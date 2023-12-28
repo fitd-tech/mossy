@@ -153,7 +153,9 @@ const appStyles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'flex-start',
   },
-  appTitle: {},
+  appTitle: {
+    fontWeight: 'bold',
+  },
   appTitleWrapper: {
     display: 'flex',
     justifyContent: 'center',
