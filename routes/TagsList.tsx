@@ -1,15 +1,9 @@
 import React, { useContext, useState, useEffect } from 'react';
 import {
-  StyleSheet,
   Text,
   View,
-  Button,
   Pressable,
   ScrollView,
-  Modal,
-  TextInput,
-  Animated,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -19,16 +13,15 @@ import { useFocusEffect } from '@react-navigation/native';
 import appStyles from 'appStyles.ts';
 import tagsListStyles from 'routes/tagsListStyles.ts';
 import { DataContext, StaticContext, ThemeContext } from 'appContext.ts';
-import getMore from 'common/utilities/getMore.ts';
+import { getMore } from 'common/utilities/requests.ts';
 
 export default function TagsList() {
   const [lastContentHeight, setLastContentHeight] = useState(0);
 
-  const { darkMode, backgroundColor, textColor, theme } =
-    useContext(ThemeContext);
+  const { backgroundColor, textColor, theme } = useContext(ThemeContext);
   const {
     tags,
-    fetchingTags,
+    loadingTags,
     selectedId: selectedTagId,
     tagsPage,
   } = useContext(DataContext);
@@ -64,7 +57,7 @@ export default function TagsList() {
       <ScrollView
         refreshControl={
           <RefreshControl
-            refreshing={fetchingTags}
+            refreshing={loadingTags}
             onRefresh={getTags}
             style={backgroundColor}
           />

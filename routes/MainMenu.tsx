@@ -3,6 +3,27 @@ import { Pressable, Text, View } from 'react-native';
 
 import appStyles from 'appStyles.ts';
 
+interface MainMenuProps {
+  viewType: string;
+  primaryButtonColor: {
+    backgroundColor: string;
+  };
+  secondaryButtonColor: {
+    backgroundColor: string;
+  };
+  backgroundColor: {
+    backgroundColor: string;
+  };
+  textColor: {
+    color: string;
+  };
+  handleViewTasks: () => void;
+  handleViewEvents: () => void;
+  handleViewTags: () => void;
+  handleViewSettings: () => void;
+  handleLogOut: () => void;
+}
+
 function MainMenu({
   viewType,
   primaryButtonColor,
@@ -14,7 +35,7 @@ function MainMenu({
   handleViewTags,
   handleViewSettings,
   handleLogOut,
-}) {
+}: MainMenuProps) {
   function generateButtonStyles(buttonView) {
     if (buttonView === viewType) {
       return [appStyles.button, secondaryButtonColor];

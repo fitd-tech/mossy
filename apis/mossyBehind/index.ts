@@ -9,6 +9,9 @@ const endpoints = {
   eventsString: `${mossyBackendDevUrl}api/events-string`,
   tags: `${mossyBackendDevUrl}api/tags`,
   events: `${mossyBackendDevUrl}api/events`,
+  debugTasks: `${mossyBackendDevUrl}api/debug/tasks`,
+  debugEvents: `${mossyBackendDevUrl}api/debug/ev ents`,
+  debugTags: `${mossyBackendDevUrl}api/debug/tags`,
 };
 
 const apiConfigs: ApiConfigs = {
@@ -80,10 +83,10 @@ const apiConfigs: ApiConfigs = {
   },
   createTask: {
     endpoint: endpoints.tasks,
-    payloadBuilder: ({ name, frequency, tags }) => ({
+    payloadBuilder: ({ name, frequency, tagIds }) => ({
       name,
       frequency,
-      tags,
+      tags: tagIds,
     }),
     configBuilder: ({ token, payload }) => ({
       method: 'POST',
@@ -147,11 +150,11 @@ const apiConfigs: ApiConfigs = {
   },
   updateTask: {
     endpoint: endpoints.tasks,
-    payloadBuilder: ({ id, name, frequency, tags }) => ({
+    payloadBuilder: ({ id, name, frequency, tagIds }) => ({
       _id: id,
       name,
       frequency,
-      tags,
+      tags: tagIds,
     }),
     configBuilder: ({ token, payload }) => ({
       method: 'PATCH',
@@ -195,10 +198,10 @@ const apiConfigs: ApiConfigs = {
   },
   updateTag: {
     endpoint: endpoints.tags,
-    payloadBuilder: ({ tagId, name, parentTag }) => ({
+    payloadBuilder: ({ tagId, name, parentTagId }) => ({
       _id: tagId,
       name,
-      parent_tag: parentTag,
+      parent_tag: parentTagId,
     }),
     configBuilder: ({ token, payload }) => ({
       method: 'PATCH',
@@ -207,6 +210,78 @@ const apiConfigs: ApiConfigs = {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(payload),
+    }),
+  },
+  debugCreateTasks: {
+    endpoint: endpoints.debugTasks,
+    payloadBuilder: ({ quantity }) => ({
+      quantity,
+    }),
+    configBuilder: ({ token, payload }) => ({
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    }),
+  },
+  debugDeleteAllTasks: {
+    endpoint: endpoints.debugTasks,
+    configBuilder: ({ token }) => ({
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    }),
+  },
+  debugCreateEvents: {
+    endpoint: endpoints.debugEvents,
+    payloadBuilder: ({ quantity }) => ({
+      quantity,
+    }),
+    configBuilder: ({ token, payload }) => ({
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    }),
+  },
+  debugDeleteAllEvents: {
+    endpoint: endpoints.debugEvents,
+    configBuilder: ({ token }) => ({
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    }),
+  },
+  debugCreateTags: {
+    endpoint: endpoints.debugTags,
+    payloadBuilder: ({ quantity }) => ({
+      quantity,
+    }),
+    configBuilder: ({ token, payload }) => ({
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    }),
+  },
+  debugDeleteAllTags: {
+    endpoint: endpoints.debugTags,
+    configBuilder: ({ token }) => ({
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
     }),
   },
 };

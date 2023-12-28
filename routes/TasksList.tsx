@@ -1,15 +1,9 @@
 import React, { useContext, useState, useEffect } from 'react';
 import {
-  StyleSheet,
   Text,
   View,
-  Button,
   Pressable,
   ScrollView,
-  Modal,
-  TextInput,
-  Animated,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -21,16 +15,15 @@ import appStyles from 'appStyles.ts';
 import tasksListStyles from 'routes/tasksListStyles.ts';
 import { DataContext, StaticContext, ThemeContext } from 'appContext.ts';
 import getDaysFromMilliseconds from 'common/utilities/time.ts';
-import getMore from 'common/utilities/getMore.ts';
+import { getMore } from 'common/utilities/requests.ts';
 
 export default function TasksList() {
   const [lastContentHeight, setLastContentHeight] = useState(0);
 
-  const { darkMode, backgroundColor, textColor, theme } =
-    useContext(ThemeContext);
+  const { backgroundColor, textColor, theme } = useContext(ThemeContext);
   const {
     tasks,
-    fetchingTasks,
+    loadingTasks,
     selectedId: selectedTaskId,
     tasksPage,
   } = useContext(DataContext);
@@ -75,7 +68,7 @@ export default function TasksList() {
     <ScrollView
       refreshControl={
         <RefreshControl
-          refreshing={fetchingTasks}
+          refreshing={loadingTasks}
           onRefresh={getTasks}
           style={backgroundColor}
         />

@@ -3,12 +3,23 @@ import { ActivityIndicator, Pressable, Text } from 'react-native';
 
 import appStyles from 'appStyles.ts';
 
+interface ConfirmLogOutProps {
+  textColor: {
+    color: string;
+  };
+  primaryButtonColor: {
+    backgroundColor: string;
+  };
+  handleConfirmLogOut: () => void;
+  loading: boolean;
+}
+
 function ConfirmLogOut({
   textColor,
   primaryButtonColor,
   handleConfirmLogOut,
   loading,
-}) {
+}: ConfirmLogOutProps) {
   return (
     <>
       <Text style={{ ...appStyles.modalTitle, ...textColor }}>

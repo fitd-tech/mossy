@@ -2,7 +2,6 @@ import React, { useState, useEffect, useContext } from 'react';
 import { View, StyleSheet } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { randomUUID } from 'expo-crypto';
-import { keys } from 'lodash';
 import * as SecureStore from 'expo-secure-store';
 
 import { UserContext } from 'appContext.ts';
@@ -16,11 +15,9 @@ export default function LogIn() {
   const [nonce, setNonce] = useState(null);
 
   const {
-    isAuthenticated,
     setIsAuthenticated,
     appleUserId,
     setAppleUserId,
-    userProfile,
     setUserProfile,
     setToken,
   } = useContext(UserContext);
@@ -29,7 +26,9 @@ export default function LogIn() {
     async function checkAvailability() {
       try {
         const availability = await AppleAuthentication.isAvailableAsync();
-        setAppleAuthAvailable(true);
+        if (availability) {
+          setAppleAuthAvailable(true);
+        }
       } catch (err) {
         console.log('AppleAuthentication availability error', err);
       }
@@ -48,7 +47,7 @@ export default function LogIn() {
     if (appleUserId) {
       getCredentialState();
     }
-  }, [appleUserId]);
+  }, [appleUserId, setIsAuthenticated]);
 
   useEffect(() => {
     async function verifyCredential() {
@@ -83,10 +82,17 @@ export default function LogIn() {
       }
     }
     // We can verify state here without decoding the JWT
-    if (credential && credential.state === authenticationState) {
+    if (credential && credential.state === authenticationState && nonce) {
       verifyCredential();
     }
-  }, [credential]);
+  }, [
+    credential,
+    nonce,
+    setAppleUserId,
+    setIsAuthenticated,
+    setToken,
+    setUserProfile,
+  ]);
 
   return (
     appleAuthAvailable && (

@@ -7,7 +7,28 @@ import appStyles from 'appStyles.ts';
 import requestBuilder from 'apis/requestBuilder.ts';
 import apiConfigs from 'apis/mossyBehind/index.ts';
 import { responseStatus } from 'common/constants.ts';
-import { UpdateUserThemePayloadBuilderParams } from 'types/types.ts';
+import { Theme, UpdateUserThemePayloadBuilderParams } from 'types/types.ts';
+
+interface ThemeMenuProps {
+  backgroundColor: {
+    backgroundColor: string;
+  };
+  textColor: {
+    color: string;
+  };
+  useSystemDarkMode: boolean;
+  colorScheme: string;
+  appleUserId: string;
+  darkMode: boolean;
+  theme: Theme;
+  setUseSystemDarkMode: React.Dispatch<React.SetStateAction<boolean>>;
+  savingUserTheme: boolean;
+  setSavingUserTheme: React.Dispatch<React.SetStateAction<boolean>>;
+  setDarkMode: React.Dispatch<React.SetStateAction<boolean>>;
+  themes: Theme[];
+  setTheme: React.Dispatch<React.SetStateAction<Theme>>;
+  token: string;
+}
 
 function ThemeMenu({
   backgroundColor,
@@ -24,9 +45,9 @@ function ThemeMenu({
   themes,
   setTheme,
   token,
-}) {
+}: ThemeMenuProps) {
   const saveUserTheme = useCallback(
-    async ({ data }) => {
+    async (data) => {
       setSavingUserTheme(true);
       const params: UpdateUserThemePayloadBuilderParams = {
         appleUserId: data.appleUserId,

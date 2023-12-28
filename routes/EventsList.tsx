@@ -1,15 +1,9 @@
 import React, { useContext, useState, useEffect } from 'react';
 import {
-  StyleSheet,
   Text,
   View,
-  Button,
   Pressable,
   ScrollView,
-  Modal,
-  TextInput,
-  Animated,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -19,7 +13,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import appStyles from 'appStyles.ts';
 import eventsListStyles from 'routes/eventsListStyles.ts';
 import { DataContext, StaticContext, ThemeContext } from 'appContext.ts';
-import getMore from 'common/utilities/getMore.ts';
+import { getMore } from 'common/utilities/requests.ts';
 
 export default function EventsList() {
   const [lastContentHeight, setLastContentHeight] = useState(0);
@@ -30,15 +24,14 @@ export default function EventsList() {
   useEffect(() => {
     setTimeout(() => {
       setSettled(true);
-    });
-  }, [500]);
+    }, 500);
+  }, []);
 
-  const { darkMode, backgroundColor, textColor, theme } =
-    useContext(ThemeContext);
+  const { backgroundColor, textColor, theme } = useContext(ThemeContext);
 
   const {
     events,
-    fetchingEvents,
+    loadingEvents,
     selectedId: selectedEventId,
     eventsPage,
   } = useContext(DataContext);
@@ -74,7 +67,7 @@ export default function EventsList() {
     <ScrollView
       refreshControl={
         <RefreshControl
-          refreshing={fetchingEvents}
+          refreshing={loadingEvents}
           onRefresh={getEvents}
           style={backgroundColor}
         />

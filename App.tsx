@@ -1,40 +1,7 @@
-import React, {
-  useState,
-  useEffect,
-  createContext,
-  useMemo,
-  useCallback,
-} from 'react';
-import { StatusBar } from 'expo-status-bar';
-import {
-  StyleSheet,
-  Text,
-  View,
-  Button,
-  Pressable,
-  ScrollView,
-  Modal,
-  TextInput,
-  Animated,
-  ActivityIndicator,
-  RefreshControl,
-  Switch,
-  useColorScheme,
-} from 'react-native';
-import {
-  map,
-  size,
-  find,
-  orderBy,
-  noop,
-  truncate,
-  includes,
-  reject,
-  filter,
-} from 'lodash';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Text, View, Pressable, Modal, useColorScheme } from 'react-native';
+import { map, find, noop, includes, reject } from 'lodash';
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
 import { NavigationContainer } from '@react-navigation/native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import * as AppleAuthentication from 'expo-apple-authentication';
@@ -42,25 +9,21 @@ import * as SecureStore from 'expo-secure-store';
 import { RootSiblingParent } from 'react-native-root-siblings';
 import Toast from 'react-native-root-toast';
 
-import FadeTransitionOverlay from 'components/FadeTransitionOverlay.jsx';
-import { pluralize } from 'common/utilities/formatStrings.js';
-import appStyles from 'appStyles.js';
-import tasksListStyles from 'routes/tasksListStyles.js';
-import TagsList from 'routes/TagsList.jsx';
-import TagsSelectList from 'components/TagsSelectList.jsx';
-import TasksList from 'routes/TasksList.jsx';
-import EventsList from 'routes/EventsList.jsx';
+import FadeTransitionOverlay from 'components/FadeTransitionOverlay.tsx';
+import appStyles from 'appStyles.ts';
+import TagsList from 'routes/TagsList.tsx';
+import TasksList from 'routes/TasksList.tsx';
+import EventsList from 'routes/EventsList.tsx';
 import {
   StaticContext,
   DataContext,
   UserContext,
   ThemeContext,
-} from 'appContext.js';
-import { navigationRef, navigate } from 'RootNavigation.js';
-import LogIn from 'routes/LogIn.jsx';
-import getDaysFromMilliseconds from 'common/utilities/time.js';
-import { responseStatus, colors } from 'common/constants.ts';
-import { themes } from 'theme/colors.js';
+} from 'appContext.ts';
+import { navigationRef, navigate } from 'RootNavigation.ts';
+import LogIn from 'routes/LogIn.tsx';
+import { colors } from 'common/constants.ts';
+import { themes } from 'theme/colors.ts';
 import TaskDetailsForm from 'routes/TaskDetailsForm.tsx';
 import SettingsMenu from 'routes/SettingsMenu.tsx';
 import MainMenu from 'routes/MainMenu.tsx';
@@ -71,21 +34,29 @@ import ConfirmDelete from 'routes/ConfirmDelete.tsx';
 import ConfirmLogOut from 'routes/ConfirmLogOut.tsx';
 import EditEventForm from 'routes/EditEventForm.tsx';
 import EditTagForm from 'routes/EditTagForm.tsx';
-import { fetchUser } from 'apis/mossyBehind/auth.js';
-import requestBuilder from 'apis/requestBuilder.js';
-import apiConfigs from 'apis/mossyBehind/index';
+import apiConfigs from 'apis/mossyBehind/index.ts';
 import {
+  CompleteTaskPayloadBuilderParams,
+  CreateTagPayloadBuilderParams,
   CreateTaskPayloadBuilderParams,
+  DebugCreateEventsPayloadBuilderParams,
+  DebugCreateTagsPayloadBuilderParams,
+  DebugCreateTasksPayloadBuilderParams,
+  DeleteEventsPayloadBuilderParams,
+  DeleteTagsPayloadBuilderParams,
+  DeleteTasksPayloadBuilderParams,
   ReadUserPayloadBuilderParams,
   SearchParams,
-  UserApiConfig,
+  UpdateEventPayloadBuilderParams,
+  UpdateTagPayloadBuilderParams,
+  UpdateTaskPayloadBuilderParams,
 } from 'types/types.ts';
+import { handleResponse } from 'common/utilities/requests.ts';
 
 const { dark1 } = colors;
 
 const defaultTheme = 'mossy';
 
-const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
 const adminAppleUserId = process.env.EXPO_PUBLIC_ADMIN_APPLE_USER_ID;
 
 const Tab = createMaterialTopTabNavigator();
@@ -102,7 +73,7 @@ export default function App() {
   const [name, setName] = useState(null);
   const [description, setDescription] = useState('');
   const [frequency, setFrequency] = useState(null);
-  const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedTagIds, setSelectedTagIds] = useState([]);
   const [parentTag, setParentTag] = useState(null);
   const [formType, setFormType] = useState(null);
   const [completionDate, setCompletionDate] = useState(new Date());
@@ -154,31 +125,26 @@ export default function App() {
     const params: ReadUserPayloadBuilderParams = {
       appleUserId,
     };
-    try {
-      const {
-        status,
-        data: _userProfile,
-        error,
-      } = await requestBuilder({
-        apiConfig: apiConfigs.readUser,
-        params,
-        token,
-      });
-      if (status === responseStatus.OK) {
-        setUserProfile(_userProfile);
-        setUseSystemDarkMode(_userProfile.should_color_scheme_use_system);
-        setDarkMode(_userProfile.is_color_scheme_dark_mode);
-        setTheme(find(themes, { id: _userProfile.color_theme }));
-        return _userProfile;
-      } else {
-        Toast.show(error);
-        clearUserData();
-        return null;
-      }
-    } catch (err) {
-      Toast.show(err.message);
-      return null;
+    const requestBuilderOptions = {
+      apiConfig: apiConfigs.readUser,
+      params,
+      token,
+    };
+    async function onSuccess(_userProfile) {
+      setUserProfile(_userProfile);
+      setUseSystemDarkMode(_userProfile.should_color_scheme_use_system);
+      setDarkMode(_userProfile.is_color_scheme_dark_mode);
+      setTheme(find(themes, { id: _userProfile.color_theme }));
     }
+    async function onFailure() {
+      clearUserData();
+    }
+    handleResponse({
+      requestBuilderOptions,
+      onSuccess,
+      onFailure,
+      setLoading: noop,
+    });
   }, [appleUserId, token]);
 
   useEffect(() => {
@@ -197,35 +163,25 @@ export default function App() {
       if (!searchParams) {
         setTasksPage(1);
       }
-      try {
-        const {
-          status,
-          data: _tasks,
-          error,
-        } = await requestBuilder({
-          apiConfig: apiConfigs.readTasks,
-          token,
-        });
-        if (status === responseStatus.OK) {
-          setTasks((tasksPrevious) => {
-            if (searchParams?.offset) {
-              const newTasks = [...tasksPrevious, ..._tasks];
-              return newTasks;
-            }
-            return _tasks;
-          });
-          setLoadingTasks(false);
+      const requestBuilderOptions = {
+        apiConfig: apiConfigs.readTasks,
+        searchParams,
+        token,
+      };
+      async function onSuccess(_tasks) {
+        setTasks((tasksPrevious) => {
+          if (searchParams?.offset) {
+            const newTasks = [...tasksPrevious, ..._tasks];
+            return newTasks;
+          }
           return _tasks;
-        } else {
-          Toast.show(error);
-          setLoadingTasks(false);
-          return null;
-        }
-      } catch (err) {
-        Toast.show(err.message);
-        setLoadingTasks(false);
-        return null;
+        });
       }
+      handleResponse({
+        requestBuilderOptions,
+        onSuccess,
+        setLoading: setLoadingTasks,
+      });
     },
     [token],
   );
@@ -236,35 +192,25 @@ export default function App() {
       if (!searchParams) {
         setEventsPage(1);
       }
-      try {
-        const {
-          status,
-          data: _events,
-          error,
-        } = await requestBuilder({
-          apiConfig: apiConfigs.readEvents,
-          token,
-        });
-        if (status === responseStatus.OK) {
-          setEvents((eventsPrevious) => {
-            if (searchParams?.offset) {
-              const newEvents = [...eventsPrevious, ..._events];
-              return newEvents;
-            }
-            return _events;
-          });
-          setLoadingEvents(false);
+      const requestBuilderOptions = {
+        apiConfig: apiConfigs.readEvents,
+        searchParams,
+        token,
+      };
+      async function onSuccess(_events) {
+        setEvents((eventsPrevious) => {
+          if (searchParams?.offset) {
+            const newEvents = [...eventsPrevious, ..._events];
+            return newEvents;
+          }
           return _events;
-        } else {
-          Toast.show(error);
-          setLoadingEvents(false);
-          return null;
-        }
-      } catch (err) {
-        Toast.show(err.message);
-        setLoadingEvents(false);
-        return null;
+        });
       }
+      handleResponse({
+        requestBuilderOptions,
+        onSuccess,
+        setLoading: setLoadingEvents,
+      });
     },
     [token],
   );
@@ -275,35 +221,25 @@ export default function App() {
       if (!searchParams) {
         setTagsPage(1);
       }
-      try {
-        const {
-          status,
-          data: _tags,
-          error,
-        } = await requestBuilder({
-          apiConfig: apiConfigs.readTags,
-          token,
-        });
-        if (status === responseStatus.OK) {
-          setTags((tagsPrevious) => {
-            if (searchParams?.offset) {
-              const newTags = [...tagsPrevious, ..._tags];
-              return newTags;
-            }
-            return _tags;
-          });
-          setLoadingTags(false);
+      const requestBuilderOptions = {
+        apiConfig: apiConfigs.readTags,
+        searchParams,
+        token,
+      };
+      async function onSuccess(_tags) {
+        setTags((tagsPrevious) => {
+          if (searchParams?.offset) {
+            const newTags = [...tagsPrevious, ..._tags];
+            return newTags;
+          }
           return _tags;
-        } else {
-          Toast.show(error);
-          setLoadingTags(false);
-          return null;
-        }
-      } catch (err) {
-        Toast.show(err.message);
-        setLoadingTags(false);
-        return null;
+        });
       }
+      handleResponse({
+        requestBuilderOptions,
+        onSuccess,
+        setLoading: setLoadingTags,
+      });
     },
     [token],
   );
@@ -319,7 +255,7 @@ export default function App() {
     loadUser();
   }, []);
 
-  // TEST linter
+  // TEST: linter and toast
   useEffect(() => {
     console.log('tasks', tasks);
     Toast.show('mmm toasty');
@@ -349,7 +285,7 @@ export default function App() {
       const task = find(tasks, ['_id.$oid', id]);
       setName(task.name);
       setFrequency(String(task.frequency));
-      setSelectedTags(map(task.tags || [], (tag) => tag.$oid));
+      setSelectedTagIds(map(task.tags || [], (tagId) => tagId.$oid));
       setFormType('taskDetails');
       setIsModalVisible(true);
     },
@@ -379,15 +315,18 @@ export default function App() {
     [tags],
   );
 
-  function handleTagSelectCardPress(id) {
-    setSelectedTags((selectedTagsPrevious) => {
-      let newSelectedTags;
-      if (includes(selectedTagsPrevious, id)) {
-        newSelectedTags = reject(selectedTagsPrevious, (tag) => tag === id);
+  function handleTagSelectCardPress(currentId) {
+    setSelectedTagIds((selectedTagIdsPrevious) => {
+      let newSelectedTagIds;
+      if (includes(selectedTagIdsPrevious, currentId)) {
+        newSelectedTagIds = reject(
+          selectedTagIdsPrevious,
+          (tagId) => tagId === currentId,
+        );
       } else {
-        newSelectedTags = [...selectedTagsPrevious, id];
+        newSelectedTagIds = [...selectedTagIdsPrevious, currentId];
       }
-      return newSelectedTags;
+      return newSelectedTagIds;
     });
   }
 
@@ -402,468 +341,259 @@ export default function App() {
     const params: CreateTaskPayloadBuilderParams = {
       name,
       frequency: frequency ? Number(frequency) : 0,
-      tags: selectedTags,
+      tagIds: selectedTagIds,
     };
-    try {
-      const {
-        status,
-        data: _task,
-        error,
-      } = await requestBuilder({
-        apiConfig: apiConfigs.createTask,
-        params,
-        token,
-      });
-      if (status === responseStatus.OK) {
-        await getTasks();
-        handleCloseModal();
-        setLoading(false);
-        return _task;
-      } else {
-        Toast.show(error);
-        setLoading(false);
-        return null;
-      }
-    } catch (err) {
-      Toast.show(err.message);
-      setLoading(false);
-      return null;
+    const requestBuilderOptions = {
+      apiConfig: apiConfigs.createTask,
+      params,
+      token,
+    };
+    async function onSuccess() {
+      await getTasks();
+      handleCloseModal();
     }
+    handleResponse({ requestBuilderOptions, onSuccess, setLoading });
   }
 
   async function createTag() {
     setLoading(true);
-    const params = {
+    const params: CreateTagPayloadBuilderParams = {
       name,
-      parent_tag: parentTag === 'placeholder' ? null : parentTag,
+      parentTagId: parentTag === 'placeholder' ? null : parentTag,
     };
-    try {
-      const {
-        status,
-        data: _tag,
-        error,
-      } = await requestBuilder({
-        apiConfig: apiConfigs.createTag,
-        params,
-        token,
-      });
-      if (status === responseStatus.OK) {
-        await getTags();
-        handleCloseModal();
-        setLoading(false);
-        return _tag;
-      } else {
-        Toast.show(error);
-        setLoading(false);
-        return null;
-      }
-    } catch (err) {
-      Toast.show(err.message);
-      setLoading(false);
-      return null;
+    const requestBuilderOptions = {
+      apiConfig: apiConfigs.createTag,
+      params,
+      token,
+    };
+    async function onSuccess() {
+      await getTags();
+      handleCloseModal();
     }
+    handleResponse({ requestBuilderOptions, onSuccess, setLoading });
   }
 
   async function deleteTasks({ taskIds }) {
     setLoading(true);
-    const params = {
+    const params: DeleteTasksPayloadBuilderParams = {
       taskIds,
     };
-    try {
-      const { status, error } = await requestBuilder({
-        apiConfig: apiConfigs.deleteTasks,
-        params,
-        token,
-      });
-      if (status === responseStatus.OK) {
-        await getTasks();
-        handleCloseModal();
-        setLoading(false);
-        return 0;
-      } else {
-        Toast.show(error);
-        setLoading(false);
-        return null;
-      }
-    } catch (err) {
-      Toast.show(err.message);
-      setLoading(false);
-      return null;
+    const requestBuilderOptions = {
+      apiConfig: apiConfigs.deleteTasks,
+      params,
+      token,
+    };
+    async function onSuccess() {
+      await getTasks();
+      handleCloseModal();
     }
+    handleResponse({ requestBuilderOptions, onSuccess, setLoading });
   }
 
   async function deleteEvents({ eventIds }) {
     setLoading(true);
-    const params = {
+    const params: DeleteEventsPayloadBuilderParams = {
       eventIds,
     };
-    try {
-      const { status, error } = await requestBuilder({
-        apiConfig: apiConfigs.deleteEvents,
-        params,
-        token,
-      });
-      if (status === responseStatus.OK) {
-        await getEvents();
-        getTasks();
-        handleCloseModal();
-        setLoading(false);
-        return 0;
-      } else {
-        Toast.show(error);
-        setLoading(false);
-        return null;
-      }
-    } catch (err) {
-      Toast.show(err.message);
-      setLoading(false);
-      return null;
+    const requestBuilderOptions = {
+      apiConfig: apiConfigs.deleteEvents,
+      params,
+      token,
+    };
+    async function onSuccess() {
+      await getEvents();
+      getTasks();
+      handleCloseModal();
     }
+    handleResponse({ requestBuilderOptions, onSuccess, setLoading });
   }
 
   async function deleteTags({ tagIds }) {
     setLoading(true);
-    const params = {
+    const params: DeleteTagsPayloadBuilderParams = {
       tagIds,
     };
-    try {
-      const { status, error } = await requestBuilder({
-        apiConfig: apiConfigs.deleteTags,
-        params,
-        token,
-      });
-      if (status === responseStatus.OK) {
-        await getTags();
-        handleCloseModal();
-        setLoading(false);
-        return 0;
-      } else {
-        Toast.show(error);
-        setLoading(false);
-        return null;
-      }
-    } catch (err) {
-      Toast.show(err.message);
-      setLoading(false);
-      return null;
+    const requestBuilderOptions = {
+      apiConfig: apiConfigs.deleteTags,
+      params,
+      token,
+    };
+    async function onSuccess() {
+      await getTags();
+      handleCloseModal();
     }
+    handleResponse({ requestBuilderOptions, onSuccess, setLoading });
   }
 
   async function saveTask() {
     setLoading(true);
-    const params = {
+    const params: UpdateTaskPayloadBuilderParams = {
       id: selectedId,
       name,
       frequency: frequency ? Number(frequency) : 0,
-      tags: selectedTags,
+      tagIds: selectedTagIds,
     };
-    try {
-      const {
-        status,
-        data: _task,
-        error,
-      } = await requestBuilder({
-        apiConfig: apiConfigs.updateTask,
-        params,
-        token,
-      });
-      if (status === responseStatus.OK) {
-        await getTasks();
-        handleCloseModal();
-        setLoading(false);
-        return _task;
-      } else {
-        Toast.show(error);
-        setLoading(false);
-        return null;
-      }
-    } catch (err) {
-      Toast.show(err.message);
-      setLoading(false);
-      return null;
+    const requestBuilderOptions = {
+      apiConfig: apiConfigs.updateTask,
+      params,
+      token,
+    };
+    async function onSuccess() {
+      await getTasks();
+      handleCloseModal();
     }
+    handleResponse({ requestBuilderOptions, onSuccess, setLoading });
   }
 
   async function completeTask() {
     setLoading(true);
-    const params = {
-      task: selectedId,
-      date: completionDate,
+    const params: CompleteTaskPayloadBuilderParams = {
+      taskId: selectedId,
+      completionDate,
     };
-    try {
-      const {
-        status,
-        data: _event,
-        error,
-      } = await requestBuilder({
-        apiConfig: apiConfigs.completeTask,
-        params,
-        token,
-      });
-      if (status === responseStatus.OK) {
-        getTasks();
-        getEvents();
-        handleCloseModal();
-        setLoading(false);
-        return _event;
-      } else {
-        Toast.show(error);
-        setLoading(false);
-        return null;
-      }
-    } catch (err) {
-      Toast.show(err.message);
-      setLoading(false);
-      return null;
+    const requestBuilderOptions = {
+      apiConfig: apiConfigs.completeTask,
+      params,
+      token,
+    };
+    async function onSuccess() {
+      getTasks();
+      getEvents();
+      handleCloseModal();
     }
+    handleResponse({ requestBuilderOptions, onSuccess, setLoading });
   }
 
   async function saveEvent() {
     setLoading(true);
     const event = find(events, ['_id.$oid', selectedId]);
-    const params = {
+    const params: UpdateEventPayloadBuilderParams = {
       eventId: event._id,
       taskId: event.task,
       completionDate,
     };
-    try {
-      const {
-        status,
-        data: _event,
-        error,
-      } = await requestBuilder({
-        apiConfig: apiConfigs.updateEvent,
-        params,
-        token,
-      });
-      if (status === responseStatus.OK) {
-        getEvents();
-        getTasks();
-        handleCloseModal();
-        setLoading(false);
-        return _event;
-      } else {
-        Toast.show(error);
-        setLoading(false);
-        return null;
-      }
-    } catch (err) {
-      Toast.show(err.message);
-      setLoading(false);
-      return null;
+    const requestBuilderOptions = {
+      apiConfig: apiConfigs.updateEvent,
+      params,
+      token,
+    };
+    async function onSuccess() {
+      getEvents();
+      getTasks();
+      handleCloseModal();
     }
+    handleResponse({ requestBuilderOptions, onSuccess, setLoading });
   }
 
   async function saveTag() {
     setLoading(true);
-    const params = {
-      _id: selectedId,
+    const params: UpdateTagPayloadBuilderParams = {
+      tagId: selectedId,
       name,
-      parent_tag: parentTag === 'placeholder' ? null : parentTag,
+      parentTagId: parentTag === 'placeholder' ? null : parentTag,
     };
-    try {
-      const {
-        status,
-        data: _tag,
-        error,
-      } = await requestBuilder({
-        apiConfig: apiConfigs.updateTag,
-        params,
-        token,
-      });
-      if (status === responseStatus.OK) {
-        getTags();
-        handleCloseModal();
-        setLoading(false);
-        return _tag;
-      } else {
-        Toast.show(error);
-        setLoading(false);
-        return null;
-      }
-    } catch (err) {
-      Toast.show(err.message);
-      setLoading(false);
-      return null;
+    const requestBuilderOptions = {
+      apiConfig: apiConfigs.updateTag,
+      params,
+      token,
+    };
+    async function onSuccess() {
+      getTags();
+      handleCloseModal();
     }
+    handleResponse({ requestBuilderOptions, onSuccess, setLoading });
   }
 
-  function debugAddAdminTasks() {
-    async function postTasks() {
-      setLoading(true);
-      const taskData = {
-        quantity: 50,
-      };
-      const config = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(taskData),
-      };
-      let result;
-      try {
-        const response = await fetch(
-          `${mossyBackendDevUrl}api/debug/tasks`,
-          config,
-        );
-        const serializedCreateTaskResponse = await response.json();
-        result = serializedCreateTaskResponse;
-        await getTasks();
-        handleCloseModal();
-      } catch (err) {
-        result = err.message;
-      }
-      setLoading(false);
+  async function debugAddAdminTasks() {
+    setLoading(true);
+    const params: DebugCreateTasksPayloadBuilderParams = {
+      quantity: 50,
+    };
+    const requestBuilderOptions = {
+      apiConfig: apiConfigs.debugCreateTasks,
+      params,
+      token,
+    };
+    async function onSuccess() {
+      await getTasks();
+      handleCloseModal();
     }
-    postTasks();
+    handleResponse({ requestBuilderOptions, onSuccess, setLoading });
   }
 
-  function debugDeleteAllAdminTasks() {
-    async function _deleteTasks() {
-      setLoading(true);
-      const config = {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      };
-      let result;
-      try {
-        const response = await fetch(
-          `${mossyBackendDevUrl}api/debug/tasks`,
-          config,
-        );
-        const serializedDeleteTasksResponse = await response.json();
-        result = serializedDeleteTasksResponse;
-        await getTasks();
-        handleCloseModal();
-      } catch (err) {
-        result = err.message;
-      }
-      setLoading(false);
+  async function debugDeleteAllAdminTasks() {
+    setLoading(true);
+    const requestBuilderOptions = {
+      apiConfig: apiConfigs.debugDeleteAllTasks,
+      token,
+    };
+    async function onSuccess() {
+      await getTasks();
+      handleCloseModal();
     }
-    _deleteTasks();
+    handleResponse({ requestBuilderOptions, onSuccess, setLoading });
   }
 
-  function debugAddAdminEvents() {
-    async function postTasks() {
-      setLoading(true);
-      const config = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      };
-      let result;
-      try {
-        const response = await fetch(
-          `${mossyBackendDevUrl}api/debug/events`,
-          config,
-        );
-        const serializedCreateEventsResponse = await response.json();
-        result = serializedCreateEventsResponse;
-        await getTasks();
-        await getEvents();
-        handleCloseModal();
-      } catch (err) {
-        result = err.message;
-      }
-      setLoading(false);
+  async function debugAddAdminEvents() {
+    setLoading(true);
+    const params: DebugCreateEventsPayloadBuilderParams = {
+      quantity: 50,
+    };
+    const requestBuilderOptions = {
+      apiConfig: apiConfigs.debugCreateEvents,
+      params,
+      token,
+    };
+    async function onSuccess() {
+      await getTasks();
+      await getEvents();
+      handleCloseModal();
     }
-    postTasks();
+    handleResponse({ requestBuilderOptions, onSuccess, setLoading });
   }
 
-  function debugDeleteAllAdminEvents() {
-    async function deleteEvents() {
-      setLoading(true);
-      const config = {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      };
-      let result;
-      try {
-        const response = await fetch(
-          `${mossyBackendDevUrl}api/debug/events`,
-          config,
-        );
-        const serializedDeleteEventsResponse = await response.json();
-        result = serializedDeleteEventsResponse;
-        await getTasks();
-        await getEvents();
-        handleCloseModal();
-      } catch (err) {
-        result = err.message;
-      }
-      setLoading(false);
+  async function debugDeleteAllAdminEvents() {
+    setLoading(true);
+    const requestBuilderOptions = {
+      apiConfig: apiConfigs.debugDeleteAllEvents,
+      token,
+    };
+    async function onSuccess() {
+      await getTasks();
+      await getEvents();
+      handleCloseModal();
     }
-    deleteEvents();
+    handleResponse({ requestBuilderOptions, onSuccess, setLoading });
   }
 
-  function debugAddAdminTags() {
-    async function postTags() {
-      setLoading(true);
-      const tagsData = {
-        quantity: 50,
-      };
-      const config = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(tagsData),
-      };
-      let result;
-      try {
-        const response = await fetch(
-          `${mossyBackendDevUrl}api/debug/tags`,
-          config,
-        );
-        const serializedCreateTagsResponse = await response.json();
-        result = serializedCreateTagsResponse;
-        await getTags();
-        handleCloseModal();
-      } catch (err) {
-        result = err.message;
-      }
-      setLoading(false);
+  async function debugAddAdminTags() {
+    setLoading(true);
+    const params: DebugCreateTagsPayloadBuilderParams = {
+      quantity: 50,
+    };
+    const requestBuilderOptions = {
+      apiConfig: apiConfigs.debugCreateTags,
+      params,
+      token,
+    };
+    async function onSuccess() {
+      await getTags();
+      handleCloseModal();
     }
-    postTags();
+    handleResponse({ requestBuilderOptions, onSuccess, setLoading });
   }
 
-  function debugDeleteAllAdminTags() {
-    async function deleteTags() {
-      setLoading(true);
-      const config = {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      };
-      let result;
-      try {
-        const response = await fetch(
-          `${mossyBackendDevUrl}api/debug/tags`,
-          config,
-        );
-        const serializedDeleteTagsResponse = await response.json();
-        result = serializedDeleteTagsResponse;
-        await getTags();
-        handleCloseModal();
-      } catch (err) {
-        result = err.message;
-      }
-      setLoading(false);
+  async function debugDeleteAllAdminTags() {
+    setLoading(true);
+    const requestBuilderOptions = {
+      apiConfig: apiConfigs.debugDeleteAllTags,
+      token,
+    };
+    async function onSuccess() {
+      await getTags();
+      handleCloseModal();
     }
-    deleteTags();
+    handleResponse({ requestBuilderOptions, onSuccess, setLoading });
   }
 
   function handleCreate() {
@@ -872,7 +602,7 @@ export default function App() {
       setName('');
       setFrequency('');
       setFormType('editTask');
-      setSelectedTags([]);
+      setSelectedTagIds([]);
     } else if (viewType === 'tags') {
       setName('');
       setParentTag(null);
@@ -1068,7 +798,7 @@ export default function App() {
           frequency={frequency}
           setFrequency={setFrequency}
           tags={tags}
-          selectedTags={selectedTags}
+          selectedTagIds={selectedTagIds}
           handleTagSelectCardPress={handleTagSelectCardPress}
           primaryButtonColor={primaryButtonColor}
           handleSaveTask={handleSaveTask}

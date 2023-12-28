@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 
 import { colors } from 'common/constants.ts';
 
-const { dark1, dark2, color1, color2, color3, color4 } = colors;
+const { dark1, dark2 } = colors;
 
 const appStyles = StyleSheet.create({
   lightModeBackgroundColor: {
@@ -22,7 +22,6 @@ const appStyles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    // backgroundColor: 'white',
     alignItems: 'center',
     justifyContent: 'center',
     height: '100%',
@@ -39,14 +38,6 @@ const appStyles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 5,
   },
-  /* tagCardStandardColor: {
-    borderColor: color2,
-    backgroundColor: color2,
-  },
-  tagCardHighlightedColor: {
-    borderColor: color3,
-    backgroundColor: color3,
-  }, */
   tagCardTitle: {
     color: 'white',
     fontWeight: 'bold',
@@ -77,7 +68,6 @@ const appStyles = StyleSheet.create({
   },
   modalView: {
     margin: 20,
-    // backgroundColor: 'white',
     borderRadius: 20,
     padding: 35,
     alignItems: 'center',
@@ -132,12 +122,6 @@ const appStyles = StyleSheet.create({
     borderRadius: 2,
     marginBottom: 15,
   },
-  /* primaryButtonColor: {
-    backgroundColor: color1,
-  },
-  secondaryButtonColor: {
-    backgroundColor: color2,
-  }, */
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
@@ -167,7 +151,7 @@ const appStyles = StyleSheet.create({
   taskStatusWrapper: {
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'start',
+    alignItems: 'flex-start',
   },
   appTitle: {},
   appTitleWrapper: {
@@ -183,20 +167,18 @@ const appStyles = StyleSheet.create({
     position: 'absolute',
     bottom: 30,
     left: 30,
-    // backgroundColor: '#BC96E6',
     borderRadius: 5,
   },
   addTaskButtonWrapper: {
     position: 'absolute',
     bottom: 30,
     right: 30,
-    // backgroundColor: '#BC96E6',
     borderRadius: 5,
   },
   taskStatusRow: {
     display: 'flex',
     flexDirection: 'row',
-    justifyContent: 'start',
+    justifyContent: 'flex-start',
     alignItems: 'center',
   },
   taskCardBadge: {
@@ -215,15 +197,6 @@ const appStyles = StyleSheet.create({
     marginLeft: 3,
     marginRight: 5,
   },
-  /* taskCardBadgeNeverCompletedColor: {
-    backgroundColor: color2,
-  },
-  taskCardBadgeOverdueColor: {
-    backgroundColor: color1,
-  },
-  taskCardBadgeCurrentColor: {
-    backgroundColor: color4,
-  }, */
   badgeTitle: {
     fontSize: 24,
     color: 'white',

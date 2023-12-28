@@ -1,4 +1,36 @@
-interface Tag {}
+import { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+
+export interface UserProfile {
+  email: string;
+}
+
+export interface Theme {
+  id: number;
+  color1: string;
+  color2: string;
+  color3: string;
+  color4: string;
+}
+
+export interface Task {
+  time_since_latest_event: number;
+  moss: number;
+  latest_event_date: string;
+  frequency: number;
+}
+
+export interface Event {
+  task: string;
+}
+
+export interface TagId {
+  $oid: string;
+}
+
+export interface Tag {
+  _id: TagId;
+  name: string;
+}
 
 interface RequestConfig {
   method: string;
@@ -56,7 +88,7 @@ interface ReadTagsConfigBuilderParams {
 export interface CreateTaskPayloadBuilderParams {
   name: string;
   frequency: number;
-  tags: Tag[];
+  tagIds: Tag[];
 }
 
 interface CreateTaskPayload {
@@ -122,7 +154,7 @@ export interface UpdateTaskPayloadBuilderParams {
   id: string;
   name: string;
   frequency: number;
-  tags: Tag[];
+  tagIds: Tag[];
 }
 
 interface UpdateTaskPayload {
@@ -139,12 +171,12 @@ interface UpdateTaskConfigBuilderParams {
 
 export interface CompleteTaskPayloadBuilderParams {
   taskId: string;
-  completionDate: string;
+  completionDate: Date;
 }
 
 interface CompleteTaskPayload {
   task: string;
-  date: string;
+  date: Date;
 }
 
 interface CompleteTaskConfigBuilderParams {
@@ -155,13 +187,13 @@ interface CompleteTaskConfigBuilderParams {
 export interface UpdateEventPayloadBuilderParams {
   eventId: string;
   taskId: string;
-  completionDate: string;
+  completionDate: Date;
 }
 
 interface UpdateEventPayload {
   _id: string;
   task: string;
-  date: string;
+  date: Date;
 }
 
 interface UpdateEventConfigBuilderParams {
@@ -172,7 +204,7 @@ interface UpdateEventConfigBuilderParams {
 export interface UpdateTagPayloadBuilderParams {
   tagId: string;
   name: string;
-  parentTag: string;
+  parentTagId: string;
 }
 
 interface UpdateTagPayload {
@@ -185,6 +217,73 @@ interface UpdateTagConfigBuilderParams {
   token: string;
   payload: UpdateTagPayload;
 }
+
+export interface DebugCreateTasksPayloadBuilderParams {
+  quantity: number;
+}
+
+interface DebugCreateTasksPayload {
+  quantity: number;
+}
+
+interface DebugCreateTasksConfigBuilderParams {
+  token: string;
+  payload: DebugCreateTasksPayload;
+}
+
+interface DebugDeleteAllTasksConfigBuilderParams {
+  token: string;
+}
+
+export interface DebugCreateEventsPayloadBuilderParams {
+  quantity: number;
+}
+
+interface DebugCreateEventsPayload {
+  quantity: number;
+}
+
+interface DebugCreateEventsConfigBuilderParams {
+  token: string;
+  payload: DebugCreateEventsPayload;
+}
+
+interface DebugDeleteAllEventsConfigBuilderParams {
+  token: string;
+}
+
+export interface DebugCreateTagsPayloadBuilderParams {
+  quantity: number;
+}
+
+interface DebugCreateTagsPayload {
+  quantity: number;
+}
+
+interface DebugCreateTagsConfigBuilderParams {
+  token: string;
+  payload: DebugCreateTagsPayload;
+}
+
+interface DebugDeleteAllTagsConfigBuilderParams {
+  token: string;
+}
+
+export type PayloadBuilderParams =
+  | ReadUserPayloadBuilderParams
+  | UpdateUserThemePayloadBuilderParams
+  | CreateTaskPayloadBuilderParams
+  | CreateTagPayloadBuilderParams
+  | DeleteTasksPayloadBuilderParams
+  | DeleteEventsPayloadBuilderParams
+  | DeleteTagsPayloadBuilderParams
+  | UpdateTaskPayloadBuilderParams
+  | CompleteTaskPayloadBuilderParams
+  | UpdateEventPayloadBuilderParams
+  | UpdateTagPayloadBuilderParams
+  | DebugCreateTasksPayloadBuilderParams
+  | DebugCreateEventsPayloadBuilderParams
+  | DebugCreateTagsPayloadBuilderParams;
 
 export interface ReadUserApiConfig {
   endpoint: string;
@@ -280,6 +379,56 @@ export interface UpdateTagApiConfig {
   configBuilder: (params: UpdateTagConfigBuilderParams) => RequestConfig;
 }
 
+export interface DebugCreateTasksApiConfig {
+  endpoint: string;
+  payloadBuilder: (
+    params: DebugCreateTasksPayloadBuilderParams,
+  ) => DebugCreateTasksPayload;
+  configBuilder: (params: DebugCreateTasksConfigBuilderParams) => RequestConfig;
+}
+
+export interface DebugDeleteAllTasksApiConfig {
+  endpoint: string;
+  payloadBuilder?: never;
+  configBuilder: (
+    params: DebugDeleteAllTasksConfigBuilderParams,
+  ) => RequestConfig;
+}
+
+export interface DebugCreateEventsApiConfig {
+  endpoint: string;
+  payloadBuilder: (
+    params: DebugCreateEventsPayloadBuilderParams,
+  ) => DebugCreateEventsPayload;
+  configBuilder: (
+    params: DebugCreateEventsConfigBuilderParams,
+  ) => RequestConfig;
+}
+
+export interface DebugDeleteAllEventsApiConfig {
+  endpoint: string;
+  payloadBuilder?: never;
+  configBuilder: (
+    params: DebugDeleteAllEventsConfigBuilderParams,
+  ) => RequestConfig;
+}
+
+export interface DebugCreateTagsApiConfig {
+  endpoint: string;
+  payloadBuilder: (
+    params: DebugCreateTagsPayloadBuilderParams,
+  ) => DebugCreateTagsPayload;
+  configBuilder: (params: DebugCreateTagsConfigBuilderParams) => RequestConfig;
+}
+
+export interface DebugDeleteAllTagsApiConfig {
+  endpoint: string;
+  payloadBuilder?: never;
+  configBuilder: (
+    params: DebugDeleteAllTagsConfigBuilderParams,
+  ) => RequestConfig;
+}
+
 export interface ApiConfigs {
   readUser: ReadUserApiConfig;
   updateUserTheme: UpdateUserThemeApiConfig;
@@ -295,9 +444,32 @@ export interface ApiConfigs {
   completeTask: CompleteTaskApiConfig;
   updateEvent: UpdateEventApiConfig;
   updateTag: UpdateTagApiConfig;
+  debugCreateTasks: DebugCreateTasksApiConfig;
+  debugDeleteAllTasks: DebugDeleteAllTasksApiConfig;
+  debugCreateEvents: DebugCreateEventsApiConfig;
+  debugDeleteAllEvents: DebugDeleteAllEventsApiConfig;
+  debugCreateTags: DebugCreateTagsApiConfig;
+  debugDeleteAllTags: DebugDeleteAllTagsApiConfig;
 }
 
-export interface SearchParams {
-  limit?: string;
-  offset?: string;
+export type SearchParams = Record<string, string>;
+
+export interface RequestBuilderParams {
+  apiConfig: ApiConfigs[keyof ApiConfigs];
+  params?: PayloadBuilderParams;
+  searchParams?: SearchParams;
+  token: string;
 }
+
+export type HandleChangeDate = (
+  e: DateTimePickerEvent,
+  date: Date,
+  setFunc: React.Dispatch<React.SetStateAction<Date>>,
+) => void;
+
+export type HandleChangeField = (
+  value: string,
+  setFunc: React.Dispatch<React.SetStateAction<string>>,
+) => void;
+
+export type HandleTagSelectCardPress = (currentId: string) => void;

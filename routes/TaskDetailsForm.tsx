@@ -4,6 +4,24 @@ import { Pressable, Text, View } from 'react-native';
 import appStyles from 'appStyles.ts';
 import { pluralize } from 'common/utilities/formatStrings.ts';
 import getDaysFromMilliseconds from 'common/utilities/time.ts';
+import { Task, Theme } from 'types/types.ts';
+
+interface TaskDetailsFormProps {
+  task: Task;
+  theme: Theme;
+  backgroundColor: {
+    backgroundColor: string;
+  };
+  textColor: {
+    color: string;
+  };
+  primaryButtonColor: {
+    backgroundColor: string;
+  };
+  handleEdit: () => void;
+  handleComplete: () => void;
+  confirmDelete: () => void;
+}
 
 function TaskDetailsForm({
   task,
@@ -14,7 +32,7 @@ function TaskDetailsForm({
   handleEdit,
   handleComplete,
   confirmDelete,
-}) {
+}: TaskDetailsFormProps) {
   const taskCardBadgeOverdueColor = {
     backgroundColor: theme.color1,
   };
@@ -29,17 +47,6 @@ function TaskDetailsForm({
   const daysSinceLastEvent = daysSince > 0 ? daysSince : 0;
   const mossDays = getDaysFromMilliseconds(task?.moss);
   const daysOverdue = mossDays > 0 ? mossDays : 0;
-  const daysSinceStatus = task?.latest_event_date
-    ? `${daysSinceLastEvent} ${pluralize('day', daysSinceLastEvent)} since`
-    : 'Never completed!';
-  let overdueStatus;
-  if (!task?.latest_event_date) {
-    overdueStatus = '';
-  } else if (daysOverdue <= 0) {
-    overdueStatus = '';
-  } else {
-    overdueStatus = `${daysOverdue} ${pluralize('day', daysOverdue)} overdue`;
-  }
   let badgeStyles;
   if (!task?.latest_event_date) {
     badgeStyles = [appStyles.taskCardBadge, taskCardBadgeNeverCompletedColor];

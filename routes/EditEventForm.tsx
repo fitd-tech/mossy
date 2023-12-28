@@ -3,6 +3,24 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 import appStyles from 'appStyles.ts';
+import { Event, HandleChangeDate } from 'types/types.ts';
+
+interface EditEventFormProps {
+  textColor: {
+    color: string;
+  };
+  event: Event;
+  completionDate: Date;
+  handleChangeDate: HandleChangeDate;
+  setCompletionDate: React.Dispatch<React.SetStateAction<Date>>;
+  dateTimePickerStyles: Record<string, unknown>;
+  primaryButtonColor: {
+    backgroundColor: string;
+  };
+  saveEvent: () => void;
+  loading: boolean;
+  confirmDelete: () => void;
+}
 
 function EditEventForm({
   textColor,
@@ -15,7 +33,7 @@ function EditEventForm({
   saveEvent,
   loading,
   confirmDelete,
-}) {
+}: EditEventFormProps) {
   return (
     <>
       <Text style={{ ...appStyles.modalTitle, ...textColor }}>Edit Event</Text>

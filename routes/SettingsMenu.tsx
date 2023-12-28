@@ -2,6 +2,29 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import appStyles from 'appStyles.ts';
+import { UserProfile } from 'types/types.ts';
+
+interface SettingsMenuProps {
+  backgroundColor: {
+    backgroundColor: string;
+  };
+  textColor: {
+    color: string;
+  };
+  userProfile: UserProfile;
+  primaryButtonColor: {
+    backgroundColor: string;
+  };
+  handleViewThemeSettings: () => void;
+  appleUserId: string;
+  adminAppleUserId: string;
+  debugAddAdminTasks: () => void;
+  debugDeleteAllAdminTasks: () => void;
+  debugAddAdminEvents: () => void;
+  debugDeleteAllAdminEvents: () => void;
+  debugAddAdminTags: () => void;
+  debugDeleteAllAdminTags: () => void;
+}
 
 function SettingsMenu({
   backgroundColor,
@@ -17,7 +40,7 @@ function SettingsMenu({
   debugDeleteAllAdminEvents,
   debugAddAdminTags,
   debugDeleteAllAdminTags,
-}) {
+}: SettingsMenuProps) {
   return (
     <>
       <View style={{ ...appStyles.taskDetailsWrapper, ...backgroundColor }}>

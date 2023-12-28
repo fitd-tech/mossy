@@ -3,6 +3,34 @@ import { ActivityIndicator, Pressable, Text, TextInput } from 'react-native';
 
 import TagsSelectList from 'components/TagsSelectList.tsx';
 import appStyles from 'appStyles.ts';
+import {
+  HandleChangeField,
+  HandleTagSelectCardPress,
+  Tag,
+} from 'types/types.ts';
+
+interface EditTaskFormProps {
+  textColor: {
+    color: string;
+  };
+  selectedTaskId: string;
+  handleChangeField: HandleChangeField;
+  name: string;
+  setName: React.Dispatch<React.SetStateAction<string>>;
+  secondaryBackgroundColor: {
+    backgroundColor: string;
+  };
+  frequency: string;
+  setFrequency: React.Dispatch<React.SetStateAction<string>>;
+  tags: Tag[];
+  handleTagSelectCardPress: HandleTagSelectCardPress;
+  primaryButtonColor: {
+    backgroundColor: string;
+  };
+  handleSaveTask: () => void;
+  loading: boolean;
+  selectedTagIds: string[];
+}
 
 function EditTaskForm({
   textColor,
@@ -14,12 +42,12 @@ function EditTaskForm({
   frequency,
   setFrequency,
   tags,
-  selectedTags,
   handleTagSelectCardPress,
   primaryButtonColor,
   handleSaveTask,
   loading,
-}) {
+  selectedTagIds,
+}: EditTaskFormProps) {
   return (
     <>
       <Text style={{ ...appStyles.modalTitle, ...textColor }}>
@@ -48,7 +76,7 @@ function EditTaskForm({
       />
       <TagsSelectList
         tags={tags}
-        selectedTags={selectedTags}
+        selectedTagIds={selectedTagIds}
         onPress={handleTagSelectCardPress}
       />
       <Pressable

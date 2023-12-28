@@ -4,6 +4,31 @@ import { Picker } from '@react-native-picker/picker';
 import { map } from 'lodash';
 
 import appStyles from 'appStyles.ts';
+import { HandleChangeField, Tag } from 'types/types.ts';
+
+interface EditTagFormProps {
+  tags: Tag[];
+  textColor: {
+    color: string;
+  };
+  selectedTagId: string;
+  name: string;
+  handleChangeField: HandleChangeField;
+  setName: React.Dispatch<React.SetStateAction<string>>;
+  secondaryBackgroundColor: {
+    backgroundColor: string;
+  };
+  description: string;
+  setDescription: React.Dispatch<React.SetStateAction<string>>;
+  parentTag: string;
+  setParentTag: React.Dispatch<React.SetStateAction<string>>;
+  primaryButtonColor: {
+    backgroundColor: string;
+  };
+  handleSaveTag: () => void;
+  loading: boolean;
+  confirmDelete: () => void;
+}
 
 function EditTagForm({
   tags,
@@ -21,7 +46,7 @@ function EditTagForm({
   handleSaveTag,
   loading,
   confirmDelete,
-}) {
+}: EditTagFormProps) {
   const tagChoices = [
     {
       _id: {
@@ -58,7 +83,7 @@ function EditTagForm({
       />
       <Picker
         selectedValue={parentTag}
-        onValueChange={(itemValue, _itemIndex) => setParentTag(itemValue)}
+        onValueChange={(itemValue) => setParentTag(itemValue)}
       >
         {map(tagChoices, (tag) => (
           <Picker.Item

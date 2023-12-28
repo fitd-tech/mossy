@@ -3,12 +3,23 @@ import { ActivityIndicator, Pressable, Text } from 'react-native';
 
 import appStyles from 'appStyles.ts';
 
+interface ConfirmDeleteProps {
+  textColor: {
+    color: string;
+  };
+  primaryButtonColor: {
+    backgroundColor: string;
+  };
+  handleDelete: () => void;
+  loading: boolean;
+}
+
 function ConfirmDelete({
   textColor,
   primaryButtonColor,
   handleDelete,
   loading,
-}) {
+}: ConfirmDeleteProps) {
   return (
     <>
       <Text style={{ ...appStyles.modalTitle, ...textColor }}>

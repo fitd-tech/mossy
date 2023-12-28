@@ -1,18 +1,5 @@
 import { responseStatus } from 'common/constants.ts';
-import {
-  ReadUserPayloadBuilderParams,
-  ReadUserApiConfig,
-  UpdateUserThemeApiConfig,
-  UpdateUserThemePayloadBuilderParams,
-  ReadTasksApiConfig,
-} from 'types/types.ts';
-
-interface RequestBuilderParams {
-  apiConfig: ReadUserApiConfig | UpdateUserThemeApiConfig | ReadTasksApiConfig;
-  params?: ReadUserPayloadBuilderParams | UpdateUserThemePayloadBuilderParams;
-  searchParams?: Record<string, string>;
-  token: string;
-}
+import { RequestBuilderParams } from 'types/types.ts';
 
 export default async function requestBuilder({
   apiConfig,
@@ -22,6 +9,7 @@ export default async function requestBuilder({
 }: RequestBuilderParams) {
   let payload;
   if (apiConfig.payloadBuilder) {
+    // @ts-expect-error We are getting the intersection of all PayloadBuilderParams instead of the union
     payload = apiConfig.payloadBuilder(params);
   }
   const config = apiConfig.configBuilder({ token, payload });

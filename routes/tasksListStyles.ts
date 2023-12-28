@@ -1,9 +1,5 @@
 import { StyleSheet } from 'react-native';
 
-import { colors } from 'common/constants.ts';
-
-const { color1, color2, color3, color4 } = colors;
-
 const taskListStyles = StyleSheet.create({
   taskCardContainer: {
     flex: 0.8,
@@ -31,17 +27,15 @@ const taskListStyles = StyleSheet.create({
     padding: 10,
     borderWidth: 2,
     borderRadius: 5,
-    // borderColor: color4,
-    // backgroundColor: color4,
   },
   taskTitle: {
-    fontWeight: 700,
+    fontWeight: '700',
     color: 'white',
   },
   taskDetailsText: {
     fontSize: 15,
     color: 'darkgrey',
-    fontWeight: 600,
+    fontWeight: '600',
   },
   taskCardHighlighted: {
     display: 'flex',
@@ -53,17 +47,15 @@ const taskListStyles = StyleSheet.create({
     padding: 10,
     borderWidth: 2,
     borderRadius: 5,
-    // borderColor: color3,
-    // backgroundColor: color3,
   },
   taskTitleHighlighted: {
-    fontWeight: 700,
+    fontWeight: '700',
     color: 'white',
   },
   taskTextHighlighted: {
     fontSize: 15,
     color: 'white',
-    fontWeight: 600,
+    fontWeight: '600',
   },
   taskCardOverdue: {
     display: 'flex',
@@ -75,17 +67,15 @@ const taskListStyles = StyleSheet.create({
     padding: 10,
     borderWidth: 2,
     borderRadius: 5,
-    // borderColor: color1,
-    // backgroundColor: color1,
   },
   taskTitleOverdue: {
-    fontWeight: 700,
+    fontWeight: '700',
     color: 'white',
   },
   taskTextOverdue: {
     fontSize: 15,
     color: 'white',
-    fontWeight: 600,
+    fontWeight: '600',
   },
   taskCardNeverCompleted: {
     display: 'flex',
@@ -97,17 +87,15 @@ const taskListStyles = StyleSheet.create({
     padding: 10,
     borderWidth: 2,
     borderRadius: 5,
-    // borderColor: color2,
-    // backgroundColor: color2,
   },
   taskTitleNeverCompleted: {
-    fontWeight: 700,
+    fontWeight: '700',
     color: 'white',
   },
   taskTextNeverCompleted: {
     fontSize: 15,
     color: 'white',
-    fontWeight: 600,
+    fontWeight: '600',
   },
   badgeWrapper: {
     display: 'flex',
@@ -126,11 +114,10 @@ const taskListStyles = StyleSheet.create({
     maxHeight: '100%',
     minHeight: '100%',
     borderRadius: 5,
-    // backgroundColor: 'white',
   },
   badgeTitle: {
     fontSize: 24,
-    fontWeight: 600,
+    fontWeight: '600',
   },
   badgeUom: {
     fontSize: 8,
