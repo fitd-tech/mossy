@@ -1,12 +1,10 @@
-import { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, StyleSheet } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { randomUUID } from 'expo-crypto';
-import { keys } from 'lodash';
 import * as SecureStore from 'expo-secure-store';
-import { Buffer } from 'buffer';
 
-import { UserContext } from '../appContext';
+import { UserContext } from 'src/appContext.ts';
 
 const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
 const authenticationState = 'Apple user sign-in';
@@ -17,20 +15,20 @@ export default function LogIn() {
   const [nonce, setNonce] = useState(null);
 
   const {
-    isAuthenticated,
     setIsAuthenticated,
-    storedAppleUserId,
-    setStoredAppleUserId,
-    userProfile,
+    appleUserId,
+    setAppleUserId,
     setUserProfile,
-    setStoredToken,
+    setToken,
   } = useContext(UserContext);
 
   useEffect(() => {
     async function checkAvailability() {
       try {
         const availability = await AppleAuthentication.isAvailableAsync();
-        setAppleAuthAvailable(true);
+        if (availability) {
+          setAppleAuthAvailable(true);
+        }
       } catch (err) {
         console.log('AppleAuthentication availability error', err);
       }
@@ -41,15 +39,15 @@ export default function LogIn() {
   useEffect(() => {
     async function getCredentialState() {
       const credentialState =
-        await AppleAuthentication.getCredentialStateAsync(storedAppleUserId);
+        await AppleAuthentication.getCredentialStateAsync(appleUserId);
       if (credentialState === 1) {
         setIsAuthenticated(true);
       }
     }
-    if (storedAppleUserId) {
+    if (appleUserId) {
       getCredentialState();
     }
-  }, [storedAppleUserId]);
+  }, [appleUserId, setIsAuthenticated]);
 
   useEffect(() => {
     async function verifyCredential() {
@@ -74,8 +72,8 @@ export default function LogIn() {
           serializedResponse.apple_user_id,
         );
         SecureStore.setItemAsync('mossyToken', serializedResponse.token);
-        setStoredAppleUserId(serializedResponse.apple_user_id);
-        setStoredToken(serializedResponse.token);
+        setAppleUserId(serializedResponse.apple_user_id);
+        setToken(serializedResponse.token);
         setUserProfile(serializedResponse);
         setIsAuthenticated(true);
       } else {
@@ -84,10 +82,17 @@ export default function LogIn() {
       }
     }
     // We can verify state here without decoding the JWT
-    if (credential && credential.state === authenticationState) {
+    if (credential && credential.state === authenticationState && nonce) {
       verifyCredential();
     }
-  }, [credential]);
+  }, [
+    credential,
+    nonce,
+    setAppleUserId,
+    setIsAuthenticated,
+    setToken,
+    setUserProfile,
+  ]);
 
   return (
     appleAuthAvailable && (

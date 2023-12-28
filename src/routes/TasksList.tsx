@@ -1,38 +1,34 @@
-import { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import {
-  StyleSheet,
   Text,
   View,
-  Button,
   Pressable,
   ScrollView,
-  Modal,
-  TextInput,
-  Animated,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { size, map } from 'lodash';
 import { useFocusEffect } from '@react-navigation/native';
 
-import { pluralize } from '../utilities/formatStrings';
-import appStyles from '../appStyles';
-import tasksListStyles from './tasksListStyles';
-import { DataContext, StaticContext, ThemeContext } from '../appContext';
-import getDaysFromMilliseconds from '../utilities/time';
-import fetchMore from '../utilities/fetchMore';
+import { pluralize } from 'src/common/utilities/formatStrings.ts';
+import appStyles from 'src/appStyles.ts';
+import tasksListStyles from 'src/routes/tasksListStyles.ts';
+import { DataContext, StaticContext, ThemeContext } from 'src/appContext.ts';
+import getDaysFromMilliseconds from 'src/common/utilities/time.ts';
+import { getMore } from 'src/common/utilities/requests.ts';
 
 export default function TasksList() {
   const [lastContentHeight, setLastContentHeight] = useState(0);
 
-  const { darkMode, backgroundColor, textColor, theme } =
-    useContext(ThemeContext);
-  const { tasks, fetchingTasks, highlightButton, tasksPage } =
-    useContext(DataContext);
+  const { backgroundColor, textColor, theme } = useContext(ThemeContext);
   const {
-    fetchTasks,
-    fetchMoreTasks,
+    tasks,
+    loadingTasks,
+    selectedId: selectedTaskId,
+    tasksPage,
+  } = useContext(DataContext);
+  const {
+    getTasks,
     onPressTaskCard: onPress,
     setViewType,
     setTasksPage,
@@ -72,21 +68,21 @@ export default function TasksList() {
     <ScrollView
       refreshControl={
         <RefreshControl
-          refreshing={fetchingTasks}
-          onRefresh={fetchTasks}
+          refreshing={loadingTasks}
+          onRefresh={getTasks}
           style={backgroundColor}
         />
       }
       style={backgroundColor}
       scrollEventThrottle={200}
       onScroll={(e) =>
-        fetchMore(e, {
+        getMore(e, {
           pageSize: 50,
           page: tasksPage,
           setPage: setTasksPage,
           lastContentHeight,
           setLastContentHeight,
-          fetchFunc: fetchTasks,
+          fetchFunc: getTasks,
         })
       }
     >
@@ -95,7 +91,7 @@ export default function TasksList() {
           {size(tasks) ? (
             <>
               {map(tasks, (task) => {
-                const taskSelected = highlightButton === task._id.$oid;
+                const taskSelected = selectedTaskId === task._id.$oid;
                 const daysSince = getDaysFromMilliseconds(
                   task.time_since_latest_event,
                 );

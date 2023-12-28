@@ -1,27 +1,25 @@
-import { useContext } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  Button,
-  Pressable,
-  ScrollView,
-  Modal,
-  TextInput,
-  Animated,
-  ActivityIndicator,
-  RefreshControl,
-} from 'react-native';
+import React, { useContext } from 'react';
+import { Text, View, Pressable, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { size, map, includes } from 'lodash';
 
-import appStyles from '../appStyles.js';
-import tagsSelectListStyles from './tagsSelectListStyles.js';
-import { ThemeContext } from '../appContext.js';
+import appStyles from 'src/appStyles.ts';
+import tagsSelectListStyles from 'src/components/tagsSelectListStyles.ts';
+import { ThemeContext } from 'src/appContext.ts';
+import { Tag } from 'src/types/types.ts';
 
-export default function TagsSelectList({ tags, selectedTags, onPress }) {
-  const { darkMode, backgroundColor, textColor, theme } =
-    useContext(ThemeContext);
+interface TagsSelectListProps {
+  tags: Tag[];
+  selectedTagIds: string[];
+  onPress: (param: string) => void;
+}
+
+export default function TagsSelectList({
+  tags,
+  selectedTagIds,
+  onPress,
+}: TagsSelectListProps) {
+  const { backgroundColor, theme } = useContext(ThemeContext);
 
   const tagCardStandardColor = {
     borderColor: theme.color2,
@@ -40,7 +38,7 @@ export default function TagsSelectList({ tags, selectedTags, onPress }) {
             <>
               {map(tags, (tag) => {
                 let cardStyles;
-                if (includes(selectedTags, tag._id.$oid)) {
+                if (includes(selectedTagIds, tag._id.$oid)) {
                   cardStyles = [
                     tagsSelectListStyles.tagCard,
                     tagCardHighlightedColor,
