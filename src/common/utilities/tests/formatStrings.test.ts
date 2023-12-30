@@ -18,7 +18,7 @@ describe('pluralize', () => {
     );
   });
   test(`given the word "test" and a quantity of 0, return "tests"`, () => {
-    expect(exportedForTesting.pluralize('test', 1)).toBe('test');
+    expect(exportedForTesting.pluralize('test', 0)).toBe('tests');
   });
   test(`given the word "test", a quantity of 0, and the "capitalize" option, return "Tests"`, () => {
     expect(exportedForTesting.pluralize('test', 0, { capitalize: true })).toBe(
@@ -49,7 +49,7 @@ describe('pluralize', () => {
       'Feet',
     );
   });
-  // We try to do what the user might expect when this fuction is called with a string that has multiple words
+  // We try to do what the user might expect when this function is called with a string that has multiple words
   test(`given the string "multiple word", a quantity of 2, and the "capitalize" option, return "Multiple Words"`, () => {
     expect(
       exportedForTesting.pluralize('multiple word', 2, { capitalize: true }),
@@ -57,7 +57,7 @@ describe('pluralize', () => {
   });
   test(`given the string "multiple foot", a quantity of 2, and the "capitalize" option, return "Multiple Feet"`, () => {
     expect(
-      exportedForTesting.pluralize('multiple word', 2, { capitalize: true }),
-    ).toBe('Multiple Words');
+      exportedForTesting.pluralize('multiple foot', 2, { capitalize: true }),
+    ).toBe('Multiple Feet');
   });
 });
