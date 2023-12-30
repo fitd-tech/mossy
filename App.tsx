@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Text, View, Pressable, Modal, useColorScheme } from 'react-native';
+import {
+  Text,
+  View,
+  Pressable,
+  Modal,
+  useColorScheme,
+  Platform,
+} from 'react-native';
 import { map, find, noop, includes, reject } from 'lodash';
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationContainer } from '@react-navigation/native';
@@ -63,6 +70,7 @@ const Tab = createMaterialTopTabNavigator();
 export default function App() {
   // System light/dark mode
   const colorScheme = useColorScheme();
+  console.log('Platform', Platform);
 
   const [selectedId, setSelectedId] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -92,6 +100,7 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [theme, setTheme] = useState(find(themes, { name: defaultTheme }));
   const [savingUserTheme, setSavingUserTheme] = useState(false);
+  console.log('isAuthenticated', isAuthenticated);
 
   const textColor = darkMode
     ? appStyles.darkModeTextColor
@@ -110,8 +119,13 @@ export default function App() {
   };
 
   function clearUserData() {
-    SecureStore.setItemAsync('mossyAppleUserId', '');
-    SecureStore.setItemAsync('mossyToken', '');
+    if (Platform.OS === 'web') {
+      localStorage.setItem('mossyAppleUserId', '');
+      localStorage.setItem('mossyToken', '');
+    } else {
+      SecureStore.setItemAsync('mossyAppleUserId', '');
+      SecureStore.setItemAsync('mossyToken', '');
+    }
     setAppleUserId(null);
     setToken(null);
     setIsModalVisible(false);
@@ -243,10 +257,19 @@ export default function App() {
 
   useEffect(() => {
     async function loadUser() {
-      const _token = await SecureStore.getItemAsync('mossyToken');
+      let _token;
+      if (Platform.OS === 'web') {
+        _token = localStorage.getItem('mossyToken');
+      } else {
+        _token = await SecureStore.getItemAsync('mossyToken');
+      }
       setToken(_token);
-      const mossyAppleUserId =
-        await SecureStore.getItemAsync('mossyAppleUserId');
+      let mossyAppleUserId;
+      if (Platform.OS === 'web') {
+        mossyAppleUserId = localStorage.getItem('mossyAppleUserId');
+      } else {
+        mossyAppleUserId = await SecureStore.getItemAsync('mossyAppleUserId');
+      }
       setAppleUserId(mossyAppleUserId);
     }
     loadUser();
@@ -462,7 +485,6 @@ export default function App() {
     const event = find(events, ['_id.$oid', selectedId]);
     const params: UpdateEventPayloadBuilderParams = {
       eventId: event._id,
-      taskId: event.task,
       completionDate,
     };
     const requestBuilderOptions = {

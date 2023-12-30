@@ -36,9 +36,27 @@ interface RequestConfig {
   method: string;
   headers: {
     'Content-Type': string;
-    Authorization: string;
+    Authorization?: string;
   };
   body?: string;
+}
+
+export interface LogInPayloadBuilderParams {
+  authorizationCode: string;
+  identityToken: string;
+  nonce: string;
+  userId: string;
+}
+
+interface LogInPayload {
+  authorization_code: string;
+  identity_token: string;
+  nonce: string;
+  user: string;
+}
+
+interface LogInConfigBuilderParams {
+  payload: LogInPayload;
 }
 
 export interface ReadUserPayloadBuilderParams {
@@ -188,13 +206,11 @@ interface CompleteTaskConfigBuilderParams {
 
 export interface UpdateEventPayloadBuilderParams {
   eventId: string;
-  // taskId: string;
   completionDate: Date;
 }
 
 interface UpdateEventPayload {
   _id: string;
-  // task: string;
   date: Date;
 }
 
@@ -274,6 +290,7 @@ interface DebugDeleteAllTagsConfigBuilderParams {
 }
 
 export type PayloadBuilderParams =
+  | LogInPayloadBuilderParams
   | ReadUserPayloadBuilderParams
   | UpdateUserThemePayloadBuilderParams
   | CreateTaskPayloadBuilderParams
@@ -289,6 +306,11 @@ export type PayloadBuilderParams =
   | DebugCreateEventsPayloadBuilderParams
   | DebugCreateTagsPayloadBuilderParams;
 
+export interface LogInApiConfig {
+  endpoint: string;
+  payloadBuilder: (params: LogInPayloadBuilderParams) => LogInPayload;
+  configBuilder: (params: LogInConfigBuilderParams) => RequestConfig;
+}
 export interface ReadUserApiConfig {
   endpoint: string;
   payloadBuilder: (params: ReadUserPayloadBuilderParams) => ReadUserPayload;
@@ -434,6 +456,7 @@ export interface DebugDeleteAllTagsApiConfig {
 }
 
 export interface ApiConfigs {
+  logIn: LogInApiConfig;
   readUser: ReadUserApiConfig;
   updateUserTheme: UpdateUserThemeApiConfig;
   readTasks: ReadTasksApiConfig;
@@ -462,7 +485,7 @@ export interface RequestBuilderParams {
   apiConfig: ApiConfigs[keyof ApiConfigs];
   params?: PayloadBuilderParams;
   searchParams?: SearchParams;
-  token: string;
+  token?: string;
 }
 
 export type HandleChangeDate = (

@@ -37,6 +37,7 @@
     "jest-expo": "^49.0.0",
     "lodash": "^4.17.21",
     "react": "18.2.0",
+    "react-apple-login": "^1.1.6",
     "react-dom": "18.2.0",
     "react-native": "0.72.5",
     "react-native-pager-view": "6.2.0",
@@ -45,7 +46,8 @@
     "react-native-screens": "~3.22.0",
     "react-native-tab-view": "^3.5.2",
     "react-native-web": "~0.19.6",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "expo-auth-session": "~5.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

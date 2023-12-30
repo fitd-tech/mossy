@@ -3,6 +3,7 @@ import { ApiConfigs } from 'src/types/types.ts';
 const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 const endpoints = {
+  logIn: `${mossyBackendDevUrl}api/log-in`,
   user: `${mossyBackendDevUrl}api/user`,
   userTheme: `${mossyBackendDevUrl}api/user/theme`,
   tasks: `${mossyBackendDevUrl}api/tasks`,
@@ -15,6 +16,22 @@ const endpoints = {
 };
 
 const apiConfigs: ApiConfigs = {
+  logIn: {
+    endpoint: endpoints.logIn,
+    payloadBuilder: ({ authorizationCode, identityToken, nonce, userId }) => ({
+      authorization_code: authorizationCode,
+      identity_token: identityToken,
+      nonce,
+      user: userId,
+    }),
+    configBuilder: ({ payload }) => ({
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }),
+  },
   readUser: {
     endpoint: endpoints.user,
     payloadBuilder: ({ appleUserId }) => ({
