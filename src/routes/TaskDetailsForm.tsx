@@ -3,7 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import appStyles from 'src/appStyles.ts';
 import { pluralize } from 'src/common/utilities/formatStrings.ts';
-import getDaysFromMilliseconds from 'src/common/utilities/time.ts';
+import { getDaysFromMilliseconds } from 'src/common/utilities/time.ts';
 import { Task, Theme } from 'src/types/types.ts';
 
 interface TaskDetailsFormProps {
