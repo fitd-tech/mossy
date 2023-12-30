@@ -14,7 +14,7 @@ import { pluralize } from 'src/common/utilities/formatStrings.ts';
 import appStyles from 'src/appStyles.ts';
 import tasksListStyles from 'src/routes/tasksListStyles.ts';
 import { DataContext, StaticContext, ThemeContext } from 'src/appContext.ts';
-import getDaysFromMilliseconds from 'src/common/utilities/time.ts';
+import { getDaysFromMilliseconds } from 'src/common/utilities/time.ts';
 import { getMore } from 'src/common/utilities/requests.ts';
 
 export default function TasksList() {

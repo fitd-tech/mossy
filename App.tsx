@@ -51,6 +51,7 @@ import {
   UpdateTaskPayloadBuilderParams,
 } from 'src/types/types.ts';
 import { handleResponse } from 'src/common/utilities/requests.ts';
+import { generateDateTimePickerStyles } from 'src/common/utilities/time.ts';
 
 const { dark1 } = colors;
 
@@ -462,7 +463,6 @@ export default function App() {
     const event = find(events, ['_id.$oid', selectedId]);
     const params: UpdateEventPayloadBuilderParams = {
       eventId: event._id,
-      taskId: event.task,
       completionDate,
     };
     const requestBuilderOptions = {
@@ -705,24 +705,6 @@ export default function App() {
       }
     }
     logOut();
-  }
-
-  function generateDateTimePickerStyles(date) {
-    let dateTimePickerStyles;
-    if (date.getDate() < 10 && date.getMonth() < 10) {
-      dateTimePickerStyles = [
-        appStyles.dateTimePicker,
-        appStyles.dateTimePickerOffsetTwoDigits,
-      ];
-    } else if (date.getDate() < 10 || date.getMonth() < 10) {
-      dateTimePickerStyles = [
-        appStyles.dateTimePicker,
-        appStyles.dateTimePickerOffsetOneDigit,
-      ];
-    } else {
-      dateTimePickerStyles = appStyles.dateTimePicker;
-    }
-    return dateTimePickerStyles;
   }
 
   function renderForm() {
