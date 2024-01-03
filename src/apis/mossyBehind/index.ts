@@ -3,31 +3,39 @@ import { ApiConfigs } from 'src/types/types.ts';
 const mossyBackendDevUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 const endpoints = {
-  logIn: `${mossyBackendDevUrl}api/log-in`,
-  user: `${mossyBackendDevUrl}api/user`,
-  userTheme: `${mossyBackendDevUrl}api/user/theme`,
-  tasks: `${mossyBackendDevUrl}api/tasks`,
-  eventsString: `${mossyBackendDevUrl}api/events-string`,
-  tags: `${mossyBackendDevUrl}api/tags`,
-  events: `${mossyBackendDevUrl}api/events`,
-  debugTasks: `${mossyBackendDevUrl}api/debug/tasks`,
-  debugEvents: `${mossyBackendDevUrl}api/debug/events`,
-  debugTags: `${mossyBackendDevUrl}api/debug/tags`,
+  logIn: `${mossyBackendDevUrl}/api/log-in`,
+  user: `${mossyBackendDevUrl}/api/user`,
+  userTheme: `${mossyBackendDevUrl}/api/user/theme`,
+  tasks: `${mossyBackendDevUrl}/api/tasks`,
+  eventsString: `${mossyBackendDevUrl}/api/events-string`,
+  tags: `${mossyBackendDevUrl}/api/tags`,
+  events: `${mossyBackendDevUrl}/api/events`,
+  debugTasks: `${mossyBackendDevUrl}/api/debug/tasks`,
+  debugEvents: `${mossyBackendDevUrl}/api/debug/events`,
+  debugTags: `${mossyBackendDevUrl}/api/debug/tags`,
 };
 
 const apiConfigs: ApiConfigs = {
   logIn: {
     endpoint: endpoints.logIn,
-    payloadBuilder: ({ authorizationCode, identityToken, nonce, userId }) => ({
+    payloadBuilder: ({
+      authorizationCode,
+      identityToken,
+      nonce,
+      // userId
+      source,
+    }) => ({
       authorization_code: authorizationCode,
       identity_token: identityToken,
       nonce,
-      user: userId,
+      // user: userId,
+      source,
     }),
     configBuilder: ({ payload }) => ({
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
       },
       body: JSON.stringify(payload),
     }),
@@ -41,6 +49,7 @@ const apiConfigs: ApiConfigs = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(payload),
@@ -63,6 +72,7 @@ const apiConfigs: ApiConfigs = {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(payload),
@@ -74,6 +84,7 @@ const apiConfigs: ApiConfigs = {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
         Authorization: `Bearer ${token}`,
       },
     }),
@@ -84,6 +95,7 @@ const apiConfigs: ApiConfigs = {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
         Authorization: `Bearer ${token}`,
       },
     }),
@@ -94,6 +106,7 @@ const apiConfigs: ApiConfigs = {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
         Authorization: `Bearer ${token}`,
       },
     }),
@@ -109,6 +122,7 @@ const apiConfigs: ApiConfigs = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(payload),
@@ -125,6 +139,7 @@ const apiConfigs: ApiConfigs = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(payload),
@@ -137,6 +152,7 @@ const apiConfigs: ApiConfigs = {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(payload),
@@ -149,6 +165,7 @@ const apiConfigs: ApiConfigs = {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(payload),
@@ -161,6 +178,7 @@ const apiConfigs: ApiConfigs = {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(payload),
@@ -178,6 +196,7 @@ const apiConfigs: ApiConfigs = {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(payload),
@@ -193,6 +212,7 @@ const apiConfigs: ApiConfigs = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(payload),

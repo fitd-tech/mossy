@@ -14,6 +14,7 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as SecureStore from 'expo-secure-store';
 import { RootSiblingParent } from 'react-native-root-siblings';
+// import { useFonts } from 'expo-font';
 
 import FadeTransitionOverlay from 'src/components/FadeTransitionOverlay.tsx';
 import appStyles from 'src/appStyles.ts';
@@ -70,7 +71,6 @@ const Tab = createMaterialTopTabNavigator();
 export default function App() {
   // System light/dark mode
   const colorScheme = useColorScheme();
-  console.log('Platform', Platform);
 
   const [selectedId, setSelectedId] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -100,7 +100,12 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [theme, setTheme] = useState(find(themes, { name: defaultTheme }));
   const [savingUserTheme, setSavingUserTheme] = useState(false);
-  console.log('isAuthenticated', isAuthenticated);
+
+  // Attemp to load fonts for web
+  // https://github.com/expo/expo/issues/21568#issuecomment-1456968737
+  /* const [fontsLoaded] = useFonts({
+    Ionicons: require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf')
+  }) */
 
   const textColor = darkMode
     ? appStyles.darkModeTextColor

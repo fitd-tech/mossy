@@ -45,14 +45,16 @@ export interface LogInPayloadBuilderParams {
   authorizationCode: string;
   identityToken: string;
   nonce: string;
-  userId: string;
+  // userId: string;
+  source?: string;
 }
 
 interface LogInPayload {
   authorization_code: string;
   identity_token: string;
   nonce: string;
-  user: string;
+  // user: string;
+  source?: string;
 }
 
 interface LogInConfigBuilderParams {

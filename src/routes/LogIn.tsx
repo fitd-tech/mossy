@@ -9,8 +9,8 @@ import { handleResponse } from 'src/common/utilities/requests.ts';
 import apiConfigs from 'src/apis/mossyBehind/index.ts';
 import { LogInPayloadBuilderParams } from 'src/types/types.ts';
 
-const appleClientId = process.env.EXPO_PUBLIC_APPLE_CLIENT_ID;
-const appleRedirectUri = process.env.EXPO_PUBLIC_APPLE_REDIRECT_URI;
+const appleClientId = process.env.EXPO_PUBLIC_MOSSY_APPLE_SIGN_IN_CLIENT_ID;
+const appleRedirectUri = process.env.EXPO_PUBLIC_APPLE_SIGN_IN_REDIRECT_URI;
 const authenticationState = 'Mossy Apple user sign-in';
 
 export default function LogIn() {
@@ -21,6 +21,7 @@ export default function LogIn() {
   console.log('appleAuthAvailable', appleAuthAvailable);
   console.log('window', window);
   console.log('appleClientId', appleClientId);
+  console.log('credential', credential);
 
   const {
     setIsAuthenticated,
@@ -32,6 +33,23 @@ export default function LogIn() {
 
   function handleScriptLoaded() {
     setLoadedAppleIdScript(true);
+  }
+
+  function handleAppleSignInSuccess(e) {
+    console.log('e', e);
+    console.log('e.detail.data', e.detail.data);
+    const _credential = {
+      authorizationCode: e.detail.authorization.code,
+      identityToken: e.detail.authorization.id_token,
+      state: e.detail.authorization.state,
+      source: 'web',
+    };
+    setCredential(_credential);
+  }
+
+  function handleAppleSignInFailure(e) {
+    console.log('e', e);
+    console.log('e.detail.error', e.detail.error);
   }
 
   useEffect(() => {
@@ -63,8 +81,28 @@ export default function LogIn() {
       // setLoadedAppleIdScript(true)
       // }, 1000)
 
+      // Listen for authorization success.
+      document.addEventListener(
+        'AppleIDSignInOnSuccess',
+        handleAppleSignInSuccess,
+      );
+
+      // Listen for authorization failures.
+      document.addEventListener(
+        'AppleIDSignInOnFailure',
+        handleAppleSignInFailure,
+      );
+
       return () => {
         document.body.removeChild(script);
+        document.body.removeEventListener(
+          'AppleIDSSignInOnSuccess',
+          handleAppleSignInSuccess,
+        );
+        document.body.removeEventListener(
+          'ApplIDSignInOnFailure',
+          handleAppleSignInFailure,
+        );
       };
     }
   }, []);
@@ -107,7 +145,8 @@ export default function LogIn() {
         authorizationCode: credential.authorizationCode,
         identityToken: credential.identityToken,
         nonce,
-        userId: credential.user,
+        // userId: credential.user,
+        source: credential.source,
       };
       const requestBuilderOptions = {
         apiConfig: apiConfigs.logIn,
