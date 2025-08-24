@@ -1,43 +1,40 @@
 {
-  "expo": {
-    "name": "mossy",
-    "slug": "mossy",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
-    "scheme": "mossy-redirect",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "assetBundlePatterns": ["**/*"],
-    "ios": {
-      "supportsTablet": true,
-      "config": {
-        "usesNonExemptEncryption": false
-      }
-    },
-    "plugins": ["expo-apple-authentication"],
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
-    },
-    "web": {
-      "favicon": "./assets/favicon.png",
-      "bundler": "metro"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "1f71a331-422c-42b7-bd8c-e14f83bb426e"
-      }
-    },
-    "owner": "aecook"
+  "name": "mossy",
+  "slug": "mossy",
+  "version": "1.0.0",
+  "orientation": "portrait",
+  "icon": "./assets/icon.png",
+  "userInterfaceStyle": "automatic",
+  "scheme": "mossy-redirect",
+  "splash": {
+    "image": "./assets/splash.png",
+    "resizeMode": "contain",
+    "backgroundColor": "#ffffff"
   },
+  "assetBundlePatterns": ["**/*"],
   "ios": {
-    "usesAppleSignIn": true
-  }
+    "supportsTablet": true,
+    "config": {
+      "usesNonExemptEncryption": false,
+      "usesAppleSignIn": true
+    }
+  },
+  "plugins": ["expo-apple-authentication", "expo-font", "expo-secure-store"],
+  "android": {
+    "adaptiveIcon": {
+      "foregroundImage": "./assets/adaptive-icon.png",
+      "backgroundColor": "#ffffff"
+    }
+  },
+  "web": {
+    "favicon": "./assets/favicon.png",
+    "bundler": "metro"
+  },
+  "extra": {
+    "eas": {
+      "projectId": "1f71a331-422c-42b7-bd8c-e14f83bb426e"
+    }
+  },
+  "owner": "aecook",
+  "newArchEnabled": true
 }

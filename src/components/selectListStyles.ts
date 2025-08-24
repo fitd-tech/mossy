@@ -1,16 +1,18 @@
 import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
-  tagCardContainer: {
-    flex: 0.8,
+  cardContainer: {
+    // flex: 1,
+    display: 'flex',
     flexDirection: 'row',
     flexWrap: 'wrap',
     width: '90%',
     alignItems: 'center',
-    minHeight: 100,
-    maxHeight: 200,
+    // minHeight: 100,
+    // maxHeight: 200,
+    padding: 2,
   },
-  tagCard: {
+  card: {
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'center',
@@ -20,12 +22,17 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 5,
   },
-  tagCardTitle: {
+  cardTitle: {
     color: 'white',
     fontWeight: 'bold',
   },
-  tagCardText: {
+  cardText: {
     color: 'white',
+  },
+  placeholderText: {
+    fontSize: 16,
+    textAlign: 'center',
+    width: '100%',
   },
 });
 

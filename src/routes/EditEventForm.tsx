@@ -40,6 +40,9 @@ function EditEventForm({
       <View style={appStyles.modalTextWrapper}>
         <Text style={textColor}>{event?.task}</Text>
       </View>
+      <Text style={{ ...appStyles.fieldLabel, ...textColor }}>
+        Date completed
+      </Text>
       <View style={appStyles.dateWrapper}>
         <DateTimePicker
           mode="date"

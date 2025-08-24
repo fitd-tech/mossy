@@ -4,10 +4,12 @@ import { Pressable, Text, View } from 'react-native';
 import appStyles from 'src/appStyles.ts';
 import { pluralize } from 'src/common/utilities/formatStrings.ts';
 import getDaysFromMilliseconds from 'src/common/utilities/time.ts';
-import { Task, Theme } from 'src/types/types.ts';
+import SelectList from 'src/components/SelectList.tsx';
+import { Tag, Task, Theme } from 'src/types/types.ts';
 
 interface TaskDetailsFormProps {
   task: Task;
+  tags: Tag[];
   theme: Theme;
   backgroundColor: {
     backgroundColor: string;
@@ -25,6 +27,7 @@ interface TaskDetailsFormProps {
 
 function TaskDetailsForm({
   task,
+  tags,
   theme,
   backgroundColor,
   textColor,
@@ -33,6 +36,7 @@ function TaskDetailsForm({
   handleComplete,
   confirmDelete,
 }: TaskDetailsFormProps) {
+  console.log('task', task);
   const taskCardBadgeOverdueColor = {
     backgroundColor: theme.color1,
   };
@@ -61,6 +65,7 @@ function TaskDetailsForm({
         <Text style={{ ...appStyles.modalTitle, ...textColor }}>
           Task Details
         </Text>
+        <Text style={{ ...appStyles.taskName, ...textColor }}>{task.name}</Text>
         <View style={appStyles.taskStatusWrapper}>
           <View style={appStyles.taskStatusRow}>
             <View style={badgeStyles}>
@@ -99,6 +104,8 @@ function TaskDetailsForm({
           </View>
         </View>
       </View>
+      <Text style={{ ...appStyles.fieldLabel, ...textColor }}>Tags</Text>
+      <SelectList items={tags} placeholder="Create some tags!" />
       <Pressable
         style={[appStyles.button, primaryButtonColor]}
         onPress={handleEdit}

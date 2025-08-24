@@ -16,6 +16,7 @@ import { DataContext, StaticContext, ThemeContext } from 'src/appContext.ts';
 import { getMore } from 'src/common/utilities/requests.ts';
 
 export default function EventsList() {
+  // console.log('EventsList')
   const [lastContentHeight, setLastContentHeight] = useState(0);
 
   // Attemp to prevent registering event card touch when quickly swiping during navigation
@@ -88,42 +89,40 @@ export default function EventsList() {
       <View style={{ ...appStyles.container, ...backgroundColor }}>
         <View style={eventsListStyles.eventCardContainer}>
           {size(events) ? (
-            <>
-              {map(events, (event) => {
-                let cardStyles;
-                if (event._id.$oid === selectedEventId) {
-                  cardStyles = [
-                    eventsListStyles.eventCard,
-                    eventCardHighlightedColor,
-                  ];
-                } else {
-                  cardStyles = [
-                    eventsListStyles.eventCard,
-                    eventCardStandardColor,
-                  ];
-                }
-                return (
-                  <Pressable
-                    key={event._id.$oid}
-                    style={cardStyles}
-                    onPress={settled ? () => onPress(event._id.$oid) : noop}
-                  >
-                    <Text style={eventsListStyles.eventCardTitle}>
-                      {truncate(event.task, { length: 40 })}
-                    </Text>
-                    <Text style={eventsListStyles.eventCardText}>
-                      {new Date(
-                        Number(event.date.$date.$numberLong),
-                      ).toLocaleDateString()}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </>
+            map(events, (event) => {
+              let cardStyles;
+              if (event._id.$oid === selectedEventId) {
+                cardStyles = [
+                  eventsListStyles.eventCard,
+                  eventCardHighlightedColor,
+                ];
+              } else {
+                cardStyles = [
+                  eventsListStyles.eventCard,
+                  eventCardStandardColor,
+                ];
+              }
+              return (
+                <Pressable
+                  key={event._id.$oid}
+                  style={cardStyles}
+                  onPress={settled ? () => onPress(event._id.$oid) : noop}
+                >
+                  <Text style={eventsListStyles.eventCardTitle}>
+                    {truncate(event.task, { length: 40 })}
+                  </Text>
+                  <Text style={eventsListStyles.eventCardText}>
+                    {new Date(
+                      Number(event.date.$date.$numberLong),
+                    ).toLocaleDateString()}
+                  </Text>
+                </Pressable>
+              );
+            })
           ) : (
             <View style={{ ...appStyles.placeholder, ...backgroundColor }}>
               <Text style={{ ...appStyles.placeholderText, ...textColor }}>
-                Create some events!
+                Complete a task to create an event!
               </Text>
             </View>
           )}

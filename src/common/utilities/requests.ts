@@ -18,6 +18,7 @@ interface HandleResponseOptions {
 
 // Could this be a custom hook?
 export function getMore(e, options) {
+  // console.log('called getMore')
   const {
     pageSize,
     page,
@@ -33,6 +34,11 @@ export function getMore(e, options) {
   const bottomOfContent = scrollEvent.contentSize.height;
   const distanceFromBottomOfContent = bottomOfContent - bottomOfScreenPosition;
   const fetchThreshold = 2000;
+  // console.log('distanceFromBottomOfContent', distanceFromBottomOfContent)
+  // console.log('fetchThreshold', fetchThreshold)
+  // console.log('bottomOfContent', bottomOfContent)
+  // console.log('lastContentHeight', lastContentHeight)
+  // console.log('topOfScreen', topOfScreen)
   if (
     distanceFromBottomOfContent < fetchThreshold &&
     bottomOfContent > lastContentHeight &&
@@ -44,7 +50,8 @@ export function getMore(e, options) {
       limit: pageSize,
       offset: page * pageSize,
     };
-    fetchFunc({ params });
+    // console.log('params from getMore', params)
+    fetchFunc({ searchParams: params });
     setPage((pagePrevious) => pagePrevious + 1);
   }
 }
@@ -55,6 +62,7 @@ export async function handleResponse({
   onFailure,
   setLoading,
 }: HandleResponseOptions) {
+  // console.log('requestBuilderOptions from handleResponse', requestBuilderOptions)
   try {
     const { status, data, error } = await requestBuilder(requestBuilderOptions);
     if (status === responseStatus.OK) {

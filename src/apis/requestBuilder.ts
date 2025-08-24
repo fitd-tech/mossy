@@ -7,11 +7,13 @@ export default async function requestBuilder({
   searchParams,
   token,
 }: RequestBuilderParams) {
+  // console.log('params from requestBuilder', params)
   let payload;
   if (apiConfig.payloadBuilder) {
     // @ts-expect-error We are getting the intersection of all PayloadBuilderParams instead of the union
     payload = apiConfig.payloadBuilder(params);
   }
+  // console.log('payload', payload)
   const config = apiConfig.configBuilder({ token, payload });
   let urlSearchParams;
   if (searchParams) {

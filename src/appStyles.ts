@@ -65,6 +65,7 @@ const appStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 22,
+    // width: 200,
   },
   modalView: {
     margin: 20,
@@ -79,6 +80,7 @@ const appStyles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+    width: 200,
     minWidth: '60%',
   },
   textStyle: {
@@ -90,6 +92,14 @@ const appStyles = StyleSheet.create({
     marginBottom: 15,
     textAlign: 'center',
     fontWeight: 'bold',
+  },
+  taskName: {
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  fieldLabel: {
+    textAlign: 'center',
+    marginBottom: 5,
   },
   modalTextWrapper: {
     display: 'flex',
@@ -109,10 +119,11 @@ const appStyles = StyleSheet.create({
     fontSize: 20,
   },
   textInput: {
-    borderBottomWidth: 1,
+    // borderBottomWidth: 1,
     width: 200,
     height: 30,
     marginBottom: 25,
+    padding: 5,
   },
   button: {
     alignItems: 'center',
@@ -121,6 +132,7 @@ const appStyles = StyleSheet.create({
     paddingHorizontal: 32,
     borderRadius: 2,
     marginBottom: 15,
+    width: '100%',
   },
   buttonText: {
     color: 'white',
@@ -169,12 +181,14 @@ const appStyles = StyleSheet.create({
     position: 'absolute',
     bottom: 30,
     left: 30,
+    borderWidth: 3,
     borderRadius: 5,
   },
   addTaskButtonWrapper: {
     position: 'absolute',
     bottom: 30,
     right: 30,
+    borderWidth: 3,
     borderRadius: 5,
   },
   taskStatusRow: {

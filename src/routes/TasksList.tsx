@@ -18,6 +18,7 @@ import getDaysFromMilliseconds from 'src/common/utilities/time.ts';
 import { getMore } from 'src/common/utilities/requests.ts';
 
 export default function TasksList() {
+  // console.log('TasksList')
   const [lastContentHeight, setLastContentHeight] = useState(0);
 
   const { backgroundColor, textColor, theme } = useContext(ThemeContext);
@@ -27,6 +28,7 @@ export default function TasksList() {
     selectedId: selectedTaskId,
     tasksPage,
   } = useContext(DataContext);
+  // console.log('size(tasks) from TasksList', size(tasks))
   const {
     getTasks,
     onPressTaskCard: onPress,
@@ -64,6 +66,17 @@ export default function TasksList() {
     setViewType('tasks');
   });
 
+  function handleScroll(e) {
+    return getMore(e, {
+      pageSize: 50,
+      page: tasksPage,
+      setPage: setTasksPage,
+      lastContentHeight,
+      setLastContentHeight,
+      fetchFunc: getTasks,
+    });
+  }
+
   return (
     <ScrollView
       refreshControl={
@@ -75,163 +88,157 @@ export default function TasksList() {
       }
       style={backgroundColor}
       scrollEventThrottle={200}
-      onScroll={(e) =>
-        getMore(e, {
-          pageSize: 50,
-          page: tasksPage,
-          setPage: setTasksPage,
-          lastContentHeight,
-          setLastContentHeight,
-          fetchFunc: getTasks,
-        })
-      }
+      onScroll={handleScroll}
     >
       <View style={{ ...appStyles.container, ...backgroundColor }}>
         <View style={tasksListStyles.taskCardContainer}>
           {size(tasks) ? (
-            <>
-              {map(tasks, (task) => {
-                const taskSelected = selectedTaskId === task._id.$oid;
-                const daysSince = getDaysFromMilliseconds(
-                  task.time_since_latest_event,
-                );
-                const daysSinceLastEvent = daysSince > 0 ? daysSince : 0;
-                const mossDays = getDaysFromMilliseconds(task.moss);
-                const daysOverdue = mossDays > 0 ? mossDays : 0;
-                const isOverdue = mossDays > 0;
-                const neverCompleted = !task.latest_event_date;
-                let taskCardStyle;
-                if (taskSelected) {
-                  taskCardStyle = {
-                    ...tasksListStyles.taskCardHighlighted,
-                    ...taskCardHighlightedColors,
-                  };
-                } else if (isOverdue) {
-                  taskCardStyle = {
-                    ...tasksListStyles.taskCardOverdue,
-                    ...taskCardOverdueColors,
-                  };
-                } else if (neverCompleted) {
-                  taskCardStyle = {
-                    ...tasksListStyles.taskCardNeverCompleted,
-                    ...taskCardNeverCompletedColors,
-                  };
-                } else {
-                  taskCardStyle = {
-                    ...tasksListStyles.taskCard,
-                    ...taskCardColors,
-                  };
-                }
-                let taskTitleStyle;
-                if (taskSelected) {
-                  taskTitleStyle = tasksListStyles.taskTitleHighlighted;
-                } else if (isOverdue) {
-                  taskTitleStyle = tasksListStyles.taskTitleOverdue;
-                } else if (neverCompleted) {
-                  taskTitleStyle = tasksListStyles.taskTitleNeverCompleted;
-                } else {
-                  taskTitleStyle = tasksListStyles.taskTitle;
-                }
-                const titleLength = size(task.name);
-                let titleFontSize;
-                if (titleLength < 15) {
-                  titleFontSize = tasksListStyles.taskTitleFontSizeLarge;
-                } else if (titleLength >= 15 && titleLength < 25) {
-                  titleFontSize = tasksListStyles.taskTitleFontSizeMedium;
-                } else {
-                  titleFontSize = tasksListStyles.taskTitleFontSizeSmall;
-                }
-                return (
-                  <Pressable
-                    onPress={() => onPress(task._id.$oid)}
-                    key={task._id.$oid}
-                  >
-                    <View style={taskCardStyle}>
-                      <Text style={[taskTitleStyle, titleFontSize]}>
-                        {task.name}
-                      </Text>
-                      <View style={tasksListStyles.badgeWrapper}>
-                        <View
+            map(tasks, (task) => {
+              // console.log('task.name', task.name)
+              const taskSelected = selectedTaskId === task._id.$oid;
+              const daysSince = getDaysFromMilliseconds(
+                task.time_since_latest_event,
+              );
+              // console.log('daysSince', daysSince)
+              const daysSinceLastEvent = daysSince > 0 ? daysSince : 0;
+              // console.log('daysSinceLastEvent', daysSinceLastEvent)
+              const mossDays = getDaysFromMilliseconds(task.moss);
+              // console.log('mossDays', mossDays)
+              const daysOverdue = mossDays > 0 ? mossDays : 0;
+              // console.log('daysOverdue', daysOverdue)
+              const isOverdue = mossDays > 0;
+              const neverCompleted = !task.latest_event_date;
+              let taskCardStyle;
+              if (taskSelected) {
+                taskCardStyle = {
+                  ...tasksListStyles.taskCardHighlighted,
+                  ...taskCardHighlightedColors,
+                };
+              } else if (isOverdue) {
+                taskCardStyle = {
+                  ...tasksListStyles.taskCardOverdue,
+                  ...taskCardOverdueColors,
+                };
+              } else if (neverCompleted) {
+                taskCardStyle = {
+                  ...tasksListStyles.taskCardNeverCompleted,
+                  ...taskCardNeverCompletedColors,
+                };
+              } else {
+                taskCardStyle = {
+                  ...tasksListStyles.taskCard,
+                  ...taskCardColors,
+                };
+              }
+              let taskTitleStyle;
+              if (taskSelected) {
+                taskTitleStyle = tasksListStyles.taskTitleHighlighted;
+              } else if (isOverdue) {
+                taskTitleStyle = tasksListStyles.taskTitleOverdue;
+              } else if (neverCompleted) {
+                taskTitleStyle = tasksListStyles.taskTitleNeverCompleted;
+              } else {
+                taskTitleStyle = tasksListStyles.taskTitle;
+              }
+              const titleLength = size(task.name);
+              let titleFontSize;
+              if (titleLength < 15) {
+                titleFontSize = tasksListStyles.taskTitleFontSizeLarge;
+              } else if (titleLength >= 15 && titleLength < 25) {
+                titleFontSize = tasksListStyles.taskTitleFontSizeMedium;
+              } else {
+                titleFontSize = tasksListStyles.taskTitleFontSizeSmall;
+              }
+              return (
+                <Pressable
+                  onPress={() => onPress(task._id.$oid)}
+                  key={task._id.$oid}
+                >
+                  <View style={taskCardStyle}>
+                    <Text style={[taskTitleStyle, titleFontSize]}>
+                      {task.name}
+                    </Text>
+                    <View style={tasksListStyles.badgeWrapper}>
+                      <View
+                        style={{
+                          ...tasksListStyles.taskCardBadge,
+                          ...backgroundColor,
+                        }}
+                      >
+                        <Text
                           style={{
-                            ...tasksListStyles.taskCardBadge,
-                            ...backgroundColor,
+                            ...tasksListStyles.badgeTitle,
+                            ...textColor,
                           }}
                         >
-                          <Text
-                            style={{
-                              ...tasksListStyles.badgeTitle,
-                              ...textColor,
-                            }}
-                          >
-                            {task.frequency}
-                          </Text>
-                          <Text
-                            style={{
-                              ...tasksListStyles.badgeUom,
-                              ...textColor,
-                            }}
-                          >
-                            {pluralize('day', task.frequency, {
-                              capitalize: true,
-                            })}
-                          </Text>
-                        </View>
-                        <View
+                          {task.frequency}
+                        </Text>
+                        <Text
                           style={{
-                            ...tasksListStyles.taskCardBadge,
-                            ...backgroundColor,
+                            ...tasksListStyles.badgeUom,
+                            ...textColor,
                           }}
                         >
-                          <Text
-                            style={{
-                              ...tasksListStyles.badgeTitle,
-                              ...textColor,
-                            }}
-                          >
-                            {daysSinceLastEvent}
-                          </Text>
-                          <Text
-                            style={{
-                              ...tasksListStyles.badgeUom,
-                              ...textColor,
-                            }}
-                          >
-                            {pluralize('day', daysSinceLastEvent, {
-                              capitalize: true,
-                            })}
-                          </Text>
-                        </View>
-                        <View
+                          {pluralize('day', task.frequency, {
+                            capitalize: true,
+                          })}
+                        </Text>
+                      </View>
+                      <View
+                        style={{
+                          ...tasksListStyles.taskCardBadge,
+                          ...backgroundColor,
+                        }}
+                      >
+                        <Text
                           style={{
-                            ...tasksListStyles.taskCardBadge,
-                            ...backgroundColor,
+                            ...tasksListStyles.badgeTitle,
+                            ...textColor,
                           }}
                         >
-                          <Text
-                            style={{
-                              ...tasksListStyles.badgeTitle,
-                              ...textColor,
-                            }}
-                          >
-                            {daysOverdue}
-                          </Text>
-                          <Text
-                            style={{
-                              ...tasksListStyles.badgeUom,
-                              ...textColor,
-                            }}
-                          >
-                            {pluralize('day', daysOverdue, {
-                              capitalize: true,
-                            })}
-                          </Text>
-                        </View>
+                          {daysSinceLastEvent}
+                        </Text>
+                        <Text
+                          style={{
+                            ...tasksListStyles.badgeUom,
+                            ...textColor,
+                          }}
+                        >
+                          {pluralize('day', daysSinceLastEvent, {
+                            capitalize: true,
+                          })}
+                        </Text>
+                      </View>
+                      <View
+                        style={{
+                          ...tasksListStyles.taskCardBadge,
+                          ...backgroundColor,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            ...tasksListStyles.badgeTitle,
+                            ...textColor,
+                          }}
+                        >
+                          {daysOverdue}
+                        </Text>
+                        <Text
+                          style={{
+                            ...tasksListStyles.badgeUom,
+                            ...textColor,
+                          }}
+                        >
+                          {pluralize('day', daysOverdue, {
+                            capitalize: true,
+                          })}
+                        </Text>
                       </View>
                     </View>
-                  </Pressable>
-                );
-              })}
-            </>
+                  </View>
+                </Pressable>
+              );
+            })
           ) : (
             <View style={{ ...appStyles.placeholder, ...backgroundColor }}>
               <Text style={{ ...appStyles.placeholderText, ...textColor }}>

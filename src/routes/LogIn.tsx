@@ -127,11 +127,17 @@ export default function LogIn() {
   }, [loadedAppleIdScript]);
 
   useEffect(() => {
+    // console.log('appleUserId from getCredentialState useEffect', appleUserId)
     async function getCredentialState() {
       const credentialState =
         await AppleAuthentication.getCredentialStateAsync(appleUserId);
       if (credentialState === 1) {
-        setIsAuthenticated(true);
+        // console.log('setting isAuthenticated true from getCredentialState')
+        /* 
+          TEMP: disabling because we need to implement multiple backend tokens and expiration
+          This credential state is useful for checking if Apple will recognize the credential, but not whether our mossy token is currently valid
+        */
+        // setIsAuthenticated(true);
       }
     }
     if (appleUserId) {
@@ -153,6 +159,7 @@ export default function LogIn() {
         params,
       };
       async function onSuccess(userProfile) {
+        // console.log('userProfile from useEffect verifyCredential', userProfile)
         if (Platform.OS === 'web') {
           localStorage.setItem('mossyAppleUserId', userProfile.apple_user_id);
           localStorage.setItem('mossyToken', userProfile.token);
@@ -166,6 +173,7 @@ export default function LogIn() {
         setAppleUserId(userProfile.apple_user_id);
         setToken(userProfile.token);
         setUserProfile(userProfile);
+        // console.log('setting isAuthenticated true from useEffect verifyCredential')
         setIsAuthenticated(true);
       }
       handleResponse({ requestBuilderOptions, onSuccess });

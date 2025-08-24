@@ -12,5 +12,8 @@ module.exports = {
     // Attempt to load icons for web
     // https://github.com/expo/expo/issues/21568#issuecomment-1456968737
     assetExts: [...(config.resolver?.assetExts || []), 'ttf', 'otf'],
+    // https://github.com/facebook/react-native/issues/33466
+    // https://stackoverflow.com/questions/70071602/main-module-field-cannot-be-resolved-after-installing-apollo-client/70076278#70076278
+    sourceExts: [...(config.resolver?.sourceExts || []), 'cjs'],
   },
 };

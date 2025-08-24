@@ -16,6 +16,7 @@ import { DataContext, StaticContext, ThemeContext } from 'src/appContext.ts';
 import { getMore } from 'src/common/utilities/requests.ts';
 
 export default function TagsList() {
+  // console.log('TagsList')
   const [lastContentHeight, setLastContentHeight] = useState(0);
 
   const { backgroundColor, textColor, theme } = useContext(ThemeContext);
@@ -52,6 +53,17 @@ export default function TagsList() {
     setViewType('tags');
   });
 
+  function handleScroll(e) {
+    return getMore(e, {
+      pageSize: 200,
+      page: tagsPage,
+      setPage: setTagsPage,
+      lastContentHeight,
+      setLastContentHeight,
+      fetchFunc: getTags,
+    });
+  }
+
   return (
     <>
       <ScrollView
@@ -64,44 +76,31 @@ export default function TagsList() {
         }
         style={backgroundColor}
         scrollEventThrottle={200}
-        onScroll={(e) =>
-          getMore(e, {
-            pageSize: 200,
-            page: tagsPage,
-            setPage: setTagsPage,
-            lastContentHeight,
-            setLastContentHeight,
-            fetchFunc: getTags,
-          })
-        }
+        onScroll={handleScroll}
       >
         <View style={{ ...appStyles.container, ...backgroundColor }}>
           <View style={tagsListStyles.tagCardContainer}>
             {size(tags) ? (
-              <>
-                {map(tags, (tag) => {
-                  let cardStyles;
-                  if (tag._id.$oid === selectedTagId) {
-                    cardStyles = [
-                      tagsListStyles.tagCard,
-                      tagCardHighlightedColor,
-                    ];
-                  } else {
-                    cardStyles = [tagsListStyles.tagCard, tagCardStandardColor];
-                  }
-                  return (
-                    <Pressable
-                      key={tag._id.$oid}
-                      style={cardStyles}
-                      onPress={() => onPress(tag._id.$oid)}
-                    >
-                      <Text style={tagsListStyles.tagCardTitle}>
-                        {tag.name}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </>
+              map(tags, (tag) => {
+                let cardStyles;
+                if (tag._id.$oid === selectedTagId) {
+                  cardStyles = [
+                    tagsListStyles.tagCard,
+                    tagCardHighlightedColor,
+                  ];
+                } else {
+                  cardStyles = [tagsListStyles.tagCard, tagCardStandardColor];
+                }
+                return (
+                  <Pressable
+                    key={tag._id.$oid}
+                    style={cardStyles}
+                    onPress={() => onPress(tag._id.$oid)}
+                  >
+                    <Text style={tagsListStyles.tagCardTitle}>{tag.name}</Text>
+                  </Pressable>
+                );
+              })
             ) : (
               <View style={{ ...appStyles.placeholder, backgroundColor }}>
                 <Text style={{ ...appStyles.placeholderText, ...textColor }}>

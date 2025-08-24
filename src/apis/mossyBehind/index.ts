@@ -6,9 +6,11 @@ const endpoints = {
   logIn: `${mossyBackendDevUrl}/api/log-in`,
   user: `${mossyBackendDevUrl}/api/user`,
   userTheme: `${mossyBackendDevUrl}/api/user/theme`,
+  tasksForTag: `${mossyBackendDevUrl}/api/tasks/tag`,
   tasks: `${mossyBackendDevUrl}/api/tasks`,
   eventsString: `${mossyBackendDevUrl}/api/events-string`,
   tags: `${mossyBackendDevUrl}/api/tags`,
+  tagsForTask: `${mossyBackendDevUrl}/api/tags/task`,
   events: `${mossyBackendDevUrl}/api/events`,
   debugTasks: `${mossyBackendDevUrl}/api/debug/tasks`,
   debugEvents: `${mossyBackendDevUrl}/api/debug/events`,
@@ -78,6 +80,17 @@ const apiConfigs: ApiConfigs = {
       body: JSON.stringify(payload),
     }),
   },
+  readTasksForTag: {
+    endpoint: endpoints.tasksForTag,
+    configBuilder: ({ token }) => ({
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+        Authorization: `Bearer ${token}`,
+      },
+    }),
+  },
   readTasks: {
     endpoint: endpoints.tasks,
     configBuilder: ({ token }) => ({
@@ -91,6 +104,17 @@ const apiConfigs: ApiConfigs = {
   },
   readEvents: {
     endpoint: endpoints.eventsString,
+    configBuilder: ({ token }) => ({
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+        Authorization: `Bearer ${token}`,
+      },
+    }),
+  },
+  readTagsForTask: {
+    endpoint: endpoints.tagsForTask,
     configBuilder: ({ token }) => ({
       method: 'GET',
       headers: {

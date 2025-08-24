@@ -1,13 +1,13 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, Text, TextInput } from 'react-native';
 
-import TagsSelectList from 'src/components/TagsSelectList.tsx';
 import appStyles from 'src/appStyles.ts';
 import {
   HandleChangeField,
   HandleTagSelectCardPress,
   Tag,
 } from 'src/types/types.ts';
+import SelectList from 'src/components/SelectList.tsx';
 
 interface EditTaskFormProps {
   textColor: {
@@ -53,6 +53,7 @@ function EditTaskForm({
       <Text style={{ ...appStyles.modalTitle, ...textColor }}>
         {selectedTaskId ? 'Edit Task' : 'Create Task'}
       </Text>
+      <Text style={{ ...appStyles.fieldLabel, ...textColor }}>Task title</Text>
       <TextInput
         value={name}
         onChangeText={(value) => handleChangeField(value, setName)}
@@ -63,6 +64,9 @@ function EditTaskForm({
           ...secondaryBackgroundColor,
         }}
       />
+      <Text style={{ ...appStyles.fieldLabel, ...textColor }}>
+        Frequency (days)
+      </Text>
       <TextInput
         value={frequency}
         onChangeText={(value) => handleChangeField(value, setFrequency)}
@@ -74,10 +78,12 @@ function EditTaskForm({
           ...secondaryBackgroundColor,
         }}
       />
-      <TagsSelectList
-        tags={tags}
-        selectedTagIds={selectedTagIds}
+      <Text style={{ ...appStyles.fieldLabel, ...textColor }}>Tags</Text>
+      <SelectList
+        items={tags}
+        selectedItemIds={selectedTagIds}
         onPress={handleTagSelectCardPress}
+        placeholder="Create some tags!"
       />
       <Pressable
         style={[appStyles.button, primaryButtonColor]}

@@ -4,10 +4,12 @@ import { Picker } from '@react-native-picker/picker';
 import { map } from 'lodash';
 
 import appStyles from 'src/appStyles.ts';
-import { HandleChangeField, Tag } from 'src/types/types.ts';
+import { HandleChangeField, Tag, Task } from 'src/types/types.ts';
+import SelectList from 'src/components/SelectList.tsx';
 
 interface EditTagFormProps {
   tags: Tag[];
+  tasks: Task[];
   textColor: {
     color: string;
   };
@@ -32,6 +34,7 @@ interface EditTagFormProps {
 
 function EditTagForm({
   tags,
+  tasks,
   textColor,
   selectedTagId,
   name,
@@ -61,6 +64,7 @@ function EditTagForm({
       <Text style={{ ...appStyles.modalTitle, ...textColor }}>
         {selectedTagId ? 'Edit Tag' : 'Create Tag'}
       </Text>
+      <Text style={{ ...appStyles.fieldLabel, ...textColor }}>Title</Text>
       <TextInput
         value={name}
         onChangeText={(value) => handleChangeField(value, setName)}
@@ -71,6 +75,7 @@ function EditTagForm({
           ...secondaryBackgroundColor,
         }}
       />
+      <Text style={{ ...appStyles.fieldLabel, ...textColor }}>Description</Text>
       <TextInput
         value={description}
         onChangeText={(value) => handleChangeField(value, setDescription)}
@@ -81,7 +86,9 @@ function EditTagForm({
           ...secondaryBackgroundColor,
         }}
       />
+      <Text style={{ ...appStyles.fieldLabel, ...textColor }}>Parent tag</Text>
       <Picker
+        style={{ width: '100%' }}
         selectedValue={parentTag}
         onValueChange={(itemValue) => setParentTag(itemValue)}
       >
@@ -90,9 +97,13 @@ function EditTagForm({
             key={tag._id.$oid}
             label={tag.name}
             value={tag._id.$oid}
+            // TEMP: test
+            style={{ backgroundColor: 'white' }}
           />
         ))}
       </Picker>
+      <Text style={{ ...appStyles.fieldLabel, ...textColor }}>Tasks</Text>
+      <SelectList items={tasks} placeholder="Assign this tag to some tasks!" />
       <Pressable
         style={[appStyles.button, primaryButtonColor]}
         onPress={handleSaveTag}

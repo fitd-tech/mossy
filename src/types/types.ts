@@ -12,11 +12,24 @@ export interface Theme {
   color4: string;
 }
 
+export interface MongoDbObject {
+  _id: {
+    $oid: string;
+  };
+  name: string;
+}
+
+export interface TaskId {
+  $oid: string;
+}
+
 export interface Task {
+  _id: TaskId;
   time_since_latest_event: number;
   moss: number;
   latest_event_date: string;
   frequency: number;
+  name: string;
 }
 
 export interface Event {
@@ -327,6 +340,12 @@ export interface UpdateUserThemeApiConfig {
   configBuilder: (params: UpdateUserThemeConfigBuilderParams) => RequestConfig;
 }
 
+export interface ReadTasksForTagApiConfig {
+  endpoint: string;
+  payloadBuilder?: never;
+  configBuilder: (params: ReadTasksConfigBuilderParams) => RequestConfig;
+}
+
 export interface ReadTasksApiConfig {
   endpoint: string;
   payloadBuilder?: never;
@@ -337,6 +356,12 @@ export interface ReadEventsApiConfig {
   endpoint: string;
   payloadBuilder?: never;
   configBuilder: (params: ReadEventsConfigBuilderParams) => RequestConfig;
+}
+
+export interface ReadTagsForTaskApiConfig {
+  endpoint: string;
+  payloadBuilder?: never;
+  configBuilder: (params: ReadTagsConfigBuilderParams) => RequestConfig;
 }
 
 export interface ReadTagsApiConfig {
@@ -461,8 +486,10 @@ export interface ApiConfigs {
   logIn: LogInApiConfig;
   readUser: ReadUserApiConfig;
   updateUserTheme: UpdateUserThemeApiConfig;
+  readTasksForTag: ReadTasksForTagApiConfig;
   readTasks: ReadTasksApiConfig;
   readEvents: ReadEventsApiConfig;
+  readTagsForTask: ReadTagsForTaskApiConfig;
   readTags: ReadTagsApiConfig;
   createTask: CreateTaskApiConfig;
   createTag: CreateTagApiConfig;

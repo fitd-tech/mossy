@@ -63,6 +63,7 @@ import { handleResponse } from 'src/common/utilities/requests.ts';
 const { dark1 } = colors;
 
 const defaultTheme = 'mossy';
+const initialViewType = 'test';
 
 const adminAppleUserId = process.env.EXPO_PUBLIC_ADMIN_APPLE_USER_ID;
 
@@ -74,8 +75,10 @@ export default function App() {
 
   const [selectedId, setSelectedId] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [tasksForTag, setTasksForTag] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [events, setEvents] = useState([]);
+  const [tagsForTask, setTagsForTask] = useState([]);
   const [tags, setTags] = useState([]);
   const [name, setName] = useState(null);
   const [description, setDescription] = useState('');
@@ -88,7 +91,7 @@ export default function App() {
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [loadingTags, setLoadingTags] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [viewType, setViewType] = useState('tasks');
+  const [viewType, setViewType] = useState(initialViewType);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [appleUserId, setAppleUserId] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
@@ -100,6 +103,12 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [theme, setTheme] = useState(find(themes, { name: defaultTheme }));
   const [savingUserTheme, setSavingUserTheme] = useState(false);
+  // console.log('tasks', tasks)
+  // console.log('tasks.length', tasks.length)
+  // console.log('tasks[0]', tasks[0])
+  // console.log('tasksPage', tasksPage)
+  // console.log('isAuthenticated', isAuthenticated)
+  // console.log('viewType', viewType)
 
   // Attemp to load fonts for web
   // https://github.com/expo/expo/issues/21568#issuecomment-1456968737
@@ -121,6 +130,9 @@ export default function App() {
   };
   const secondaryButtonColor = {
     backgroundColor: theme.color2,
+  };
+  const menuButtonBorderColor = {
+    borderColor: backgroundColor.backgroundColor,
   };
 
   function clearUserData() {
@@ -146,11 +158,17 @@ export default function App() {
       params,
       token,
     };
+    // console.log('requestBuilderOptions from getUserDetails', requestBuilderOptions)
     async function onSuccess(_userProfile) {
-      setUserProfile(_userProfile);
-      setUseSystemDarkMode(_userProfile.should_color_scheme_use_system);
-      setDarkMode(_userProfile.is_color_scheme_dark_mode);
-      setTheme(find(themes, { id: _userProfile.color_theme }));
+      // console.log('_userProfile from userUserDetails onSuccess', _userProfile)
+      if (_userProfile) {
+        setUserProfile(_userProfile);
+        setUseSystemDarkMode(_userProfile.should_color_scheme_use_system);
+        setDarkMode(_userProfile.is_color_scheme_dark_mode);
+        setTheme(find(themes, { id: _userProfile.color_theme }));
+      } else {
+        setIsAuthenticated(false);
+      }
     }
     async function onFailure() {
       clearUserData();
@@ -173,8 +191,36 @@ export default function App() {
     }
   }, [colorScheme, useSystemDarkMode]);
 
+  const getTasksForTag = useCallback(
+    async ({ tagId }: { tagId?: string } = {}) => {
+      // console.log('tagId from getTasksForTag', tagId)
+      // setLoadingTags(true);
+      /* if (!searchParams) {
+        setTagsPage(1);
+      } */
+      const requestBuilderOptions = {
+        apiConfig: apiConfigs.readTasksForTag,
+        searchParams: {
+          tag_id: tagId,
+        },
+        token,
+      };
+      async function onSuccess(_tasks) {
+        // console.log('_tasks from getTasksForTag onSuccess', _tasks)
+        setTasksForTag(_tasks);
+      }
+      handleResponse({
+        requestBuilderOptions,
+        onSuccess,
+        // setLoading: setLoadingTags,
+      });
+    },
+    [token],
+  );
+
   const getTasks = useCallback(
     async ({ searchParams }: { searchParams?: SearchParams } = {}) => {
+      // console.log('called getTasks')
       setLoadingTasks(true);
       if (!searchParams) {
         setTasksPage(1);
@@ -226,6 +272,33 @@ export default function App() {
         requestBuilderOptions,
         onSuccess,
         setLoading: setLoadingEvents,
+      });
+    },
+    [token],
+  );
+
+  const getTagsForTask = useCallback(
+    async ({ taskId }: { taskId?: string } = {}) => {
+      // console.log('taskId from getTagsForTask', taskId)
+      // setLoadingTags(true);
+      /* if (!searchParams) {
+        setTagsPage(1);
+      } */
+      const requestBuilderOptions = {
+        apiConfig: apiConfigs.readTagsForTask,
+        searchParams: {
+          task_id: taskId,
+        },
+        token,
+      };
+      async function onSuccess(_tags) {
+        // console.log('_tags from getTagsForTask onSuccess', _tags)
+        setTagsForTask(_tags);
+      }
+      handleResponse({
+        requestBuilderOptions,
+        onSuccess,
+        // setLoading: setLoadingTags,
       });
     },
     [token],
@@ -288,18 +361,19 @@ export default function App() {
 
   useEffect(() => {
     async function loadData() {
-      if (token) {
+      if (isAuthenticated) {
         getTasks();
         getEvents();
         getTags();
       }
     }
     loadData();
-  }, [getEvents, getTags, getTasks, token]);
+  }, [getEvents, getTags, getTasks, isAuthenticated, token]);
 
   const handleTaskCardPress = useCallback(
     (id) => {
       getTags();
+      getTagsForTask({ taskId: id });
       setSelectedId(id);
       const task = find(tasks, ['_id.$oid', id]);
       setName(task.name);
@@ -308,7 +382,7 @@ export default function App() {
       setFormType('taskDetails');
       setIsModalVisible(true);
     },
-    [getTags, tasks],
+    [getTags, getTagsForTask, tasks],
   );
 
   const handleEventCardPress = useCallback(
@@ -324,6 +398,7 @@ export default function App() {
 
   const handleTagCardPress = useCallback(
     (id) => {
+      getTasksForTag({ tagId: id });
       setSelectedId(id);
       const tag = find(tags, ['_id.$oid', id]);
       setName(tag.name);
@@ -332,7 +407,7 @@ export default function App() {
       setFormType('editTag');
       setIsModalVisible(true);
     },
-    [tags],
+    [getTasksForTag, tags],
   );
 
   function handleTagSelectCardPress(currentId) {
@@ -870,6 +945,7 @@ export default function App() {
       return (
         <TaskDetailsForm
           task={task}
+          tags={tagsForTask}
           theme={theme}
           backgroundColor={backgroundColor}
           textColor={textColor}
@@ -902,6 +978,7 @@ export default function App() {
       return (
         <EditTagForm
           tags={tags}
+          tasks={tasksForTag}
           textColor={textColor}
           selectedTagId={selectedId}
           name={name}
@@ -1019,8 +1096,15 @@ export default function App() {
                 <DataContext.Provider value={dataContext}>
                   {isAuthenticated ? (
                     <>
+                      {/* DEBUG: 
+                        The navigator component isn't loading its components.
+                          - The component will load if there is another element on the page (<Text />)
+                          - The tab bar (if given a height) does display properly, but the component below does not
+                        Temporary solution: an empty Text component allows the page to display properly for now.
+                      */}
+                      <Text style={{ height: 0 }} />
                       <Tab.Navigator
-                        initialRouteName="tasks"
+                        initialRouteName={initialViewType}
                         screenOptions={{
                           tabBarStyle: {
                             height: 0,
@@ -1038,19 +1122,19 @@ export default function App() {
                         visible={isModalVisible}
                       >
                         <Pressable
-                          onPress={() => handleCloseModal()}
+                          onPress={handleCloseModal}
                           style={appStyles.modalPressOut}
                         >
                           <View style={appStyles.centeredView}>
-                            <View
-                              style={{
-                                ...appStyles.modalView,
-                                ...backgroundColor,
-                              }}
+                            <Pressable
+                              onPress={noop}
+                              // style={appStyles.modalPressReset}
                             >
-                              <Pressable
-                                onPress={noop}
-                                style={appStyles.modalPressReset}
+                              <View
+                                style={{
+                                  ...appStyles.modalView,
+                                  ...backgroundColor,
+                                }}
                               >
                                 {renderForm()}
                                 <Pressable
@@ -1064,8 +1148,8 @@ export default function App() {
                                     Close
                                   </Text>
                                 </Pressable>
-                              </Pressable>
-                            </View>
+                              </View>
+                            </Pressable>
                           </View>
                         </Pressable>
                       </Modal>
@@ -1074,6 +1158,7 @@ export default function App() {
                         style={{
                           ...appStyles.menuButtonWrapper,
                           ...secondaryButtonColor,
+                          ...menuButtonBorderColor,
                         }}
                       >
                         <Ionicons
@@ -1088,13 +1173,14 @@ export default function App() {
                           style={{
                             ...appStyles.addTaskButtonWrapper,
                             ...secondaryButtonColor,
+                            ...menuButtonBorderColor,
                           }}
                         >
                           <Ionicons
-                            name="ios-add-circle"
+                            name="add-circle"
                             size={48}
                             color={darkMode ? dark1 : 'white'}
-                            style={{ marginLeft: 3 }}
+                            // style={{ marginLeft: 3 }}
                           />
                         </Pressable>
                       )}
